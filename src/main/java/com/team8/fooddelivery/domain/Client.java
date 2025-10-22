@@ -37,7 +37,7 @@ public class Client {
         this.isActive = true;
     }
 
-    public Client(String name, String email, String phone, String address) {
+    public Client(String name, String email, String phone, Adress address) {
         this.name = name;
         this.email = email;
         this.phone = phone;
@@ -59,7 +59,7 @@ public class Client {
     public void setName(String name) { this.name = name; }
     public void setEmail(String email) { this.email = email; }
     public void setPhone(String phone) { this.phone = phone; }
-    public void setAddress(String address) { this.address = address; }
+    public void setAddress(Adress address) { this.address = address; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
     public void setCart(Cart cart) { this.cart = cart; }
