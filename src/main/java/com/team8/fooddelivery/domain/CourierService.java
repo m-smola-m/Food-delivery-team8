@@ -1,4 +1,4 @@
-package org.example;
+package com.team8.fooddelivery.domain;
 
 public interface CourierService {
 
