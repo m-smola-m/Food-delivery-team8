@@ -2,6 +2,7 @@ package com.team8.fooddelivery.domain;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.time.Instant;
 
 @Entity
 @Table(name = "cart_items")

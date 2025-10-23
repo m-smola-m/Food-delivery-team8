@@ -1,3 +1,8 @@
+package com.team8.fooddelivery.domain;
+
+import jakarta.persistence.*;
+import java.time.Instant;
+
 public class Address {
   private String country;
   private String city;

@@ -1,3 +1,7 @@
+package com.team8.fooddelivery.domain;
+
+import jakarta.persistence.*;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;

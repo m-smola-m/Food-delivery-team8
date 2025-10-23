@@ -22,7 +22,7 @@ public class Cart {
     @Column(nullable = false)
     private Instant updatedAt;
     
-    @OneToMany(mappedBy = "cartId", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<CartItem> products;
 
     public Cart() {
