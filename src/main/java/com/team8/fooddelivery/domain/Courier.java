@@ -1,3 +1,5 @@
+package com.team8.fooddelivery.domain;
+
 public class Courier {
 
   // Уникальный номер курьера в БД
