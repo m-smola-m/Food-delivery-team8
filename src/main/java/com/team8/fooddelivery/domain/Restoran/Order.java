@@ -3,7 +3,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class OrderForStore {
+public class Order {
   private UUID orderId;
   private UUID storeId;
   private String customerName;
