@@ -3,7 +3,7 @@ package com.team8.fooddelivery.domain;
 import jakarta.persistence.*;
 import java.time.Instant;
 
-public interface CourierService {
+public interface CourierService { // + methods from user stories
 
 
   void startShift(long courierId);
