@@ -1,31 +1,14 @@
 package com.team8.fooddelivery.domain;
 
-import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-@Entity
-@Table(name = "cart_items")
 public class CartItem {
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long cartItemId;
-    
-    @Column(nullable = false)
     private Long cartId;
-    
-    @Column(nullable = false)
     private Long productId;
-    
-    @Column(nullable = false)
     private Integer quantity;
-    
-    @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
-
-    public CartItem() {
-    }
 
     public CartItem(Long cartId, Long productId, Integer quantity, BigDecimal price) {
         this.cartId = cartId;

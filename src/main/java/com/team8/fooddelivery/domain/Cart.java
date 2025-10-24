@@ -1,28 +1,13 @@
 package com.team8.fooddelivery.domain;
 
-import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.List;
 
-@Entity
-@Table(name = "carts")
 public class Cart {
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long cartId;
-    
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "client_id", nullable = false)
     private Client client;
-    
-    @Column(nullable = false)
     private Instant createdAt;
-    
-    @Column(nullable = false)
     private Instant updatedAt;
-    
-    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<CartItem> products;
 
     public Cart() {
