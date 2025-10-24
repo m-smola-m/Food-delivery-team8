@@ -6,12 +6,12 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
-public class Shops {
+public class Shops {  // Shop
   private Long shopId;
   private String naming;
   private String description;
   private String publicEmail;
-  private String emailForAU;
+  private String emailForAU; // emailForAuth
   private String phoneForAU;
   private String publicPhone;
   private ShopStatus status;
@@ -20,7 +20,7 @@ public class Shops {
   private List<Product> products;
   private String ownerName;
   private String ownerContactPhone;
-  final private LocalDateTime registrationDate = LocalDateTime.now();
+  final private LocalDateTime registrationDate = LocalDateTime.now(); // Instant
   private Double rating = 0.0;
   private ShopType type;
   private String password;
