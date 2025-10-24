@@ -2,7 +2,6 @@ package com.team8.fooddelivery.domain;
 
 import jakarta.persistence.*;
 import java.time.Instant;
-
 @Entity
 @Table(name = "notifications")
 public class Notification {

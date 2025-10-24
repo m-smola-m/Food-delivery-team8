@@ -1,7 +1,12 @@
+package com.team8.fooddelivery.domain;
+
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import jakarta.persistence.*;
+import java.time.Instant;
 
 public class OrderForStore {
   private UUID orderId;
