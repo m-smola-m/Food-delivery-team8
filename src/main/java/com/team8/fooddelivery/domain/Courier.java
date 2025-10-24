@@ -1,50 +1,126 @@
 package com.team8.fooddelivery.domain;
 
-import jakarta.persistence.*;
-import lombok.*;
 
-import java.math.BigDecimal;
+import jakarta.persistence.*;
 import java.time.Instant;
 
-@Entity
-@Table(name = "couriers")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Courier {
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
-    @Column(nullable = false)
-    private String name;
-    
-    @Column(nullable = false, unique = true)
-    private String email;
-    
-    @Column(nullable = false)
-    private String phone;
-    
-    @Builder.Default
-    @Column(nullable = false)
-    private Instant createdAt = Instant.now();
-    
-    @Builder.Default
-    @Column(nullable = false)
-    private Boolean isActive = true;
-    
-    @Builder.Default
-    @Column(nullable = false)
-    private Boolean isAvailable = true;
-    
-    @Builder.Default
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal totalEarnings = BigDecimal.ZERO;
-    
-    @Builder.Default
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal totalPenalties = BigDecimal.ZERO;
+
+  private long courierId;
+
+  private String name;
+
+  private String password;
+
+  private String phoneNumber;
+
+
+  private String status;
+
+
+  private String transportType;
+
+  private long currentOrderId;
+
+
+  private double currentBalance;
+
+
+  private long bankCard;
+
+  public Courier(long courierId, String name, String password, int phoneNumber, String status,
+      String transportType, long currentOrderId, double currentBalance, long bankCard) {
+    this.courierId = courierId;
+    this.name = name;
+    this.password = password;
+    this.phoneNumber = phoneNumber;
+    this.status = status;
+    this.transportType = transportType;
+    this.currentOrderId = currentOrderId;
+    this.currentBalance = currentBalance;
+    this.bankCard = bankCard;
+  }
+
+
+  public Courier() {
+  }
+
+
+  public long getCourierId() {
+    return courierId;
+  }
+
+  public void setCourierId(long courierId) {
+    this.courierId = courierId;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public String getPassword() {
+    return password;
+  }
+
+  public void setPassword(String password) {
+    this.password = password;
+  }
+
+  public String getPhoneNumber() {
+    return phoneNumber;
+  }
+
+  public void setPhoneNumber(int phoneNumber) {
+    this.phoneNumber = phoneNumber;
+  }
+
+  public String getStatus() {
+    return status;
+  }
+
+  public void setStatus(String status) {
+    this.status = status;
+  }
+
+  public String getTransportType() {
+    return transportType;
+  }
+
+  public void setTransportType(String transportType) {
+    this.transportType = transportType;
+  }
+
+  public long getCurrentOrderId() {
+    return currentOrderId;
+  }
+
+  public void setCurrentOrderId(long currentOrderId) {
+    this.currentOrderId = currentOrderId;
+  }
+
+  public String getLastAddress() {
+    return lastAddress;
+  }
+
+  public double getCurrentBalance() {
+    return currentBalance;
+  }
+
+  public void setCurrentBalance(double currentBalance) {
+    this.currentBalance = currentBalance;
+  }
+
+  public long getBankCard() {
+    return bankCard;
+  }
+
+  public void setBankCard(long bankCard) {
+    this.bankCard = bankCard;
+  }
+
+
 }

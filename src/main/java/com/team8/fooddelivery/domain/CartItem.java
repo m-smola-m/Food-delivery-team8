@@ -1,6 +1,7 @@
 package com.team8.fooddelivery.domain;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 
 public class CartItem {
     private Long cartItemId;
