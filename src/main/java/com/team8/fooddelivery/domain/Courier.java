@@ -17,6 +17,7 @@ public class Courier {
   private long currentOrderId;
   private double currentBalance;
   private long bankCard;
+      // private List<Notification> notifications;
 
   // public void setStatus(String status) {
   //   this.status = status;
