@@ -24,6 +24,7 @@ public class Shops {  // Shop
   private Double rating = 0.0;
   private ShopType type;
   private String password;
+      // private List<Notification> notifications;
 
   public enum ShopStatus {
     PENDING, ACTIVE, SUSPENDED, CLOSED
