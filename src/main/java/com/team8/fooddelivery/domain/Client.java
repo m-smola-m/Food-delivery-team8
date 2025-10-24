@@ -1,35 +1,15 @@
 package com.team8.fooddelivery.domain;
 
-import jakarta.persistence.*;
 import java.time.Instant;
 
-@Entity
-@Table(name = "clients")
 public class Client {
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
-    @Column(nullable = false)
     private String name;
-    
-    @Column(nullable = false, unique = true)
     private String email;
-    
-    @Column(nullable = false)
     private String phone;
-    
-    @Column(nullable = false)
     private String address;
-    
-    @Column(nullable = false)
     private Instant createdAt;
-    
-    @Column(nullable = false)
     private Boolean isActive;
-    
-    @OneToOne(mappedBy = "client", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Cart cart;
 
     public Client() {
