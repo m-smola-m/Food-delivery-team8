@@ -1,37 +1,42 @@
 package com.team8.fooddelivery.domain;
 
-import jakarta.persistence.*;
-import java.time.Instant;
-import java.util.UUID;
 import java.util.List;
 
 public interface InterfaceForShops {
+  
+  Shops registerShop(Shops infoAbout);
 
-  void approveStore(UUID shopId); // одобрение регистрации
+  void approveShop(Long shopId);
 
-  void rejectStore(String rejectionReason); // отклонение регистрации
+  void rejectShop(String rejectionReason);
 
-  String changePassword(UUID shopId, String emailForAU, String phoneForAU);
+  String changePassword(Long shopId, String emailForAU, String phoneForAU);
 
-  String changeEmailForAU(UUID shopId, String phoneForAU, String password);
+  String changeEmailForAU(Long shopId, String phoneForAU, String password);
 
-  String changePhoneForAU(UUID shopId, String emailForAU, String password);
+  String changePhoneForAU(Long shopId, String emailForAU, String password);
 
-  Shops getStoreById(UUID shopId); // поиск реторана по id
+  //Shops getShopById(Long shopId);
 
-  Shops updateStoreInfo(UUID shopId);
+  Shops updateShopInfo(Long shopId);
 
-  Product addProduct(UUID shopId);
+  Product addProduct(Long shopId);
 
-  Product updateProduct(UUID shopId, Integer productId);
+  Product updateProduct(Long shopId, Integer productId);
 
-  void deleteProduct(UUID shopId, Integer productId);
+  void deleteProduct(Long shopId, Integer productId);
 
-  List<Product> getStoreProducts(UUID shopId);
+  List<Product> getShopProducts(Long shopId);
 
-  List<Product> getProductsByCategory(UUID shopId, Product.ProductCategory category);
+  List<Product> getProductsByCategory(Long shopId, Product.ProductCategory category);
 
-  void updateProductAvailability(UUID shopId, Integer productId, boolean isAvailable);
+  void updateProductAvailability(Long shopId, Integer productId, boolean isAvailable);
 
-  List<OrderForStore> getPendingOrders(UUID storeId);
+  List<Order> getPendingOrders(Long shopId);
+
+  void changeShopStatus(Long shopId);
+
+  void changeOrderStatus(Long shopId, Long orderId);
+
+  void rejectOrder(Long orderId, String reason);
 }
