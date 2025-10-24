@@ -1,41 +1,16 @@
 package com.team8.fooddelivery.domain;
 
-import jakarta.persistence.*;
 import java.time.Instant;
-
-@Entity
-@Table(name = "payment_methods")
 public class PaymentMethod {
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long paymentMethodId;
-    
-    @Column(nullable = false)
     private Long clientId;
-    
-    @Column(nullable = false)
     private String methodType;
-    
-    @Column(nullable = false)
     private String cardNumber;
-    
-    @Column(nullable = false)
     private String cardHolderName;
-    
-    @Column(nullable = false)
     private String expiryDate;
-    
-    @Column(nullable = false)
     private String cvv;
-    
-    @Column(nullable = false)
     private Boolean isDefault;
-    
-    @Column(nullable = false)
     private Instant createdAt;
-    
-    @Column(nullable = false)
     private Boolean isActive;
 
     public PaymentMethod() {
