@@ -13,6 +13,7 @@ public class Client {
     private Instant createdAt= Instant.now();
     private Boolean isActive = true;
     private Cart cart;
+    // private List<Notification> notifications;
 
     // public Client() {
     //     this.createdAt = Instant.now();
