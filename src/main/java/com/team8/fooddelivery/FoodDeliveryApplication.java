@@ -12,7 +12,8 @@ public class ClientUserStories {
 
       public static void checkUserStory1() {
         log.info(CLIENTS);
-        
+
+         UserService userService =new UserService();
         userService.register(....);
 
         log.info(CLIENTS);
