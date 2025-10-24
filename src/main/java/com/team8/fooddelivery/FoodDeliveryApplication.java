@@ -1,13 +1,21 @@
 package com.team8.fooddelivery;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+@Sl4j
+public class ClientUserStories {
 
-@SpringBootApplication
-public class FoodDeliveryApplication {
+    public static final List<Client> CLIENTS = new ArrayList<>();
+
     public static void main(String[] args) {
-        SpringApplication.run(FoodDeliveryApplication.class, args);
+        checkUserStory1();
+        //  checkUserStory2();
     }
+
+      public static void checkUserStory1() {
+        log.info(CLIENTS);
+        
+        userService.register(....);
+
+        log.info(CLIENTS);
+      }
+          
 }
-
-
