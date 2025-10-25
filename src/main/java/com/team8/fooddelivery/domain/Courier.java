@@ -1,50 +1,63 @@
 package com.team8.fooddelivery.domain;
 
-import jakarta.persistence.*;
-import lombok.*;
+// import jakarta.persistence.*;
+// import java.time.Instant;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-
-@Entity
-@Table(name = "couriers")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+// @Data
+// @AllArgsConstructor
 public class Courier {
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
-    @Column(nullable = false)
-    private String name;
-    
-    @Column(nullable = false, unique = true)
-    private String email;
-    
-    @Column(nullable = false)
-    private String phone;
-    
-    @Builder.Default
-    @Column(nullable = false)
-    private Instant createdAt = Instant.now();
-    
-    @Builder.Default
-    @Column(nullable = false)
-    private Boolean isActive = true;
-    
-    @Builder.Default
-    @Column(nullable = false)
-    private Boolean isAvailable = true;
-    
-    @Builder.Default
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal totalEarnings = BigDecimal.ZERO;
-    
-    @Builder.Default
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal totalPenalties = BigDecimal.ZERO;
+
+  // private long courierId;
+  private Long id;
+  private String name;
+  private String password;
+  private String phoneNumber;
+  private String status;         // enum
+  private String transportType;
+  private long currentOrderId;
+  private double currentBalance;
+  private long bankCard;
+      // private List<Notification> notifications;
+
+  // public void setStatus(String status) {
+  //   this.status = status;
+  // }
+
+  // public String getTransportType() {
+  //   return transportType;
+  // }
+
+  // public void setTransportType(String transportType) {
+  //   this.transportType = transportType;
+  // }
+
+  // public long getCurrentOrderId() {
+  //   return currentOrderId;
+  // }
+
+  // public void setCurrentOrderId(long currentOrderId) {
+  //   this.currentOrderId = currentOrderId;
+  // }
+
+  // public String getLastAddress() {
+  //   return lastAddress;
+  // }
+
+  // public double getCurrentBalance() {
+  //   return currentBalance;
+  // }
+
+  // public void setCurrentBalance(double currentBalance) {
+  //   this.currentBalance = currentBalance;
+  // }
+
+  // public long getBankCard() {
+  //   return bankCard;
+  // }
+
+  // public void setBankCard(long bankCard) {
+  //   this.bankCard = bankCard;
+  // }
+
+
 }
