@@ -1,0 +1,14 @@
+/Users/nachynondar/untitled/Food-delivery-team8/src/main/java/com/team8/fooddelivery/FoodDeliveryApplication.java
+/Users/nachynondar/untitled/Food-delivery-team8/src/main/java/com/team8/fooddelivery/domain/Address.java
+/Users/nachynondar/untitled/Food-delivery-team8/src/main/java/com/team8/fooddelivery/domain/Cart.java
+/Users/nachynondar/untitled/Food-delivery-team8/src/main/java/com/team8/fooddelivery/domain/CartItem.java
+/Users/nachynondar/untitled/Food-delivery-team8/src/main/java/com/team8/fooddelivery/domain/Client.java
+/Users/nachynondar/untitled/Food-delivery-team8/src/main/java/com/team8/fooddelivery/domain/Courier.java
+/Users/nachynondar/untitled/Food-delivery-team8/src/main/java/com/team8/fooddelivery/domain/CourierInterface.java
+/Users/nachynondar/untitled/Food-delivery-team8/src/main/java/com/team8/fooddelivery/domain/InterfaceForShops.java
+/Users/nachynondar/untitled/Food-delivery-team8/src/main/java/com/team8/fooddelivery/domain/Notification.java
+/Users/nachynondar/untitled/Food-delivery-team8/src/main/java/com/team8/fooddelivery/domain/OrderForStore.java
+/Users/nachynondar/untitled/Food-delivery-team8/src/main/java/com/team8/fooddelivery/domain/PaymentMethod.java
+/Users/nachynondar/untitled/Food-delivery-team8/src/main/java/com/team8/fooddelivery/domain/Product.java
+/Users/nachynondar/untitled/Food-delivery-team8/src/main/java/com/team8/fooddelivery/domain/Shops.java
+/Users/nachynondar/untitled/Food-delivery-team8/src/main/java/com/team8/fooddelivery/domain/WorkingHours.java
