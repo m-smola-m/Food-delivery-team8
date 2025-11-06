@@ -1,0 +1,6 @@
+com/team8/fooddelivery/domain/Product.class
+com/team8/fooddelivery/domain/OrderForStore.class
+com/team8/fooddelivery/domain/WorkingHours.class
+com/team8/fooddelivery/domain/Product$ProductCategory.class
+com/team8/fooddelivery/domain/OrderForStore$StoreOrderStatus.class
+com/team8/fooddelivery/domain/CourierService.class
