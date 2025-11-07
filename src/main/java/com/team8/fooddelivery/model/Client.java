@@ -14,8 +14,9 @@ public class Client {
     private String email;
     private String phone;
     private String address;
+    private String passwordHash;
     private Instant createdAt = Instant.now();
-    private Boolean isActive = true;
+    private boolean isActive = true;
     private Cart cart;
 }
 
