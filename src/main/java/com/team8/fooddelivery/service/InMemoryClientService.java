@@ -27,6 +27,10 @@ public class InMemoryClientService implements ClientService {
         if (!isValidAddress(address)) throw new IllegalArgumentException("Неверный формат адреса");
         if (!isValidPassword(password)) throw new IllegalArgumentException("Слабый пароль");
 
+        // Проверка уникальности email и телефона
+        if (isEmailExists(email)) throw new IllegalArgumentException("Пользователь с таким email уже существует");
+        if (isPhoneExists(phone)) throw new IllegalArgumentException("Пользователь с таким телефоном уже существует");
+
         String hashedPassword = PasswordUtils.hashPassword(password);
         Long id = ID_SEQ.getAndIncrement();
         Client client = new Client(id, name, email, phone, address, hashedPassword, Instant.now(), true, new Cart());
@@ -54,21 +58,37 @@ public class InMemoryClientService implements ClientService {
     @Override
     public Client update(Long clientId, String name, String email, String phone, String address) {
         Client existing = ID_TO_CLIENT.get(clientId);
-        if (existing == null) return null;
+        if (existing == null) throw new IllegalArgumentException("Клиент не найден");
 
-        if (name != null) existing.setName(name);
-        if (email != null) {
+        // Проверяем, не совпадают ли новые данные со старыми
+        if (Objects.equals(existing.getName(), name)
+                && Objects.equals(existing.getEmail(), email)
+                && Objects.equals(existing.getPhone(), phone)
+                && Objects.equals(existing.getAddress(), address)) {
+            throw new IllegalArgumentException("Изменений не обнаружено");
+        }
+
+        if (email != null && !email.equals(existing.getEmail())) {
             if (!isValidEmail(email)) throw new IllegalArgumentException("Неверный формат email");
+            if (isEmailExists(email)) throw new IllegalArgumentException("Email уже используется другим пользователем");
             existing.setEmail(email);
         }
-        if (phone != null) {
+
+        if (phone != null && !phone.equals(existing.getPhone())) {
             if (!isValidPhone(phone)) throw new IllegalArgumentException("Неверный формат телефона");
+            if (isPhoneExists(phone)) throw new IllegalArgumentException("Телефон уже используется другим пользователем");
             existing.setPhone(phone);
         }
-        if (address != null) {
+
+        if (address != null && !address.equals(existing.getAddress())) {
             if (!isValidAddress(address)) throw new IllegalArgumentException("Неверный формат адреса");
             existing.setAddress(address);
         }
+
+        if (name != null && !name.equals(existing.getName())) {
+            existing.setName(name);
+        }
+
         return existing;
     }
 
@@ -130,6 +150,17 @@ public class InMemoryClientService implements ClientService {
         }
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         history.add("[" + timestamp + "] " + entry);
+    }
+
+    // =====================
+    // Проверки уникальности
+    // =====================
+    private boolean isEmailExists(String email) {
+        return ID_TO_CLIENT.values().stream().anyMatch(c -> c.getEmail().equalsIgnoreCase(email));
+    }
+
+    private boolean isPhoneExists(String phone) {
+        return ID_TO_CLIENT.values().stream().anyMatch(c -> c.getPhone().equals(phone));
     }
 
     // =====================
