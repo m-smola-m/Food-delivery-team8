@@ -1,11 +1,12 @@
 package com.team8.fooddelivery.service;
-import com.team8.fooddelivery.model.Order;
+
 import com.team8.fooddelivery.model.Product;
 import com.team8.fooddelivery.model.Shop;
+import com.team8.fooddelivery.model.ProductCategory;
 
 import java.util.List;
 
-public interface ShopService { // ShopsInfoService, ShopsProductsService, ShopsOrderService + разделить на 3 интерфейса
+public interface ShopProductsService { // ShopsInfoService, ShopsProductsService, ShopsOrderService + разделить на 3 интерфейса
 
   Shop getShopById(Long shopId);
 
@@ -19,15 +20,10 @@ public interface ShopService { // ShopsInfoService, ShopsProductsService, ShopsO
 
   List<Product> getShopProducts(Long shopId);
 
-  List<Product> getProductsByCategory(Long shopId, Product.ProductCategory category);
+  List<Product> getProductsByCategory(Long shopId, ProductCategory category);
 
   void updateProductAvailability(Long shopId, Integer productId, boolean isAvailable);
 
-  List<Order> getPendingOrders(Long shopId);
-
   void changeShopStatus(Long shopId);
 
-  void changeOrderStatus(Long shopId, Long orderId);
-
-  void rejectOrder(Long orderId, String reason);
 }

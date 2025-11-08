@@ -1,4 +1,4 @@
-package com.team8.fooddelivery;
+package com.team8.fooddelivery.userstory;
 
 @Sl4j
 public class ClientUserStories {
@@ -20,3 +20,4 @@ public class ClientUserStories {
       }
           
 }
+//ShopInfoServiceImpl

@@ -1,5 +1,6 @@
-package com.team8.fooddelivery.domain;
+package com.team8.fooddelivery.model;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.*;
@@ -9,24 +10,19 @@ import lombok.*;
 public class Order {
   private Long orderId;
   private Long shopId;
-  private String customerName; // Long clientId
-  private String customerPhone; // delete
+  private Long clientId; // Long clientId
   private List<Product> items;
   private Address deliveryAddress;
   private StoreOrderStatus status;
-  private double totalAmount;
-  private double storeRevenue;
-  private LocalDateTime orderTime;
-  private LocalDateTime estimatedReadyTime;  // Instant
-  private LocalDateTime actualReadyTime;
+  private Double totalAmount;
+  private Double storeRevenue;
+  private Duration orderTime;
+  private Duration estimatedReadyTime;  // Instant
+  private Duration actualReadyTime;
   private String customerNotes;
   private String internalNotes;
   private String rejectionReason;
-  private Integer preparationTime;   // Instant
+  private Duration preparationTime;   // Instant
   private boolean isPaid;
-  private String paymentMethod; // enum
-
-  public enum StoreOrderStatus {
-    PENDING, CONFIRMED, PREPARING, READY, PICKED_UP, COMPLETED, REJECTED, CANCELLED
-  }
+  private PaymentMethodForOrder paymentMethod; // enum
 }

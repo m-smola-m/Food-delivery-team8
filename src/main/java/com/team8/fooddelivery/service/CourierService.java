@@ -1,7 +1,4 @@
-package com.team8.fooddelivery.domain;
-
-import jakarta.persistence.*;
-import java.time.Instant;
+package com.team8.fooddelivery.service;
 
 public interface CourierService { // + methods from user stories + methods for courier management
 

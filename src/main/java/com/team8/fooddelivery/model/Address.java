@@ -1,4 +1,4 @@
-package com.team8.fooddelivery.domain;
+package com.team8.fooddelivery.model;
 
 import lombok.*;
 
@@ -12,8 +12,8 @@ public class Address {
   private Integer apartment;
   private Integer entrance;
   private Integer floor;
-  private double latitude;
-  private double longitude;
+  private Double latitude;
+  private Double longitude;
   private String addressNote;
   private String district;
 }
