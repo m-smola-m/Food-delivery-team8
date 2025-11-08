@@ -1,9 +1,15 @@
 package com.team8.fooddelivery.userstory;
 
-@Sl4j
+import com.team8.fooddelivery.model.Shop;
+
+import java.util.ArrayList;
+import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class ClientUserStories {
 
-    public static final List<Client> CLIENTS = new ArrayList<>();
+    public static final List<Shop> SHOPS = new ArrayList<>();
 
     public static void main(String[] args) {
         checkUserStory1();

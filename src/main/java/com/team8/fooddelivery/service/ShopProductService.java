@@ -3,27 +3,27 @@ package com.team8.fooddelivery.service;
 import com.team8.fooddelivery.model.Product;
 import com.team8.fooddelivery.model.Shop;
 import com.team8.fooddelivery.model.ProductCategory;
+import com.team8.fooddelivery.model.ShopStatus;
 
 import java.util.List;
 
-public interface ShopProductsService { // ShopsInfoService, ShopsProductsService, ShopsOrderService + разделить на 3 интерфейса
+public interface ShopProductService {
 
   Shop getShopById(Long shopId);
 
-  Shop updateShopInfo(Long shopId); // + new Shop
+  Shop updateShopInfo(Long shopId, Shop updatedShop); // + new Shop
 
-  Product addProduct(Long shopId); // + набор полей
+  Product addProduct(Long shopId, Product product); // + набор полей
 
-  Product updateProduct(Long shopId, Integer productId);
+  Product updateProduct(Long shopId, Long productId, Product updatedProduct); // changed Integer to Long
 
-  void deleteProduct(Long shopId, Integer productId);
+  void deleteProduct(Long shopId, Long productId); // changed Integer to Long
 
   List<Product> getShopProducts(Long shopId);
 
   List<Product> getProductsByCategory(Long shopId, ProductCategory category);
 
-  void updateProductAvailability(Long shopId, Integer productId, boolean isAvailable);
+  void updateProductAvailability(Long shopId, Long productId, boolean isAvailable); // changed Integer to Long
 
-  void changeShopStatus(Long shopId);
-
+  void changeShopStatus(Long shopId, ShopStatus status);
 }
