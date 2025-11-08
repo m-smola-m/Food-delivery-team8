@@ -1,8 +1,8 @@
 package com.team8.fooddelivery.main;
 
 import com.team8.fooddelivery.model.Courier;
-import com.team8.fooddelivery.service.CourierServiceImpl;
-import com.team8.fooddelivery.interfaces.CourierService;
+import com.team8.fooddelivery.service.imp.CourierServiceImpl;
+import com.team8.fooddelivery.service.CourierService;
 
 public class CourierMain {
 

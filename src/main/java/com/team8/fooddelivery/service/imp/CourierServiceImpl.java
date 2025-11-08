@@ -1,7 +1,8 @@
-package com.team8.fooddelivery.service;
+package com.team8.fooddelivery.service.imp;
 
-import com.team8.fooddelivery.interfaces.CourierService;
 import com.team8.fooddelivery.model.Courier;
+import com.team8.fooddelivery.service.CourierService;
+
 import java.util.*;
 
 public class CourierServiceImpl implements CourierService {

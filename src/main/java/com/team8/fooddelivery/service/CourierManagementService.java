@@ -1,4 +1,4 @@
-package com.team8.fooddelivery.interfaces;
+package com.team8.fooddelivery.service;
 
 import com.team8.fooddelivery.model.Courier;
 
