@@ -13,7 +13,7 @@ public class Client {
     private String name;
     private String email;
     private String phone;
-    private String address;
+    private Address address;
     private String passwordHash;
     private Instant createdAt = Instant.now();
     private boolean isActive = true;

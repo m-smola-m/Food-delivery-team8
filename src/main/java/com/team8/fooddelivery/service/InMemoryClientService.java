@@ -1,9 +1,11 @@
 package com.team8.fooddelivery.service;
 
 import com.team8.fooddelivery.interfaces.ClientService;
-import com.team8.fooddelivery.model.Client;
+import com.team8.fooddelivery.model.Address;
 import com.team8.fooddelivery.model.Cart;
+import com.team8.fooddelivery.model.Client;
 import com.team8.fooddelivery.utils.PasswordUtils;
+import com.team8.fooddelivery.utils.ValidationUtils;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -20,12 +22,14 @@ public class InMemoryClientService implements ClientService {
     // =====================
     // Регистрация
     // =====================
-    @Override
-    public Client register(String name, String email, String phone, String address, String password) {
-        if (!isValidEmail(email)) throw new IllegalArgumentException("Неверный формат email");
-        if (!isValidPhone(phone)) throw new IllegalArgumentException("Неверный формат телефона");
-        if (!isValidAddress(address)) throw new IllegalArgumentException("Неверный формат адреса");
-        if (!isValidPassword(password)) throw new IllegalArgumentException("Слабый пароль");
+    public Client register(String name, String email, String phone, Address address, String password) {
+        if (email == null || email.isBlank()) throw new IllegalArgumentException("Email не может быть пустым");
+        if (password == null || password.isBlank()) throw new IllegalArgumentException("Пароль не может быть пустым");
+
+        if (!ValidationUtils.isValidEmail(email)) throw new IllegalArgumentException("Неверный формат email");
+        if (!ValidationUtils.isValidPhone(phone)) throw new IllegalArgumentException("Неверный формат телефона");
+        if (!ValidationUtils.isValidAddress(address)) throw new IllegalArgumentException("Неверный формат адреса");
+        if (!ValidationUtils.isValidPassword(password)) throw new IllegalArgumentException("Слабый пароль");
 
         // Проверка уникальности email и телефона
         if (isEmailExists(email)) throw new IllegalArgumentException("Пользователь с таким email уже существует");
@@ -33,6 +37,7 @@ public class InMemoryClientService implements ClientService {
 
         String hashedPassword = PasswordUtils.hashPassword(password);
         Long id = ID_SEQ.getAndIncrement();
+
         Client client = new Client(id, name, email, phone, address, hashedPassword, Instant.now(), true, new Cart());
 
         ID_TO_CLIENT.put(id, client);
@@ -56,11 +61,11 @@ public class InMemoryClientService implements ClientService {
     // Обновление клиента
     // =====================
     @Override
-    public Client update(Long clientId, String name, String email, String phone, String address) {
+    public Client update(Long clientId, String name, String email, String phone, Address address) {
         Client existing = ID_TO_CLIENT.get(clientId);
         if (existing == null) throw new IllegalArgumentException("Клиент не найден");
 
-        // Проверяем, не совпадают ли новые данные со старыми
+        // Проверка — изменилось ли хоть что-то
         if (Objects.equals(existing.getName(), name)
                 && Objects.equals(existing.getEmail(), email)
                 && Objects.equals(existing.getPhone(), phone)
@@ -68,20 +73,21 @@ public class InMemoryClientService implements ClientService {
             throw new IllegalArgumentException("Изменений не обнаружено");
         }
 
+        // Проверки и установка новых данных
         if (email != null && !email.equals(existing.getEmail())) {
-            if (!isValidEmail(email)) throw new IllegalArgumentException("Неверный формат email");
+            if (!ValidationUtils.isValidEmail(email)) throw new IllegalArgumentException("Неверный формат email");
             if (isEmailExists(email)) throw new IllegalArgumentException("Email уже используется другим пользователем");
             existing.setEmail(email);
         }
 
         if (phone != null && !phone.equals(existing.getPhone())) {
-            if (!isValidPhone(phone)) throw new IllegalArgumentException("Неверный формат телефона");
+            if (!ValidationUtils.isValidPhone(phone)) throw new IllegalArgumentException("Неверный формат телефона");
             if (isPhoneExists(phone)) throw new IllegalArgumentException("Телефон уже используется другим пользователем");
             existing.setPhone(phone);
         }
 
         if (address != null && !address.equals(existing.getAddress())) {
-            if (!isValidAddress(address)) throw new IllegalArgumentException("Неверный формат адреса");
+            if (!ValidationUtils.isValidAddress(address)) throw new IllegalArgumentException("Некорректный адрес");
             existing.setAddress(address);
         }
 
@@ -93,7 +99,7 @@ public class InMemoryClientService implements ClientService {
     }
 
     // =====================
-    // Деактивация
+    // Активация / деактивация
     // =====================
     @Override
     public boolean deactivate(Long clientId) {
@@ -103,9 +109,6 @@ public class InMemoryClientService implements ClientService {
         return true;
     }
 
-    // =====================
-    // Активация
-    // =====================
     @Override
     public boolean activate(Long clientId) {
         Client existing = ID_TO_CLIENT.get(clientId);
@@ -114,9 +117,8 @@ public class InMemoryClientService implements ClientService {
         return true;
     }
 
-
     // =====================
-    // Получение клиента
+    // Получение клиентов
     // =====================
     @Override
     public Client getById(Long clientId) {
@@ -135,7 +137,7 @@ public class InMemoryClientService implements ClientService {
     }
 
     // =====================
-    // Добавление заказа
+    // Добавление записи в историю заказов
     // =====================
     public void addOrderHistoryEntry(Long clientId, String entry) {
         Client client = ID_TO_CLIENT.get(clientId);
@@ -143,11 +145,7 @@ public class InMemoryClientService implements ClientService {
             throw new IllegalStateException("Клиент не существует или деактивирован");
         }
 
-        List<String> history = ID_TO_ORDER_HISTORY.get(clientId);
-        if (history == null) {
-            history = new ArrayList<>();
-            ID_TO_ORDER_HISTORY.put(clientId, history);
-        }
+        List<String> history = ID_TO_ORDER_HISTORY.computeIfAbsent(clientId, k -> new ArrayList<>());
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         history.add("[" + timestamp + "] " + entry);
     }
@@ -156,41 +154,12 @@ public class InMemoryClientService implements ClientService {
     // Проверки уникальности
     // =====================
     private boolean isEmailExists(String email) {
-        return ID_TO_CLIENT.values().stream().anyMatch(c -> c.getEmail().equalsIgnoreCase(email));
+        return ID_TO_CLIENT.values().stream()
+                .anyMatch(c -> c.getEmail().equalsIgnoreCase(email));
     }
 
     private boolean isPhoneExists(String phone) {
-        return ID_TO_CLIENT.values().stream().anyMatch(c -> c.getPhone().equals(phone));
-    }
-
-    // =====================
-    // Валидация
-    // =====================
-    private boolean isValidEmail(String email) {
-        return email != null && email.matches("^[\\w.-]+@[\\w.-]+\\.[A-Za-z]{2,6}$");
-    }
-
-    private boolean isValidPhone(String phone) {
-        return phone != null && phone.matches("^8\\d{10}$");
-    }
-
-    private boolean isValidAddress(String address) {
-        if (address == null) return false;
-        String[] parts = address.split(",");
-        if (parts.length != 10) return false;
-        try {
-            Double.parseDouble(parts[7]); // latitude
-            Double.parseDouble(parts[8]); // longitude
-        } catch (NumberFormatException e) {
-            return false;
-        }
-        for (int i = 0; i <= 6; i++) {
-            if (parts[i].trim().isEmpty()) return false;
-        }
-        return true;
-    }
-
-    private boolean isValidPassword(String password) {
-        return password != null && password.matches("^(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}$");
+        return ID_TO_CLIENT.values().stream()
+                .anyMatch(c -> c.getPhone().equals(phone));
     }
 }
