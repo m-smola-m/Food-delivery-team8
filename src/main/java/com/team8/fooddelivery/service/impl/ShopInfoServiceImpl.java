@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.team8.fooddelivery.util.ValidationUtils.isValidEmail;
+import static com.team8.fooddelivery.util.ValidationUtils.isValidPhone;
 
 public class ShopInfoServiceImp implements ShopInfoService {
 
@@ -26,6 +27,10 @@ public class ShopInfoServiceImp implements ShopInfoService {
 
     if (!isValidEmail(emailForAuth)) {
       throw new IllegalArgumentException("Некорректный формат email");
+    }
+
+    if (!isValidPhone(phoneForAuth)) {
+      throw new IllegalArgumentException("Некорректный формат телефона");
     }
 
     if (authRepository.containsKey(emailForAuth)) {
