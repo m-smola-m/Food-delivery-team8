@@ -25,74 +25,70 @@ public class ClientServiceImp implements ClientService {
     // =====================
     // Регистрация
     // =====================
-    public Client register(String name, String email, String phone, Address address, String password) {
-        logger.info("Попытка регистрации пользователя: " + email);
+    public Client register(String phone, String password, String name, String email, Address address) {
+        logger.info("Попытка регистрации пользователя с телефоном: " + phone);
 
-        if (email == null || email.isBlank()) {
-            logger.warn("Регистрация не удалась: пустой email");
-            throw new IllegalArgumentException("Email не может быть пустым");
-        }
-        if (password == null || password.isBlank()) {
-            logger.warn("Регистрация не удалась: пустой пароль для " + email);
-            throw new IllegalArgumentException("Пароль не может быть пустым");
-        }
-
-        if (!ValidationUtils.isValidEmail(email)) {
-            logger.warn("Регистрация не удалась: неверный формат email: " + email);
-            throw new IllegalArgumentException("Неверный формат email");
-        }
+        // Проверка телефона как уникального логина
         if (!ValidationUtils.isValidPhone(phone)) {
             logger.warn("Регистрация не удалась: неверный формат телефона: " + phone);
             throw new IllegalArgumentException("Неверный формат телефона");
-        }
-        if (!ValidationUtils.isValidAddress(address)) {
-            logger.warn("Регистрация не удалась: неверный адрес для пользователя " + email);
-            throw new IllegalArgumentException("Неверный формат адреса");
-        }
-        if (!ValidationUtils.isValidPassword(password)) {
-            logger.warn("Регистрация не удалась: слабый пароль для " + email);
-            throw new IllegalArgumentException("Слабый пароль");
-        }
-
-        if (isEmailExists(email)) {
-            logger.warn("Регистрация не удалась: email уже существует: " + email);
-            throw new IllegalArgumentException("Пользователь с таким email уже существует");
         }
         if (isPhoneExists(phone)) {
             logger.warn("Регистрация не удалась: телефон уже существует: " + phone);
             throw new IllegalArgumentException("Пользователь с таким телефоном уже существует");
         }
 
+        // Email можно менять, но он обязателен
+        if (email == null || email.isBlank() || !ValidationUtils.isValidEmail(email)) {
+            logger.warn("Регистрация не удалась: неверный email: " + email);
+            throw new IllegalArgumentException("Email не может быть пустым и должен быть корректным");
+        }
+
+        if (password == null || password.isBlank()) {
+            logger.warn("Регистрация не удалась: пустой пароль для " + email);
+            throw new IllegalArgumentException("Пароль не может быть пустым");
+        }
+
+        if (!ValidationUtils.isValidPassword(password)) {
+            logger.warn("Регистрация не удалась: слабый пароль для " + email);
+            throw new IllegalArgumentException("Слабый пароль");
+        }
+
+        if (!ValidationUtils.isValidAddress(address)) {
+            logger.warn("Регистрация не удалась: неверный адрес для пользователя " + email);
+            throw new IllegalArgumentException("Неверный формат адреса");
+        }
+
         String hashedPassword = PasswordUtils.hashPassword(password);
         Long id = ID_SEQ.getAndIncrement();
 
-        Client client = new Client(id, name, email, phone, address, hashedPassword, Instant.now(), true, new Cart());
+        Client client = new Client(id, name, phone, hashedPassword, email, address, Instant.now(), true, new Cart());
 
         ID_TO_CLIENT.put(id, client);
         ID_TO_ORDER_HISTORY.put(id, new ArrayList<>());
 
-        logger.info("Пользователь успешно зарегистрирован: " + email + ", id=" + id);
+        logger.info("Пользователь успешно зарегистрирован: " + name + " - " + phone + ", id=" + id);
         return client;
     }
 
     // =====================
-    // Аутентификация
-    // =====================
-    public boolean authenticate(String email, String password) {
-        logger.info("Попытка аутентификации пользователя: " + email);
+// Аутентификация по телефону (телефон = логин)
+// =====================
+    public boolean authenticate(String phone, String password) {
+        logger.info("Попытка аутентификации пользователя с телефоном: " + phone);
 
         for (Client client : ID_TO_CLIENT.values()) {
-            if (client.getEmail().equals(email) && client.isActive()) {
+            if (client.getPhone().equals(phone) && client.isActive()) {
                 boolean result = PasswordUtils.checkPassword(password, client.getPasswordHash());
                 if (result) {
-                    logger.info("Пользователь успешно аутентифицирован: " + email);
+                    logger.info("Пользователь успешно аутентифицирован: " + phone);
                 } else {
-                    logger.warn("Неудачная аутентификация: неверный пароль для " + email);
+                    logger.warn("Неудачная аутентификация: неверный пароль для " + phone);
                 }
                 return result;
             }
         }
-        logger.warn("Неудачная аутентификация: пользователь не найден или деактивирован: " + email);
+        logger.warn("Неудачная аутентификация: пользователь не найден или деактивирован: " + phone);
         return false;
     }
 
@@ -100,7 +96,7 @@ public class ClientServiceImp implements ClientService {
     // Обновление клиента
     // =====================
     @Override
-    public Client update(Long clientId, String name, String email, String phone, Address address) {
+    public Client update(Long clientId, String name, String email, Address address) {
         logger.info("Попытка обновления данных клиента id=" + clientId);
 
         Client existing = ID_TO_CLIENT.get(clientId);
@@ -111,12 +107,12 @@ public class ClientServiceImp implements ClientService {
 
         if (Objects.equals(existing.getName(), name)
                 && Objects.equals(existing.getEmail(), email)
-                && Objects.equals(existing.getPhone(), phone)
                 && Objects.equals(existing.getAddress(), address)) {
             logger.warn("Обновление не удалось: изменений не обнаружено для id=" + clientId);
             throw new IllegalArgumentException("Изменений не обнаружено");
         }
 
+        // Email можно менять
         if (email != null && !email.equals(existing.getEmail())) {
             if (!ValidationUtils.isValidEmail(email)) {
                 logger.warn("Некорректный email при обновлении: " + email);
@@ -128,19 +124,6 @@ public class ClientServiceImp implements ClientService {
             }
             existing.setEmail(email);
             logger.info("Email обновлен для id=" + clientId + " на " + email);
-        }
-
-        if (phone != null && !phone.equals(existing.getPhone())) {
-            if (!ValidationUtils.isValidPhone(phone)) {
-                logger.warn("Некорректный телефон при обновлении: " + phone);
-                throw new IllegalArgumentException("Неверный формат телефона");
-            }
-            if (isPhoneExists(phone)) {
-                logger.warn("Телефон уже используется другим пользователем: " + phone);
-                throw new IllegalArgumentException("Телефон уже используется другим пользователем");
-            }
-            existing.setPhone(phone);
-            logger.info("Телефон обновлен для id=" + clientId + " на " + phone);
         }
 
         if (address != null && !address.equals(existing.getAddress())) {
@@ -160,6 +143,7 @@ public class ClientServiceImp implements ClientService {
         logger.info("Обновление данных клиента успешно для id=" + clientId);
         return existing;
     }
+
 
     // =====================
     // Смена пароля

@@ -11,10 +11,10 @@ import lombok.AllArgsConstructor;
 public class Client {
     private Long id;
     private String name;
-    private String email;
     private String phone;
-    private Address address;
     private String passwordHash;
+    private String email;
+    private Address address;
     private Instant createdAt = Instant.now();
     private boolean isActive = true;
     private Cart cart;

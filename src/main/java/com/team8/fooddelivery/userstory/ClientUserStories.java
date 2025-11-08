@@ -24,42 +24,42 @@ public class ClientUserStories {
         );
 
         Client c1 = clientService.register(
-                "Иван Иванов",
-                "ivan@example.com",
-                "89991112233",
-                address1,
-                "Ivan123!"
+                "89991112233",         // телефон = логин
+                "Ivan123!",            // пароль
+                "Иван Иванов",         // имя
+                "ivan@example.com",    // email
+                address1               // адрес
         );
 
         Client c2 = clientService.register(
+                "89995556677",
+                "Maria456@",
                 "Мария Петрова",
                 "maria@example.com",
-                "89995556677",
-                address2,
-                "Maria456@"
+                address2
         );
 
         System.out.println("Клиенты зарегистрированы:");
         clientService.listAll().forEach(System.out::println);
 
         // =====================
-        // 2. Аутентификация
+        // 2. Аутентификация по телефону
         // =====================
         System.out.println("\n2. Аутентификация\n");
 
         System.out.println("Иван, правильный пароль: ");
-        System.out.println(clientService.authenticate("ivan@example.com", "Ivan123!")); // true
+        System.out.println(clientService.authenticate("89991112233", "Ivan123!")); // true
         System.out.println("Иван, неверный пароль: ");
-        System.out.println(clientService.authenticate("ivan@example.com", "wrongpass")); // false
-        System.out.println("Несуществующий email: ");
-        System.out.println(clientService.authenticate("unknown@example.com", "123456")); // false
+        System.out.println(clientService.authenticate("89991112233", "wrongpass")); // false
+        System.out.println("Несуществующий телефон: ");
+        System.out.println(clientService.authenticate("89990000000", "123456")); // false
 
         // =====================
         // 3. Добавление истории заказов
         // =====================
         System.out.println("\n3. Добавление истории заказов\n");
 
-        clientService.addOrderHistoryEntry(c2.getId(), "Заказ #1006: тушеная картошечка, 1250₽");
+        clientService.addOrderHistoryEntry(c1.getId(), "Заказ #1006: тушеная картошечка, 1250₽");
         clientService.addOrderHistoryEntry(c1.getId(), "Заказ #1001: суши, 1250₽");
         clientService.addOrderHistoryEntry(c1.getId(), "Заказ #1015: пицца, 780₽");
 
@@ -71,7 +71,7 @@ public class ClientUserStories {
         // =====================
         System.out.println("\n4. Обновление клиента (изменяем email)\n");
 
-        clientService.update(c2.getId(), null, "masha@example.com", null, address1);
+        clientService.update(c2.getId(), null, "masha@example.com", address1);
         Client updatedC2 = clientService.getById(c2.getId());
         System.out.println("После обновления email второго клиента:");
         System.out.println(updatedC2);
@@ -92,7 +92,7 @@ public class ClientUserStories {
 
         System.out.println("Попытка аутентификации деактивированного клиента:");
         System.out.println("Мария: " +
-                clientService.authenticate("masha@example.com", "Maria456@")); // false
+                clientService.authenticate("89995556677", "Maria456@")); // false
 
         // =====================
         // 7. Попытка добавления заказа для деактивированного клиента
@@ -127,7 +127,7 @@ public class ClientUserStories {
         System.out.println("\nПопытка аутентификации после активации\n");
 
         System.out.println("Мария: " +
-                clientService.authenticate("masha@example.com", "Maria456@")); // true
+                clientService.authenticate("89995556677", "Maria456@")); // true
 
         System.out.println("\nДобавление заказа после активации\n");
 
@@ -158,7 +158,7 @@ public class ClientUserStories {
         clientService.changePassword(c1.getId(), "Ivan123!", "Ivan789@");
 
         System.out.println("Проверка аутентификации со старым и новым паролем:");
-        System.out.println("Старый пароль: " + clientService.authenticate("ivan@example.com", "Ivan123!")); // false
-        System.out.println("Новый пароль: " + clientService.authenticate("ivan@example.com", "Ivan789@"));  // true
+        System.out.println("Старый пароль: " + clientService.authenticate("89991112233", "Ivan123!")); // false
+        System.out.println("Новый пароль: " + clientService.authenticate("89991112233", "Ivan789@"));  // true
     }
 }
