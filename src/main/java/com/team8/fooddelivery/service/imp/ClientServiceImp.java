@@ -1,11 +1,13 @@
-package com.team8.fooddelivery.service;
+package com.team8.fooddelivery.service.imp;
 
-import com.team8.fooddelivery.interfaces.ClientService;
 import com.team8.fooddelivery.model.Address;
 import com.team8.fooddelivery.model.Cart;
 import com.team8.fooddelivery.model.Client;
-import com.team8.fooddelivery.utils.PasswordUtils;
-import com.team8.fooddelivery.utils.ValidationUtils;
+import com.team8.fooddelivery.service.ClientService;
+import com.team8.fooddelivery.util.PasswordUtils;
+import com.team8.fooddelivery.util.ValidationUtils;
+import com.team8.fooddelivery.util.SimpleLogger;
+
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -13,7 +15,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class InMemoryClientService implements ClientService {
+public class ClientServiceImp implements ClientService {
+
+    private static final SimpleLogger logger = new SimpleLogger(ClientServiceImp.class);
 
     private static final AtomicLong ID_SEQ = new AtomicLong(1);
     private static final Map<Long, Client> ID_TO_CLIENT = new HashMap<>();
@@ -23,6 +27,8 @@ public class InMemoryClientService implements ClientService {
     // Регистрация
     // =====================
     public Client register(String name, String email, String phone, Address address, String password) {
+        logger.info("Попытка регистрации пользователя: " + email);
+
         if (email == null || email.isBlank()) throw new IllegalArgumentException("Email не может быть пустым");
         if (password == null || password.isBlank()) throw new IllegalArgumentException("Пароль не может быть пустым");
 
@@ -42,6 +48,8 @@ public class InMemoryClientService implements ClientService {
 
         ID_TO_CLIENT.put(id, client);
         ID_TO_ORDER_HISTORY.put(id, new ArrayList<>());
+
+        logger.info("Пользователь зарегистрирован: " + email + ", id=" + id);
         return client;
     }
 

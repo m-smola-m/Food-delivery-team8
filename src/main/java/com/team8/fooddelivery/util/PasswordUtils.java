@@ -1,4 +1,4 @@
-package com.team8.fooddelivery.utils;
+package com.team8.fooddelivery.util;
 
 import org.mindrot.jbcrypt.BCrypt;
 
