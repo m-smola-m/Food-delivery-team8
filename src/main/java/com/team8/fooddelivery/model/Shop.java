@@ -25,4 +25,6 @@ public class Shop {  // Shop
   private ShopType type;
   private String password;
   // private List<Notification> notifications;
+
+  public Shop() {};
 }

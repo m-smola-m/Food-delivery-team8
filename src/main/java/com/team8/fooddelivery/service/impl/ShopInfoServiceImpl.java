@@ -1,4 +1,4 @@
-package com.team8.fooddelivery.service.imp;
+package com.team8.fooddelivery.service.impl;
 
 import com.team8.fooddelivery.model.Shop;
 import com.team8.fooddelivery.model.ShopStatus;
@@ -8,10 +8,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static com.team8.fooddelivery.util.ValidationUtils.isValidEmail;
-import static com.team8.fooddelivery.util.ValidationUtils.isValidPhone;
+import static com.team8.fooddelivery.util.ValidationUtils.*;
 
-public class ShopInfoServiceImp implements ShopInfoService {
+public class ShopInfoServiceImpl implements ShopInfoService {
 
   private Map<Long, Shop> shopRepository = new HashMap<>();
   private Map<String, String> authRepository = new HashMap<>(); // email -> password
@@ -31,6 +30,10 @@ public class ShopInfoServiceImp implements ShopInfoService {
 
     if (!isValidPhone(phoneForAuth)) {
       throw new IllegalArgumentException("Некорректный формат телефона");
+    }
+
+    if (!isValidPassword(password)) {
+      throw new IllegalArgumentException("Некорректный формат пароля");
     }
 
     if (authRepository.containsKey(emailForAuth)) {
@@ -94,12 +97,21 @@ public class ShopInfoServiceImp implements ShopInfoService {
   }
 
   @Override
-  public String changePassword(Long shopId, String emailForAuth, String phoneForAuth, String newPassword) {
+  public String changePassword(Long shopId, String emailForAuth, String phoneForAuth, String newPassword, String password) {
     if (newPassword == null || newPassword.trim().isEmpty()) {
       throw new IllegalArgumentException("Новый пароль не может быть пустым");
     }
 
+    if (password == null || password.trim().isEmpty()) {
+      throw new IllegalArgumentException("Пароль не может быть пустым");
+    }
+
+    if (!isValidPassword(newPassword)) {
+      throw new IllegalArgumentException("Новый пароль не корректный");
+    }
+
     Shop shop = shopRepository.get(shopId);
+
     if (shop == null) {
       throw new IllegalArgumentException("Магазин с ID " + shopId + " не найден");
     }
@@ -108,8 +120,10 @@ public class ShopInfoServiceImp implements ShopInfoService {
       throw new SecurityException("Неверные аутентификационные данные");
     }
 
-    authRepository.put(emailForAuth, newPassword);
-    System.out.println("Пароль для магазина с ID " + shopId + " успешно изменен");
+    if (password.equals(authRepository.get(emailForAuth))) {
+      authRepository.put(emailForAuth, newPassword);
+      System.out.println("Пароль для магазина с ID " + shopId + " успешно изменен");
+    }
     return "Пароль успешно изменен";
   }
 

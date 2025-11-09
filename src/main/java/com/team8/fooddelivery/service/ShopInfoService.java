@@ -10,7 +10,7 @@ public interface ShopInfoService {
 
   boolean rejectShop(String rejectionReason, Long shopId); // возвращать статус
 
-  String changePassword(Long shopId, String emailForAuth, String phoneForAuth, String newPassword); // + new password
+  String changePassword(Long shopId, String emailForAuth, String phoneForAuth, String newPassword, String password); // + new password
 
   String changeEmailForAuth(Long shopId, String phoneForAuth, String password, String newEmailForAuth); // + new email
 

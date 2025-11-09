@@ -1,29 +1,30 @@
 package com.team8.fooddelivery.userstory;
 
 import com.team8.fooddelivery.model.Shop;
+import com.team8.fooddelivery.model.ShopStatus;
+import com.team8.fooddelivery.service.impl.ShopInfoServiceImpl;
 
-import java.util.ArrayList;
-import java.util.List;
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
 public class ClientUserStories {
+  public static void main(String[] args) {
+    ShopInfoServiceImpl service = new ShopInfoServiceImpl();
 
-    public static final List<Shop> SHOPS = new ArrayList<>();
+    Shop shop = new Shop();
+    shop.setNaming("Test Shop");
+    shop.setPhoneForAuth("+79123456789");
+    Shop registered = service.registerShop(shop, "test@mail.com", "Password123", "+79123456789");
+    System.out.println("Магазин зарегистрирован: " + registered.getShopId() + ", статус: " + registered.getStatus());
 
-    public static void main(String[] args) {
-        checkUserStory1();
-        //  checkUserStory2();
-    }
+    boolean approved = service.approveShop(registered.getShopId());
+    System.out.println("Магазин одобрен: " + approved);
 
-      public static void checkUserStory1() {
-        log.info(CLIENTS);
+    String passResult = service.changePassword(registered.getShopId(), "test@mail.com", "+79123456789", "NewPassword123", "Password123");
+    System.out.println("Смена пароля: " + passResult);
 
-         UserService userService =new UserService();
-        userService.register(....);
+    String emailResult = service.changeEmailForAuth(registered.getShopId(), "+79123456789", "NewPassword123", "new@mail.com");
+    System.out.println("Смена email: " + emailResult);
 
-        log.info(CLIENTS);
-      }
-          
+    String phoneResult = service.changePhoneForAuth(registered.getShopId(), "new@mail.com", "NewPassword123", "+79999999999");
+    System.out.println("Смена телефона: " + phoneResult);
+
+  }
 }
-//ShopInfoServiceImpl
