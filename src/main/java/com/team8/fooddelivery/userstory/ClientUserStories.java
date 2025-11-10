@@ -2,11 +2,11 @@ package com.team8.fooddelivery.userstory;
 
 import com.team8.fooddelivery.model.Address;
 import com.team8.fooddelivery.model.Client;
-import com.team8.fooddelivery.service.imp.ClientServiceImp;
+import com.team8.fooddelivery.service.impl.ClientServiceImpl;
 
 public class ClientUserStories {
     public static void main(String[] args) {
-        ClientServiceImp clientService = new ClientServiceImp();
+        ClientServiceImpl clientService = new ClientServiceImpl();
 
         // =====================
         // 1. Регистрация клиентов

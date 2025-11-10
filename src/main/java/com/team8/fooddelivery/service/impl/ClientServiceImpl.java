@@ -1,4 +1,4 @@
-package com.team8.fooddelivery.service.imp;
+package com.team8.fooddelivery.service.impl;
 
 import com.team8.fooddelivery.model.Address;
 import com.team8.fooddelivery.model.Cart;
@@ -14,9 +14,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class ClientServiceImp implements ClientService {
+public class ClientServiceImpl implements ClientService {
 
-    private static final SimpleLogger logger = new SimpleLogger(ClientServiceImp.class);
+    private static final SimpleLogger logger = new SimpleLogger(ClientServiceImpl.class);
 
     private static final AtomicLong ID_SEQ = new AtomicLong(1);
     private static final Map<Long, Client> ID_TO_CLIENT = new HashMap<>();
