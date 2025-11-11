@@ -9,7 +9,7 @@ public class Courier {
   private String name;
   private String password;
   private String phoneNumber;
-  private String status;
+  private Courier status;
   private String transportType;
   private Long currentOrderId;
   private Double currentBalance;
@@ -24,8 +24,7 @@ public class Courier {
     c1.setName("Ivan Petrov");
     c1.setPassword("pass123");
     c1.setPhoneNumber("+79990001122");
-    c1.setStatus("AVAILABLE");
-    c1.setTransportType("bike");
+    c1.setStatus(CourierStatus.ON_SHIFT); 
     c1.setCurrentBalance(500.0);
     c1.setBankCard(1234567890123456L);
 
@@ -34,8 +33,7 @@ public class Courier {
     c2.setName("Anna Ivanova");
     c2.setPassword("securepass");
     c2.setPhoneNumber("+79995554433");
-    c2.setStatus("DELIVERING");
-    c2.setTransportType("car");
+    c2.setStatus(CourierStatus.DELIVERING);
     c2.setCurrentBalance(300.0);
     c2.setBankCard(9876543210123456L);
 
