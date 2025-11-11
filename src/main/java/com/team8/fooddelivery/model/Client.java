@@ -8,13 +8,16 @@ import lombok.AllArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Notification {
-    private Long notificationId;
-    private Long userId;
-    private String title;
-    private String message;
+public class Client {
+    private Long id;
+    private String name;
+    private String phone;
+    private String passwordHash;
+    private String email;
+    private Address address;
     private Instant createdAt = Instant.now();
-    private Boolean read = false;
+    private boolean isActive = true;
+    private Cart cart;
 }
 
 
