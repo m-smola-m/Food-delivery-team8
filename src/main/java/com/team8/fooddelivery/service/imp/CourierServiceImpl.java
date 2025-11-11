@@ -51,13 +51,13 @@ public class CourierServiceImpl implements CourierManagementService, CourierWork
   public void updateCourierData(Long courierId, String name, String phoneNumber, String password, String transportType) {
     Courier c = couriers.get(courierId);
     if (c != null) {
-//      if (!ValidationUtils.isValidPhone(phoneNumber)) {
-//          throw new IllegalArgumentException("Неверный формат номера телефона.");
-//      }
-//
-//      if (!ValidationUtils.isValidPassword(password)) {
-//          throw new IllegalArgumentException("Пароль не соответствует требованиям безопасности.");
-//      }
+     if (!ValidationUtils.isValidPhone(phoneNumber)) {
+         throw new IllegalArgumentException("Неверный формат номера телефона.");
+     }
+
+     if (!ValidationUtils.isValidPassword(password)) {
+         throw new IllegalArgumentException("Пароль не соответствует требованиям безопасности.");
+     }
       c.setName(name);
       c.setPhoneNumber(phoneNumber);
       c.setPassword(password);
