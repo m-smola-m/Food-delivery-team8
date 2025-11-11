@@ -6,7 +6,7 @@ import com.team8.fooddelivery.model.Order;
 import com.team8.fooddelivery.model.OrderStatus;
 import com.team8.fooddelivery.service.CourierManagementService;
 import com.team8.fooddelivery.service.CourierWorkService;
-import com.team8.fooddelivery.fooddelivery.util.ValidationUtils;
+import com.team8.fooddelivery.util.ValidationUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
