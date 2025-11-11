@@ -2,6 +2,7 @@ package com.team8.fooddelivery.service.imp;
 
 import com.team8.fooddelivery.model.Courier;
 import com.team8.fooddelivery.service.CourierService;
+import com.team8.fooddelivery.fooddelivery.ValidationUtils; 
 
 import java.util.*;
 
@@ -11,6 +12,12 @@ public class CourierServiceImpl implements CourierService {
 
   @Override
   public Long registerNewCourier(String name, String phoneNumber, String password, String transportType) {
+        if (!ValidationUtils.isValidPhone(phoneNumber)) {
+        throw new IllegalArgumentException("Неверный формат номера телефона.");
+    }
+    if (!ValidationUtils.isValidPassword(password)) {
+        throw new IllegalArgumentException("Пароль не соответствует требованиям безопасности.");
+    }
     long newId = couriers.size() + 1L;
     Courier c = new Courier();
     c.setId(newId);
@@ -37,6 +44,13 @@ public class CourierServiceImpl implements CourierService {
   public void updateCourierData(Long courierId, String name, String phoneNumber, String password, String transportType) {
     Courier c = couriers.get(courierId);
     if (c != null) {
+      if (!ValidationUtils.isValidPhone(phoneNumber)) {
+          throw new IllegalArgumentException("Неверный формат номера телефона.");
+      }
+      
+      if (!ValidationUtils.isValidPassword(password)) {
+          throw new IllegalArgumentException("Пароль не соответствует требованиям безопасности.");
+      }
       c.setName(name);
       c.setPhoneNumber(phoneNumber);
       c.setPassword(password);
