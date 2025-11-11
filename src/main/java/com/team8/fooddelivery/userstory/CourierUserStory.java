@@ -1,6 +1,7 @@
 package com.team8.fooddelivery.userstory;
 
-import com.team8.fooddelivery.service.CourierService;
+import com.team8.fooddelivery.service.CourierManagementService;
+import com.team8.fooddelivery.service.CourierWorkService;
 import com.team8.fooddelivery.model.Courier;
 import com.team8.fooddelivery.service.imp.CourierServiceImpl;
 
