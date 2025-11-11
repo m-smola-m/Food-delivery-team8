@@ -6,7 +6,7 @@ import com.team8.fooddelivery.model.Order;
 import com.team8.fooddelivery.model.OrderStatus;
 import com.team8.fooddelivery.service.CourierManagementService;
 import com.team8.fooddelivery.service.CourierWorkService;
-//import com.team8.fooddelivery.fooddelivery.ValidationUtils;
+import com.team8.fooddelivery.fooddelivery.ValidationUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -18,12 +18,12 @@ public class CourierServiceImpl implements CourierManagementService, CourierWork
 
   @Override
   public Long registerNewCourier(String name, String phoneNumber, String password, String transportType) {
-//    if (!ValidationUtils.isValidPhone(phoneNumber)) {
-//        throw new IllegalArgumentException("Неверный формат номера телефона.");
-//    }
-//    if (!ValidationUtils.isValidPassword(password)) {
-//        throw new IllegalArgumentException("Пароль не соответствует требованиям безопасности.");
-//    }
+   if (!ValidationUtils.isValidPhone(phoneNumber)) {
+       throw new IllegalArgumentException("Неверный формат номера телефона.");
+   }
+   if (!ValidationUtils.isValidPassword(password)) {
+       throw new IllegalArgumentException("Пароль не соответствует требованиям безопасности.");
+   }
 
     long newId = couriers.size() + 1L;
     Courier c = new Courier();
