@@ -8,19 +8,20 @@ import java.util.HashMap;
 @Data
 public class Order {
     private Long id;
-    private String status;
+    private OrderStatus status;
     private Long customerId;
     private Long restaurantId;
     private String deliveryAddress;
     private Long courierId; 
     private Double totalPrice;
     private List<String> items;
+
     public static final Map<Long, Order> TEST_ORDERS = new HashMap<>();
 
     static {
         Order o1 = new Order();
         o1.setId(101L);
-        o1.setStatus("READY_FOR_PICKUP"); 
+        o1.setStatus(OrderStatus.READY_FOR_PICKUP); 
         o1.setCustomerId(1L);
         o1.setRestaurantId(1L);
         o1.setDeliveryAddress("ул. Пушкина, д. 10");
@@ -29,7 +30,7 @@ public class Order {
         
         Order o2 = new Order();
         o2.setId(102L);
-        o2.setStatus("PENDING");
+        o2.setStatus(OrderStatus.PENDING); 
         o2.setCustomerId(2L);
         o2.setRestaurantId(2L);
         o2.setDeliveryAddress("пр. Ленина, д. 5");
