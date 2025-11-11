@@ -1,12 +1,12 @@
 package com.team8.fooddelivery.service.imp;
 
 import com.team8.fooddelivery.model.Courier;
-import com.team8.fooddelivery.service.CourierService;
+import com.team8.fooddelivery.service.CourierManagementService;
+import com.team8.fooddelivery.service.CourierWorkService;
 import com.team8.fooddelivery.fooddelivery.ValidationUtils; 
-
 import java.util.*;
 
-public class CourierServiceImpl implements CourierService {
+public class CourierServiceImpl implements CourierManagementService, CourierWorkService {
 
   private final Map<Long, Courier> couriers = Courier.TEST_COURIERS;
 
