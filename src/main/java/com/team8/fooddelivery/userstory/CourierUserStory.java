@@ -4,11 +4,12 @@ import com.team8.fooddelivery.service.CourierManagementService;
 import com.team8.fooddelivery.service.CourierWorkService;
 import com.team8.fooddelivery.model.Courier;
 import com.team8.fooddelivery.service.imp.CourierServiceImpl;
+import com.team8.fooddelivery.model.Order;
 
 public class CourierUserStory {
 
     public static void main(String[] args) {
-        CourierService courierService = new CourierServiceImpl();
+        CourierServiceImpl courierService = new CourierServiceImpl();
 
         System.out.println("=== СИСТЕМА ДОСТАВКИ: КУРЬЕР ===");
 
