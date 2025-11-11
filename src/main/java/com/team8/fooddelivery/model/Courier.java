@@ -1,43 +1,43 @@
 package com.team8.fooddelivery.model;
 
 import lombok.Data;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 @Data
-public class Courier {
-  private Long id;
-  private String name;
-  private String password;
-  private String phoneNumber;
-  private Courier status;
-  private String transportType;
-  private Long currentOrderId;
-  private Double currentBalance;
-  private Long bankCard;
-  private List<Notification> notifications = new ArrayList<>();
+public class Order {
+    private Long id;
+    private OrderStatus status;
+    private Long customerId;
+    private Long restaurantId;
+    private String deliveryAddress;
+    private Long courierId; 
+    private Double totalPrice;
+    private List<String> items;
 
-  public static final Map<Long, Courier> TEST_COURIERS = new HashMap<>();
+    public static final Map<Long, Order> TEST_ORDERS = new HashMap<>();
 
-  static {
-    Courier c1 = new Courier();
-    c1.setId(1L);
-    c1.setName("Ivan Petrov");
-    c1.setPassword("pass123");
-    c1.setPhoneNumber("+79990001122");
-    c1.setStatus(CourierStatus.ON_SHIFT); 
-    c1.setCurrentBalance(500.0);
-    c1.setBankCard(1234567890123456L);
+    static {
+        Order o1 = new Order();
+        o1.setId(101L);
+        o1.setStatus(OrderStatus.READY_FOR_PICKUP); 
+        o1.setCustomerId(1L);
+        o1.setRestaurantId(1L);
+        o1.setDeliveryAddress("ул. Пушкина, д. 10");
+        o1.setTotalPrice(1500.0);
+        o1.setItems(List.of("Пицца Пепперони", "Кола"));
+        
+        Order o2 = new Order();
+        o2.setId(102L);
+        o2.setStatus(OrderStatus.PENDING);
+        o2.setCustomerId(2L);
+        o2.setRestaurantId(2L);
+        o2.setDeliveryAddress("пр. Ленина, д. 5");
+        o2.setTotalPrice(900.0);
+        o2.setItems(List.of("Вок с курицей"));
 
-    Courier c2 = new Courier();
-    c2.setId(2L);
-    c2.setName("Anna Ivanova");
-    c2.setPassword("securepass");
-    c2.setPhoneNumber("+79995554433");
-    c2.setStatus(CourierStatus.DELIVERING);
-    c2.setCurrentBalance(300.0);
-    c2.setBankCard(9876543210123456L);
-
-    TEST_COURIERS.put(c1.getId(), c1);
-    TEST_COURIERS.put(c2.getId(), c2);
-  }
+        TEST_ORDERS.put(o1.getId(), o1);
+        TEST_ORDERS.put(o2.getId(), o2);
+    }
 }
