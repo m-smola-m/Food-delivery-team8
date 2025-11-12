@@ -4,14 +4,19 @@ import com.team8.fooddelivery.model.Address;
 import com.team8.fooddelivery.model.Client;
 import com.team8.fooddelivery.service.impl.ClientServiceImpl;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class ClientUserStories {
+
     public static void main(String[] args) {
+        log.error("asd");
         ClientServiceImpl clientService = new ClientServiceImpl();
 
         // =====================
         // 1. Регистрация клиентов
         // =====================
-        System.out.println("\n1. Регистрация клиентов\n");
+       log.info("\n1. Регистрация клиентов\n");
 
         Address address1 = new Address(
                 "Россия", "Москва", "Тверская", 1, 10, 1, 3,
