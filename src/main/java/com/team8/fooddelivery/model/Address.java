@@ -4,6 +4,7 @@ import lombok.*;
 
 @Data
 @AllArgsConstructor
+
 public class Address {
   private String country;
   private String city;
@@ -12,8 +13,8 @@ public class Address {
   private Integer apartment;
   private Integer entrance;
   private Integer floor;
-  private Double latitude;
-  private Double longitude;
+  private double latitude;
+  private double longitude;
   private String addressNote;
   private String district;
 }
