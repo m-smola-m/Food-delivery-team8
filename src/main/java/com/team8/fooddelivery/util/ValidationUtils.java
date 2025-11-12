@@ -2,7 +2,7 @@ package com.team8.fooddelivery.util;
 
 public class ValidationUtils {
   public static boolean isValidEmail(String email) {
-    return email != null && email.matches("^[A-Za-z]+[A-Za-z._]+@(gmail\\.com|mail\\.ru|yandex\\.ru)$");
+    return email != null && email.matches("^[A-Za-z][A-Za-z0-9._]*@(gmail\\.com|mail\\.ru|yandex\\.ru|mail\\.com)$");
   }
 
   public static boolean isValidPhone(String phone) {

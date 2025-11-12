@@ -1,7 +1,6 @@
 package com.team8.fooddelivery.model;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.List;
 import lombok.*;
 

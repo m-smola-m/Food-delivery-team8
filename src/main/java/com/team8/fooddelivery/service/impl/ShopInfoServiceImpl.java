@@ -48,7 +48,8 @@ public class ShopInfoServiceImpl implements ShopInfoService {
     infoAbout.setStatus(ShopStatus.PENDING);
     infoAbout.setShopId(shopId);
     infoAbout.setEmailForAuth(emailForAuth);
-    infoAbout.setEmailForAuth(phoneForAuth);
+    infoAbout.setPhoneForAuth(phoneForAuth);
+    infoAbout.setPassword(password);
 
     authRepository.put(emailForAuth, password);
     phoneToShopIdMap.put(infoAbout.getPhoneForAuth(), shopId);
