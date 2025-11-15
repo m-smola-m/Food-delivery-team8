@@ -64,7 +64,6 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
-          -- lombok plugin
         </plugins>
     </build>
 </project>

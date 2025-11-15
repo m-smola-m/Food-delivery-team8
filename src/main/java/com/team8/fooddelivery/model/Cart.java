@@ -6,17 +6,29 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class Cart {
-    private Long cartId;
-    private Client client;  // Long clientId
-    private Instant createdAt;
-    private Instant updatedAt;
-    private List<CartItem> products;
-    private Double totalPrice;
-    private Integer totalQuantity;
+    private Long id;
+    private Long clientId;
+    private List<CartItem> items;
+
+    // Инициализация списка если null
+    public List<CartItem> getItems() {
+        if (items == null) {
+            items = new ArrayList<>();
+        }
+        return items;
     }
 
+    public double getTotalPrice() {
+        return getItems().stream()
+                .mapToDouble(i -> i.getPrice() * i.getQuantity())
+                .sum();
+    }
+}
 
