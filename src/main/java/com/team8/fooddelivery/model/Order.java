@@ -1,5 +1,29 @@
 package com.team8.fooddelivery.model;
 
+import java.time.Duration;
+import java.util.List;
+import lombok.*;
+
+@Data
+@AllArgsConstructor
+public class Order {
+  private Long orderId;
+  private Long shopId;
+  private Long clientId; // Long clientId
+  private List<Product> items;
+  private Address deliveryAddress;
+  private StoreOrderStatus status;
+  private Double totalAmount;
+  private Double storeRevenue;
+  private Duration orderTime;
+  private Duration estimatedReadyTime;  // Instant
+  private Duration actualReadyTime;
+  private String customerNotes;
+  private String internalNotes;
+  private String rejectionReason;
+  private Duration preparationTime;   // Instant
+  private boolean isPaid;
+  private PaymentMethodForOrder paymentMethod; // enum
 import lombok.Data;
 import java.util.List;
 import java.util.Map;
