@@ -20,7 +20,7 @@ public interface CartService {
 
     Cart clear(Long clientId);
 
-    double calculateTotal(Long clientId);
+    Long calculateTotal(Long clientId);
 }
 
 

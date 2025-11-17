@@ -4,6 +4,7 @@ public enum ClientStatus {
     ACTIVE,
     INACTIVE,
     UPDATED,
-    AUTHORIZED
+    AUTHORIZED,
+    UPDATED_PASSWORD
 }
 

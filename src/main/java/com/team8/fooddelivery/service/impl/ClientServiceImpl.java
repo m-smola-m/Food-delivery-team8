@@ -3,9 +3,11 @@ package com.team8.fooddelivery.service.impl;
 import com.team8.fooddelivery.model.Address;
 import com.team8.fooddelivery.model.Cart;
 import com.team8.fooddelivery.model.Client;
+import com.team8.fooddelivery.model.ClientStatus;
 import com.team8.fooddelivery.service.ClientService;
 import com.team8.fooddelivery.util.PasswordUtils;
 import com.team8.fooddelivery.util.ValidationUtils;
+import com.team8.fooddelivery.util.JWTUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +66,19 @@ public class ClientServiceImpl implements ClientService {
         String hashedPassword = PasswordUtils.hashPassword(password);
         Long id = ID_SEQ.getAndIncrement();
 
-        Client client = new Client(id, name, phone, hashedPassword, email, address, Instant.now(), true, new Cart());
+        Client client = Client.builder()
+                .id(id)
+                .name(name)
+                .phone(phone)
+                .passwordHash(hashedPassword)
+                .email(email)
+                .address(address)
+                .createdAt(Instant.now())
+                .status(ClientStatus.ACTIVE)
+                .isActive(true)
+                .cart(new Cart())
+                .orderHistory(new ArrayList<>())
+                .build();
 
         ID_TO_CLIENT.put(id, client);
         ID_TO_ORDER_HISTORY.put(id, new ArrayList<>());
@@ -81,9 +95,15 @@ public class ClientServiceImpl implements ClientService {
 
         for (Client client : ID_TO_CLIENT.values()) {
             if (client.getPhone().equals(phone) && client.isActive()) {
+
                 boolean ok = PasswordUtils.checkPassword(password, client.getPasswordHash());
-                if (ok) logger.info("Успешная аутентификация {}", phone);
-                else logger.warn("Неверный пароль {}", phone);
+                if (ok) {
+                    client.setStatus(ClientStatus.AUTHORIZED);
+                    logger.info("Успешная аутентификация {}", phone);
+                }
+                else {
+                    logger.warn("Неверный пароль {}", phone);
+                }
                 return ok;
             }
         }
@@ -98,22 +118,22 @@ public class ClientServiceImpl implements ClientService {
     public Client update(Long clientId, String name, String email, Address address) {
         logger.info("Обновление данных клиента id={}", clientId);
 
-        Client existing = ID_TO_CLIENT.get(clientId);
-        if (existing == null) {
+        Client client = ID_TO_CLIENT.get(clientId);
+        if (client == null) {
             logger.warn("Клиент id={} не найден", clientId);
             throw new IllegalArgumentException("Клиент не найден");
         }
 
-        if (Objects.equals(existing.getName(), name)
-                && Objects.equals(existing.getEmail(), email)
-                && Objects.equals(existing.getAddress(), address)) {
+        if (Objects.equals(client.getName(), name)
+                && Objects.equals(client.getEmail(), email)
+                && Objects.equals(client.getAddress(), address)) {
 
             logger.warn("Изменений не обнаружено для id={}", clientId);
             throw new IllegalArgumentException("Изменений нет");
         }
 
         // Email можно менять
-        if (email != null && !email.equals(existing.getEmail())) {
+        if (email != null && !email.equals(client.getEmail())) {
             if (!ValidationUtils.isValidEmail(email)) {
                 logger.warn("Некорректный email {}", email);
                 throw new IllegalArgumentException("Неверный email");
@@ -122,26 +142,27 @@ public class ClientServiceImpl implements ClientService {
                 logger.warn("Email {} уже используется", email);
                 throw new IllegalArgumentException("Email уже используется другим пользователем");
             }
-            existing.setEmail(email);
+            client.setEmail(email);
             logger.info("Email обновлен для id={} → {}", clientId, email);
         }
 
-        if (address != null && !address.equals(existing.getAddress())) {
+        if (address != null && !address.equals(client.getAddress())) {
             if (!ValidationUtils.isValidAddress(address)) {
                 logger.warn("Некорректный адрес для id={}", clientId);
                 throw new IllegalArgumentException("Неверный адрес");
             }
-            existing.setAddress(address);
+            client.setAddress(address);
             logger.info("Адрес обновлён для id={}", clientId);
         }
 
-        if (name != null && !name.equals(existing.getName())) {
-            existing.setName(name);
+        if (name != null && !name.equals(client.getName())) {
+            client.setName(name);
             logger.info("Имя обновлено id={} → {}", clientId, name);
         }
 
+        client.setStatus(ClientStatus.UPDATED);
         logger.info("Обновление клиента id={} завершено успешно", clientId);
-        return existing;
+        return client;
     }
 
     // =====================
@@ -181,6 +202,7 @@ public class ClientServiceImpl implements ClientService {
         // Хэширование и установка нового пароля
         String hashedNewPassword = PasswordUtils.hashPassword(newPassword);
         client.setPasswordHash(hashedNewPassword);
+        client.setStatus(ClientStatus.UPDATED_PASSWORD);
         logger.info("Пароль успешно изменён для клиента id=" + clientId);
 
         return true;
@@ -197,6 +219,7 @@ public class ClientServiceImpl implements ClientService {
             return false;
         }
         client.setActive(false);
+        client.setStatus(ClientStatus.INACTIVE);
         logger.info("Клиент деактивирован id={}", clientId);
         return true;
     }
@@ -209,6 +232,7 @@ public class ClientServiceImpl implements ClientService {
             return false;
         }
         client.setActive(true);
+        client.setStatus(ClientStatus.ACTIVE);
         logger.info("Клиент активирован id={}", clientId);
         return true;
     }
@@ -280,4 +304,5 @@ public class ClientServiceImpl implements ClientService {
         logger.info("Проверка телефона '{}': {}", phone, existing ? "занят" : "свободен");
         return existing;
     }
+
 }

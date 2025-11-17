@@ -2,6 +2,8 @@ package com.team8.fooddelivery.model;
 
 import java.time.Instant;
 import java.util.*;
+
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -9,6 +11,7 @@ import lombok.AllArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Client {
     private Long id;
     private String name;

@@ -1,10 +1,6 @@
 package com.team8.fooddelivery.model;
 
-import java.time.Instant;
-import java.util.List;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,12 +8,21 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Cart {
+
     private Long id;
     private Long clientId;
     private List<CartItem> items;
 
-    // Инициализация списка если null
+    public static Cart createEmpty(Long clientId) {
+        return Cart.builder()
+                .id(null)
+                .clientId(clientId)
+                .items(new ArrayList<>())
+                .build();
+    }
+
     public List<CartItem> getItems() {
         if (items == null) {
             items = new ArrayList<>();
@@ -25,10 +30,9 @@ public class Cart {
         return items;
     }
 
-    public double getTotalPrice() {
+    public Long getTotalPrice() {
         return getItems().stream()
-                .mapToDouble(i -> i.getPrice() * i.getQuantity())
+                .mapToLong(i -> (long) (i.getPrice() * i.getQuantity()))
                 .sum();
     }
 }
-
