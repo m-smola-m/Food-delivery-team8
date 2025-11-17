@@ -4,14 +4,14 @@ import lombok.*;
 
 @Data
 @AllArgsConstructor
-
+@Builder
 public class Address {
   private String country;
   private String city;
   private String street;
-  private Integer building;
-  private Integer apartment;
-  private Integer entrance;
+  private String building;
+  private String apartment;
+  private String entrance;
   private Integer floor;
   private double latitude;
   private double longitude;
