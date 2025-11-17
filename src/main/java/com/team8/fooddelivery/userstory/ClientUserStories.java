@@ -1,12 +1,18 @@
 package com.team8.fooddelivery.userstory;
 
+import com.team8.fooddelivery.dto.AuthResponse;
 import com.team8.fooddelivery.model.Address;
 import com.team8.fooddelivery.model.Client;
+import com.team8.fooddelivery.model.ClientStatus;
+import com.team8.fooddelivery.service.impl.CartServiceImpl;
 import com.team8.fooddelivery.service.impl.ClientServiceImpl;
+import com.team8.fooddelivery.util.JWTUtil;
 
 public class ClientUserStories {
+
     public static void main(String[] args) {
-        ClientServiceImpl clientService = new ClientServiceImpl();
+        CartServiceImpl cartService = new CartServiceImpl();
+        ClientServiceImpl clientService = new ClientServiceImpl(cartService);
 
         // =====================
         // 1. Регистрация клиентов
@@ -23,138 +29,97 @@ public class ClientUserStories {
                 59.9311, 30.3609, "Рядом с метро Площадь Восстания", "Центральный"
         );
 
-        Client c1 = clientService.register(
-                "89991112233",         // телефон = логин
-                "Ivan123!",            // пароль
-                "Иван Иванов",         // имя
-                "ivan@example.com",    // email
-                address1               // адрес
-        );
-
-        Client c2 = clientService.register(
-                "89995556677",
-                "Maria456@",
-                "Мария Петрова",
-                "maria@example.com",
-                address2
-        );
+        Client c1 = clientService.register("89991112233", "Ivan123!", "Иван Иванов", "ivan@example.com", address1);
+        Client c2 = clientService.register("89995556677", "Maria456@", "Мария Петрова", "maria@example.com", address2);
 
         System.out.println("Клиенты зарегистрированы:");
         clientService.listAll().forEach(System.out::println);
 
         // =====================
-        // 2. Аутентификация по телефону
+        // 2. Аутентификация и JWT авторизация
         // =====================
-        System.out.println("\n2. Аутентификация\n");
+        System.out.println("\n2. Аутентификация и авторизация\n");
 
-        System.out.println("Иван, правильный пароль: ");
-        System.out.println(clientService.authenticate("89991112233", "Ivan123!")); // true
-        System.out.println("Иван, неверный пароль: ");
-        System.out.println(clientService.authenticate("89991112233", "wrongpass")); // false
-        System.out.println("Несуществующий телефон: ");
-        System.out.println(clientService.authenticate("89990000000", "123456")); // false
+        String phone = "89991112233";
+        String password = "Ivan123!";
+
+        if (clientService.authenticate(phone, password)) {
+            Client client = clientService.getByPhone(phone); // новый метод getByPhone
+            client.setStatus(com.team8.fooddelivery.model.ClientStatus.AUTHORIZED);
+
+            String token = JWTUtil.generateToken(client.getId());
+            System.out.println("Иван авторизован:");
+            System.out.println("ClientId: " + client.getId());
+            System.out.println("Token: " + token);
+            System.out.println("Status: " + client.getStatus());
+        }
+        // =====================
+        // 3. Авторизация (JWT)
+        // =====================
+        System.out.println("\n3. Авторизация (JWT)\n");
+
+        AuthResponse authC1 = clientService.login("89991112233", "Ivan123!");
+        System.out.println("Иван авторизован:");
+        System.out.println("ClientId: " + authC1.getClientId());
+        System.out.println("Token: " + authC1.getAuthToken());
+        System.out.println("Status: " + authC1.getStatus());
 
         // =====================
-        // 3. Добавление истории заказов
+        // 4. Добавление истории заказов
         // =====================
-        System.out.println("\n3. Добавление истории заказов\n");
-
         clientService.addOrderHistoryEntry(c1.getId(), "Заказ #1006: тушеная картошечка, 1250₽");
         clientService.addOrderHistoryEntry(c1.getId(), "Заказ #1001: суши, 1250₽");
         clientService.addOrderHistoryEntry(c1.getId(), "Заказ #1015: пицца, 780₽");
 
-        System.out.println("История заказов клиента " + c1.getName() + ":");
+        System.out.println("\nИстория заказов клиента " + c1.getName() + ":");
         clientService.getOrderHistory(c1.getId()).forEach(System.out::println);
 
         // =====================
-        // 4. Обновление клиента (изменяем email)
+        // 5. Обновление клиента (email)
         // =====================
-        System.out.println("\n4. Обновление клиента (изменяем email)\n");
-
         clientService.update(c2.getId(), null, "masha@example.com", address1);
         Client updatedC2 = clientService.getById(c2.getId());
-        System.out.println("После обновления email второго клиента:");
+        updatedC2.setStatus(ClientStatus.UPDATED);
+        System.out.println("\nПосле обновления email второго клиента:");
         System.out.println(updatedC2);
 
         // =====================
-        // 5. Деактивация
+        // 6. Деактивация
         // =====================
-        System.out.println("\n5. Деактивация\n");
-
         clientService.deactivate(c2.getId());
-        System.out.println("После деактивации второго клиента:");
-        System.out.println(updatedC2);
+        System.out.println("\nПосле деактивации второго клиента:");
+        System.out.println(clientService.getById(c2.getId()));
 
         // =====================
-        // 6. Проверка входа после деактивации
+        // 7. Проверка входа после деактивации
         // =====================
-        System.out.println("\n6. Проверка входа после деактивации\n");
-
-        System.out.println("Попытка аутентификации деактивированного клиента:");
-        System.out.println("Мария: " +
-                clientService.authenticate("89995556677", "Maria456@")); // false
-
-        // =====================
-        // 7. Попытка добавления заказа для деактивированного клиента
-        // =====================
-        System.out.println("\n7. Попытка добавления заказа для деактивированного клиента\n");
-
-        try {
-            clientService.addOrderHistoryEntry(c2.getId(), "Заказ #2001: бургер, 500₽");
-        } catch (IllegalStateException e) {
-            System.out.println("Ошибка при добавлении заказа деактивированного клиента:");
-            System.out.println(e.getMessage());
-        }
+        System.out.println("\nПопытка аутентификации деактивированного клиента:");
+        System.out.println("Мария: " + clientService.authenticate("89995556677", "Maria456@")); // false
 
         // =====================
         // 8. Добавление заказа активного клиента
         // =====================
-        System.out.println("\n8. Добавление заказа активного клиента\n");
-
         clientService.addOrderHistoryEntry(c1.getId(), "Заказ #1018: роллы, 950₽");
-        System.out.println("Обновлённая история заказов активного клиента " + c1.getName() + ":");
+        System.out.println("\nОбновлённая история заказов активного клиента " + c1.getName() + ":");
         clientService.getOrderHistory(c1.getId()).forEach(System.out::println);
 
         // =====================
         // 9. Активация клиента
         // =====================
-        System.out.println("\n9. Активация клиента\n");
-
         clientService.activate(c2.getId());
-        System.out.println("После активации второго клиента:");
+        System.out.println("\nПосле активации второго клиента:");
         System.out.println(clientService.getById(c2.getId()));
 
-        System.out.println("\nПопытка аутентификации после активации\n");
-
-        System.out.println("Мария: " +
-                clientService.authenticate("89995556677", "Maria456@")); // true
-
-        System.out.println("\nДобавление заказа после активации\n");
-
-        clientService.addOrderHistoryEntry(c2.getId(), "Заказ #2002: салат, 300₽");
-        System.out.println("История заказов повторно активированного клиента:");
-        clientService.getOrderHistory(c2.getId()).forEach(System.out::println);
+        AuthResponse authC2 = clientService.login("89995556677", "Maria456@");
+        System.out.println("\nМария авторизована:");
+        System.out.println("ClientId: " + authC2.getClientId());
+        System.out.println("Token: " + authC2.getAuthToken());
+        System.out.println("Status: " + authC2.getStatus());
 
         // =====================
         // 10. Смена пароля
         // =====================
-        System.out.println("\n10. Смена пароля\n");
-
-        System.out.println("Попытка смены пароля с неверным старым паролем:");
-        try {
-            clientService.changePassword(c1.getId(), "WrongOld123", "NewPass123!");
-        } catch (Exception e) {
-            System.out.println("Ошибка: " + e.getMessage());
-        }
-
-        System.out.println("\nПопытка смены пароля с некорректным новым паролем:");
-        try {
-            clientService.changePassword(c1.getId(), "Ivan123!", "123");
-        } catch (Exception e) {
-            System.out.println("Ошибка: " + e.getMessage());
-        }
-
-        System.out.println("\nСмена пароля с корректными данными:");
+        System.out.println("\nСмена пароля Иван:");
         clientService.changePassword(c1.getId(), "Ivan123!", "Ivan789@");
 
         System.out.println("Проверка аутентификации со старым и новым паролем:");
