@@ -13,12 +13,9 @@ public class ValidationUtils {
     }
 
     // =====================
-    // Телефон (формат 89XXXXXXXXX)
+    // Телефон (формат 8[+7]9XXXXXXXXX)
     // =====================
-    public static boolean isValidPhone(String phone) {
-        return phone != null && phone.matches("^8\\d{10}$");
-    }
-
+    public static boolean isValidPhone(String phone) {return phone != null && phone.matches("^(8|\\+7)\\d{10}$");}
     // =====================
     // Адрес (объект Address)
     // =====================

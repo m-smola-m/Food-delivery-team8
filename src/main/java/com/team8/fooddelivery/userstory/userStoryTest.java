@@ -1,19 +1,20 @@
 package com.team8.fooddelivery.userstory;
 
 import com.team8.fooddelivery.model.*;
+import com.team8.fooddelivery.service.CartService;
 import com.team8.fooddelivery.service.impl.CartServiceImpl;
 import com.team8.fooddelivery.service.impl.ClientServiceImpl;
 
 import java.util.List;
 
-public class CartUserStory {
+public class userStoryTest {
     public static void main(String[] args) {
 
         // =====================
         // 0. Инициализация сервисов
         // =====================
-        CartServiceImpl cartService = new CartServiceImpl();
-        ClientServiceImpl clientService = new ClientServiceImpl(cartService);
+        ClientServiceImpl clientService = new ClientServiceImpl();
+        CartService cartService = new CartServiceImpl();
 
         // =====================
         // 1. Регистрация клиента (US1)
@@ -38,8 +39,10 @@ public class CartUserStory {
         // =====================
         // 2. Создание корзины автоматически (US5)
         // =====================
-        Cart cart = cartService.createCartForClient(client.getId());
+        cartService.createCartForClient(client.getId());
+        Cart cart = cartService.getCartForClient(client.getId());
         client.setCart(cart);
+
         System.out.println("Корзина создана для клиента: " + cart);
 
         // =====================
@@ -60,7 +63,7 @@ public class CartUserStory {
                 .build());
 
         cart = cartService.getCartForClient(client.getId());
-        System.out.println("Корзина после добавления товаров: " + cart.getItems());
+        System.out.println("Корзина после добавления товаров: " + cart);
         System.out.println("TotalPrice: " + cart.getTotalPrice() + " коп.");
 
         // =====================
@@ -76,7 +79,7 @@ public class CartUserStory {
                     .quantity(1)
                     .price(800L)
                     .build());
-        } catch (IllegalStateException e) {
+        } catch (Exception e) {
             System.out.println("Ошибка при добавлении товара деактивированным клиентом: " + e.getMessage());
         }
 
@@ -96,14 +99,14 @@ public class CartUserStory {
         System.out.println("Общая сумма заказа: " + totalPrice + " коп.");
 
         // ---------------------
-        // Здесь можно интегрировать OrderService и PaymentService для полного завершения US7
+        // здесь можно создать OrderService и PaymentService
+        // для завершения User Story 7
         // ---------------------
 
         // =====================
         // 7. Очистка корзины после заказа (US5)
         // =====================
         cartService.clear(client.getId());
-        cart = cartService.getCartForClient(client.getId());
-        System.out.println("Корзина после оформления заказа: " + cart.getItems());
+        System.out.println("Корзина после оформления заказа: " + cartService.getCartForClient(client.getId()));
     }
 }

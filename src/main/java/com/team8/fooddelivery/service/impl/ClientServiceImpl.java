@@ -22,18 +22,10 @@ import java.util.concurrent.atomic.AtomicLong;
 public class ClientServiceImpl implements ClientService {
 
     private static final Logger logger = LoggerFactory.getLogger(ClientServiceImpl.class);
-    NotificationServiceImpl notificationService = new NotificationServiceImpl();
 
     private static final AtomicLong ID_SEQ = new AtomicLong(1);
     private static final Map<Long, Client> ID_TO_CLIENT = new HashMap<>();
     private static final Map<Long, List<String>> ID_TO_ORDER_HISTORY = new HashMap<>();
-
-    private final CartServiceImpl cartService;
-
-    public ClientServiceImpl(CartServiceImpl cartService) {
-        this.cartService = cartService;
-    }
-
 
     // =====================
     // Регистрация
@@ -72,12 +64,8 @@ public class ClientServiceImpl implements ClientService {
             throw new IllegalArgumentException("Неверный формат адреса");
         }
 
-
-
         String hashedPassword = PasswordUtils.hashPassword(password);
         Long id = ID_SEQ.getAndIncrement();
-
-        Cart cart = cartService.createCartForClient(id);
 
         Client client = Client.builder()
                 .id(id)
@@ -89,7 +77,7 @@ public class ClientServiceImpl implements ClientService {
                 .createdAt(Instant.now())
                 .status(ClientStatus.ACTIVE)
                 .isActive(true)
-                .cart(cart)
+                .cart(new Cart())
                 .orderHistory(new ArrayList<>())
                 .build();
 
@@ -200,26 +188,6 @@ public class ClientServiceImpl implements ClientService {
     }
 
     // =====================
-    // Поиск клиента по телефону
-    // =====================
-    public Client getByPhone(String phone) {
-        return ID_TO_CLIENT.values().stream()
-                .filter(c -> c.getPhone().equals(phone))
-                .findFirst()
-                .orElse(null);
-    }
-
-    // =====================
-    // Поиск клиента по email
-    // =====================
-    public Client getByEmail(String email) {
-        return ID_TO_CLIENT.values().stream()
-                .filter(c -> c.getEmail().equalsIgnoreCase(email))
-                .findFirst()
-                .orElse(null);
-    }
-
-    // =====================
     // Смена пароля
     // =====================
     public boolean changePassword(Long clientId, String oldPassword, String newPassword) {
@@ -320,7 +288,6 @@ public class ClientServiceImpl implements ClientService {
         logger.info("История заказов id={}, entries={}", clientId, history.size());
         return new ArrayList<>(history);
     }
-
 
     // =====================
     // Добавление записи в историю заказов
