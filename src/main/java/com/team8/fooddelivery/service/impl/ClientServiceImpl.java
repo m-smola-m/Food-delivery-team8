@@ -1,5 +1,6 @@
 package com.team8.fooddelivery.service.impl;
 
+import com.team8.fooddelivery.dto.AuthResponse;
 import com.team8.fooddelivery.model.Address;
 import com.team8.fooddelivery.model.Cart;
 import com.team8.fooddelivery.model.Client;
@@ -86,30 +87,51 @@ public class ClientServiceImpl implements ClientService {
         logger.info("Пользователь зарегистрирован: {} — {}, id={}", name, phone, id);
         return client;
     }
+    // =====================
+// Проверка логина и пароля (аутентификация)
+// =====================
+    public boolean authenticate(String login, String password) {
+        Client client = ID_TO_CLIENT.values().stream()
+                .filter(c -> c.isActive() &&
+                        (login.equals(c.getPhone()) || login.equalsIgnoreCase(c.getEmail())))
+                .findFirst()
+                .orElse(null);
+
+        if (client == null) {
+            logger.warn("Клиент {} не найден или деактивирован", login);
+            return false;
+        }
+
+        boolean ok = PasswordUtils.checkPassword(password, client.getPasswordHash());
+        if (ok) logger.info("Аутентификация успешна для {}", login);
+        else logger.warn("Неверный пароль для {}", login);
+
+        return ok;
+    }
 
     // =====================
-// Аутентификация по телефону (телефон = логин)
+// Авторизация: вход в систему, выдача JWT, статус AUTHORIZED
 // =====================
-    public boolean authenticate(String phone, String password) {
-        logger.info("Попытка аутентификации {}", phone);
-
-        for (Client client : ID_TO_CLIENT.values()) {
-            if (client.getPhone().equals(phone) && client.isActive()) {
-
-                boolean ok = PasswordUtils.checkPassword(password, client.getPasswordHash());
-                if (ok) {
-                    client.setStatus(ClientStatus.AUTHORIZED);
-                    logger.info("Успешная аутентификация {}", phone);
-                }
-                else {
-                    logger.warn("Неверный пароль {}", phone);
-                }
-                return ok;
-            }
+    public AuthResponse login(String login, String password) {
+        if (!authenticate(login, password)) {
+            throw new IllegalArgumentException("Неверный логин или пароль");
         }
-        logger.warn("Пользователь {} не найден или деактивирован", phone);
-        return false;
+
+        Client client = ID_TO_CLIENT.values().stream()
+                .filter(c -> login.equals(c.getPhone()) || login.equalsIgnoreCase(c.getEmail()))
+                .findFirst()
+                .get();
+
+        String authToken = JWTUtil.generateToken(client.getId());
+
+        // Меняем статус на AUTHORIZED
+        client.setStatus(ClientStatus.AUTHORIZED);
+
+        logger.info("Клиент {} авторизован, токен: {}", login, authToken);
+
+        return new AuthResponse(client.getId(), authToken, client.getStatus());
     }
+
 
     // =====================
     // Обновление клиента
