@@ -1,20 +1,20 @@
 package com.team8.fooddelivery.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import java.time.Instant;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
 
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Notification {
-    private Long id;
-    private Long clientId;
-    private String type;
+    private Long notificationId;
+    private Long userId;
+    private String title;
     private String message;
-    private LocalDateTime timestamp;
+    private Instant createdAt = Instant.now();
+    private Boolean read = false;
 }
+
+
