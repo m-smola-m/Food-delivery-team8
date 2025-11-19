@@ -1,4 +1,4 @@
-package com.team8.fooddelivery.service.imp;
+package com.team8.fooddelivery.service.impl;
 
 import com.team8.fooddelivery.model.Courier;
 import com.team8.fooddelivery.model.CourierStatus;
@@ -7,6 +7,7 @@ import com.team8.fooddelivery.model.OrderStatus;
 import com.team8.fooddelivery.service.CourierManagementService;
 import com.team8.fooddelivery.service.CourierWorkService;
 import com.team8.fooddelivery.util.ValidationUtils;
+import com.team8.fooddelivery.util.PasswordUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -16,54 +17,63 @@ public class CourierServiceImpl implements CourierManagementService, CourierWork
   private final Map<Long, Courier> couriers = Courier.TEST_COURIERS;
   private final Map<Long, Order> orders = Order.TEST_ORDERS;
 
-  @Override
-  public Long registerNewCourier(String name, String phoneNumber, String password, String transportType) {
-   if (!ValidationUtils.isValidPhone(phoneNumber)) {
-       throw new IllegalArgumentException("Неверный формат номера телефона.");
-   }
-   if (!ValidationUtils.isValidPassword(password)) {
-       throw new IllegalArgumentException("Пароль не соответствует требованиям безопасности.");
-   }
+    public Long registerNewCourier(String name, String phoneNumber, String password, String transportType) {
+        if (!ValidationUtils.isValidPhone(phoneNumber)) {
+            throw new IllegalArgumentException("Неверный формат номера телефона.");
+        }
+        if (!ValidationUtils.isValidPassword(password)) {
+            throw new IllegalArgumentException("Пароль не соответствует требованиям безопасности.");
+        }
 
-    long newId = couriers.size() + 1L;
-    Courier c = new Courier();
-    c.setId(newId);
-    c.setName(name);
-    c.setPhoneNumber(phoneNumber);
-    c.setPassword(password);
-    c.setTransportType(transportType);
-    c.setStatus(CourierStatus.OFF_SHIFT); 
-    c.setCurrentBalance(0.0);
-    c.setBankCard(1111222233334444L);
-    couriers.put(newId, c);
-    return newId;
-  }
-
-  @Override
-  public Courier login(String phoneNumber, String password) {
-    return couriers.values().stream()
-        .filter(c -> c.getPhoneNumber().equals(phoneNumber) && c.getPassword().equals(password))
-        .findFirst()
-        .orElse(null);
-  }
-
-  @Override
-  public void updateCourierData(Long courierId, String name, String phoneNumber, String password, String transportType) {
-    Courier c = couriers.get(courierId);
-    if (c != null) {
-     if (!ValidationUtils.isValidPhone(phoneNumber)) {
-         throw new IllegalArgumentException("Неверный формат номера телефона.");
-     }
-
-     if (!ValidationUtils.isValidPassword(password)) {
-         throw new IllegalArgumentException("Пароль не соответствует требованиям безопасности.");
-     }
-      c.setName(name);
-      c.setPhoneNumber(phoneNumber);
-      c.setPassword(password);
-      c.setTransportType(transportType);
+        long newId = couriers.size() + 1L;
+        Courier c = new Courier();
+        c.setId(newId);
+        c.setName(name);
+        c.setPhoneNumber(phoneNumber);
+        // ИСПРАВЛЕНИЕ: Хешируем пароль перед сохранением
+        c.setPassword(PasswordUtils.hashPassword(password));
+        c.setTransportType(transportType);
+        c.setStatus(CourierStatus.OFF_SHIFT);
+        c.setCurrentBalance(0.0);
+        c.setBankCard(1111222233334444L);
+        couriers.put(newId, c);
+        return newId;
     }
-  }
+
+    @Override
+    public Courier login(String phoneNumber, String password) {
+        return couriers.values().stream()
+                .filter(c -> c.getPhoneNumber().equals(phoneNumber))
+                .filter(c -> {
+                    // ИСПРАВЛЕНИЕ: Правильная проверка пароля через PasswordUtils
+                    try {
+                        return PasswordUtils.checkPassword(password, c.getPassword());
+                    } catch (Exception e) {
+                        return false;
+                    }
+                })
+                .findFirst()
+                .orElse(null);
+    }
+
+
+    @Override
+    public void updateCourierData(Long courierId, String name, String phoneNumber, String password, String transportType) {
+        Courier c = couriers.get(courierId);
+        if (c != null) {
+            if (!ValidationUtils.isValidPhone(phoneNumber)) {
+                throw new IllegalArgumentException("Неверный формат номера телефона.");
+            }
+            if (!ValidationUtils.isValidPassword(password)) {
+                throw new IllegalArgumentException("Пароль не соответствует требованиям безопасности.");
+            }
+            c.setName(name);
+            c.setPhoneNumber(phoneNumber);
+            // ИСПРАВЛЕНИЕ: Хешируем новый пароль
+            c.setPassword(PasswordUtils.hashPassword(password));
+            c.setTransportType(transportType);
+        }
+    }
 
   @Override
   public void startShift(Long courierId) {

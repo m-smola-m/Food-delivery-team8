@@ -1,5 +1,6 @@
 package com.team8.fooddelivery.userstory;
 
+import com.team8.fooddelivery.dto.AuthResponse;
 import com.team8.fooddelivery.model.Address;
 import com.team8.fooddelivery.model.Client;
 import com.team8.fooddelivery.model.ClientStatus;
@@ -7,19 +8,16 @@ import com.team8.fooddelivery.service.impl.CartServiceImpl;
 import com.team8.fooddelivery.service.impl.ClientServiceImpl;
 import com.team8.fooddelivery.util.JWTUtil;
 
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
 public class ClientUserStories {
 
     public static void main(String[] args) {
-        log.error("asd");
-        ClientServiceImpl clientService = new ClientServiceImpl();
+        CartServiceImpl cartService = new CartServiceImpl();
+        ClientServiceImpl clientService = new ClientServiceImpl(cartService);
 
         // =====================
         // 1. Регистрация клиентов
         // =====================
-       log.info("\n1. Регистрация клиентов\n");
+        System.out.println("\n1. Регистрация клиентов\n");
 
         Address address1 = new Address(
                 "Россия", "Москва", "Тверская", "1", "10", "1", 3,

@@ -2,36 +2,59 @@ package com.team8.fooddelivery.service.impl;
 
 import com.team8.fooddelivery.model.Cart;
 import com.team8.fooddelivery.model.CartItem;
+import com.team8.fooddelivery.repository.CartRepository;
 import com.team8.fooddelivery.service.CartService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class CartServiceImpl implements CartService {
 
-    // -----------------------------
-    //   Псевдо-БД (пока In-Memory)
-    // -----------------------------
-    private final Map<Long, Cart> carts = new HashMap<>();
-    private final AtomicLong cartIdGen = new AtomicLong(1);
-    private final AtomicLong itemIdGen = new AtomicLong(1);
+    private static final Logger logger = LoggerFactory.getLogger(CartServiceImpl.class);
+    private final CartRepository cartRepository = new CartRepository();
 
     // Используется ClientService при регистрации
     public Cart createCartForClient(Long clientId) {
-        Cart cart = Cart.builder()
-                .id(cartIdGen.getAndIncrement())
-                .clientId(clientId)
-                .items(new ArrayList<>())
-                .build();
+        if (clientId == null) {
+            // Временная корзина, будет сохранена позже
+            return Cart.builder()
+                    .clientId(null)
+                    .items(new ArrayList<>())
+                    .build();
+        }
 
-        carts.put(clientId, cart);
-        return cart;
+        try {
+            // Проверяем, есть ли уже корзина для этого клиента
+            Optional<Cart> existingCart = cartRepository.findByClientId(clientId);
+            if (existingCart.isPresent()) {
+                return existingCart.get();
+            }
+
+            // Создаем новую корзину
+            Cart cart = Cart.builder()
+                    .clientId(clientId)
+                    .items(new ArrayList<>())
+                    .build();
+
+            Long cartId = cartRepository.save(cart);
+            cart.setId(cartId);
+            return cart;
+        } catch (SQLException e) {
+            logger.error("Ошибка при создании корзины для клиента {}", clientId, e);
+            throw new RuntimeException("Не удалось создать корзину", e);
+        }
     }
 
     @Override
     public Cart getCartForClient(Long clientId) {
-        return carts.get(clientId);
+        try {
+            return cartRepository.findByClientId(clientId).orElse(null);
+        } catch (SQLException e) {
+            logger.error("Ошибка при получении корзины для клиента {}", clientId, e);
+            return null;
+        }
     }
 
     @Override
@@ -43,50 +66,85 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public Cart addItem(Long clientId, CartItem item) {
-        Cart cart = getOrCreate(clientId);
+        try {
+            Cart cart = getOrCreate(clientId);
 
-        // Если товар уже есть — увеличиваем количество
-        Optional<CartItem> existing = cart.getItems().stream()
-                .filter(i -> i.getProductId().equals(item.getProductId()))
-                .findFirst();
+            // Если товар уже есть — увеличиваем количество
+            Optional<CartItem> existing = cart.getItems().stream()
+                    .filter(i -> i.getProductId().equals(item.getProductId()))
+                    .findFirst();
 
-        if (existing.isPresent()) {
-            CartItem ci = existing.get();
-            ci.setQuantity(ci.getQuantity() + item.getQuantity());
+            if (existing.isPresent()) {
+                CartItem ci = existing.get();
+                ci.setQuantity(ci.getQuantity() + item.getQuantity());
+                cartRepository.updateCartItem(ci);
+                return cart;
+            }
+
+            // Новый товар
+            item.setCartId(cart.getId());
+            Long itemId = cartRepository.saveCartItem(item);
+            item.setId(itemId);
+            cart.getItems().add(item);
             return cart;
+        } catch (SQLException e) {
+            logger.error("Ошибка при добавлении товара в корзину", e);
+            throw new RuntimeException("Не удалось добавить товар в корзину", e);
         }
-
-        // Новый товар
-        item.setId(itemIdGen.getAndIncrement());
-        item.setCartId(cart.getId());
-        cart.getItems().add(item);
-        return cart;
     }
 
     @Override
     public Cart updateItem(Long clientId, Long productId, int newQuantity) {
-        Cart cart = getOrCreate(clientId);
+        try {
+            Cart cart = getOrCreate(clientId);
 
-        cart.getItems().stream()
-                .filter(i -> i.getProductId().equals(productId))
-                .findFirst()
-                .ifPresent(i -> i.setQuantity(newQuantity));
+            Optional<CartItem> itemOpt = cart.getItems().stream()
+                    .filter(i -> i.getProductId().equals(productId))
+                    .findFirst();
 
-        return cart;
+            if (itemOpt.isPresent()) {
+                CartItem item = itemOpt.get();
+                item.setQuantity(newQuantity);
+                cartRepository.updateCartItem(item);
+            }
+
+            return cart;
+        } catch (SQLException e) {
+            logger.error("Ошибка при обновлении товара в корзине", e);
+            throw new RuntimeException("Не удалось обновить товар в корзине", e);
+        }
     }
 
     @Override
     public Cart removeItem(Long clientId, Long productId) {
-        Cart cart = getOrCreate(clientId);
-        cart.getItems().removeIf(i -> i.getProductId().equals(productId));
-        return cart;
+        try {
+            Cart cart = getOrCreate(clientId);
+            Optional<CartItem> itemToRemove = cart.getItems().stream()
+                    .filter(i -> i.getProductId().equals(productId))
+                    .findFirst();
+
+            if (itemToRemove.isPresent()) {
+                cartRepository.deleteCartItemByProductId(cart.getId(), productId);
+                cart.getItems().removeIf(i -> i.getProductId().equals(productId));
+            }
+            return cart;
+        } catch (SQLException e) {
+            logger.error("Ошибка при удалении товара из корзины", e);
+            throw new RuntimeException("Не удалось удалить товар из корзины", e);
+        }
     }
 
     @Override
     public Cart clear(Long clientId) {
-        Cart cart = getOrCreate(clientId);
-        cart.getItems().clear();
-        return cart;
+        try {
+            Cart cart = getOrCreate(clientId);
+            cartRepository.clearCart(cart.getId());
+            cart.getItems().clear();
+            return cart;
+        } catch (SQLException e) {
+            logger.error("Ошибка при очистке корзины", e);
+            throw new RuntimeException("Не удалось очистить корзину", e);
+        }
     }
 
     @Override
@@ -101,13 +159,25 @@ public class CartServiceImpl implements CartService {
     // ---------------------------------
 
     private Cart getOrCreate(Long clientId) {
-        return carts.computeIfAbsent(clientId, id ->
-                Cart.builder()
-                        .id(cartIdGen.getAndIncrement())
-                        .clientId(clientId)
-                        .items(new ArrayList<>())
-                        .build()
-        );
+        try {
+            Optional<Cart> existingCart = cartRepository.findByClientId(clientId);
+            if (existingCart.isPresent()) {
+                return existingCart.get();
+            }
+
+            // Создаем новую корзину
+            Cart cart = Cart.builder()
+                    .clientId(clientId)
+                    .items(new ArrayList<>())
+                    .build();
+
+            Long cartId = cartRepository.save(cart);
+            cart.setId(cartId);
+            return cart;
+        } catch (SQLException e) {
+            logger.error("Ошибка при получении/создании корзины для клиента {}", clientId, e);
+            throw new RuntimeException("Не удалось получить или создать корзину", e);
+        }
     }
 }
 

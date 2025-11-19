@@ -3,7 +3,7 @@ package com.team8.fooddelivery.userstory;
 import com.team8.fooddelivery.service.CourierManagementService;
 import com.team8.fooddelivery.service.CourierWorkService;
 import com.team8.fooddelivery.model.Courier;
-import com.team8.fooddelivery.service.imp.CourierServiceImpl;
+import com.team8.fooddelivery.service.impl.CourierServiceImpl;
 import com.team8.fooddelivery.model.Order;
 
 public class CourierUserStory {
@@ -15,13 +15,13 @@ public class CourierUserStory {
 
         Long courierId = courierService.registerNewCourier(
                 "Ivan Tokaev",
-                "79997776655",
-                "mypassword",
+                "+79997776655",
+                "Ivan123!",
                 "scooter"
         );
         System.out.println("Зарегистрирован новый курьер с ID: " + courierId);
 
-        Courier courier = courierService.login("79997776655", "mypassword");
+        Courier courier = courierService.login("+79997776655", "Ivan123!");
         if (courier != null) {
             System.out.println("Вход выполнен: " + courier.getName());
         } else {
