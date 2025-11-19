@@ -5,6 +5,7 @@ import com.team8.fooddelivery.model.Address;
 import com.team8.fooddelivery.model.Cart;
 import com.team8.fooddelivery.model.Client;
 import com.team8.fooddelivery.model.ClientStatus;
+import com.team8.fooddelivery.repository.ClientRepository;
 import com.team8.fooddelivery.service.ClientService;
 import com.team8.fooddelivery.util.PasswordUtils;
 import com.team8.fooddelivery.util.ValidationUtils;
@@ -13,25 +14,23 @@ import com.team8.fooddelivery.util.JWTUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.SQLException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class ClientServiceImpl implements ClientService {
 
     private static final Logger logger = LoggerFactory.getLogger(ClientServiceImpl.class);
     NotificationServiceImpl notificationService = new NotificationServiceImpl();
 
-    private static final AtomicLong ID_SEQ = new AtomicLong(1);
-    private static final Map<Long, Client> ID_TO_CLIENT = new HashMap<>();
-    private static final Map<Long, List<String>> ID_TO_ORDER_HISTORY = new HashMap<>();
-
+    private final ClientRepository clientRepository;
     private final CartServiceImpl cartService;
 
     public ClientServiceImpl(CartServiceImpl cartService) {
         this.cartService = cartService;
+        this.clientRepository = new ClientRepository();
     }
 
 
@@ -75,12 +74,10 @@ public class ClientServiceImpl implements ClientService {
 
 
         String hashedPassword = PasswordUtils.hashPassword(password);
-        Long id = ID_SEQ.getAndIncrement();
 
-        Cart cart = cartService.createCartForClient(id);
+        Cart cart = cartService.createCartForClient(null); // Временная корзина, id будет установлен после сохранения клиента
 
         Client client = Client.builder()
-                .id(id)
                 .name(name)
                 .phone(phone)
                 .passwordHash(hashedPassword)
@@ -93,32 +90,48 @@ public class ClientServiceImpl implements ClientService {
                 .orderHistory(new ArrayList<>())
                 .build();
 
-        ID_TO_CLIENT.put(id, client);
-        ID_TO_ORDER_HISTORY.put(id, new ArrayList<>());
-
-        logger.info("Пользователь зарегистрирован: {} — {}, id={}", name, phone, id);
-        return client;
+        try {
+            Long id = clientRepository.save(client);
+            client.setId(id);
+            cart.setClientId(id);
+            logger.info("Пользователь зарегистрирован: {} — {}, id={}", name, phone, id);
+            return client;
+        } catch (SQLException e) {
+            logger.error("Ошибка при сохранении клиента", e);
+            throw new RuntimeException("Не удалось зарегистрировать клиента", e);
+        }
     }
     // =====================
 // Проверка логина и пароля (аутентификация)
 // =====================
     public boolean authenticate(String login, String password) {
-        Client client = ID_TO_CLIENT.values().stream()
-                .filter(c -> c.isActive() &&
-                        (login.equals(c.getPhone()) || login.equalsIgnoreCase(c.getEmail())))
-                .findFirst()
-                .orElse(null);
+        try {
+            Client client = null;
+            // Пытаемся найти по телефону или email
+            Optional<Client> byPhone = clientRepository.findByPhone(login);
+            if (byPhone.isPresent()) {
+                client = byPhone.get();
+            } else {
+                Optional<Client> byEmail = clientRepository.findByEmail(login);
+                if (byEmail.isPresent()) {
+                    client = byEmail.get();
+                }
+            }
 
-        if (client == null) {
-            logger.warn("Клиент {} не найден или деактивирован", login);
+            if (client == null || !client.isActive()) {
+                logger.warn("Клиент {} не найден или деактивирован", login);
+                return false;
+            }
+
+            boolean ok = PasswordUtils.checkPassword(password, client.getPasswordHash());
+            if (ok) logger.info("Аутентификация успешна для {}", login);
+            else logger.warn("Неверный пароль для {}", login);
+
+            return ok;
+        } catch (SQLException e) {
+            logger.error("Ошибка при аутентификации", e);
             return false;
         }
-
-        boolean ok = PasswordUtils.checkPassword(password, client.getPasswordHash());
-        if (ok) logger.info("Аутентификация успешна для {}", login);
-        else logger.warn("Неверный пароль для {}", login);
-
-        return ok;
     }
 
     // =====================
@@ -129,19 +142,35 @@ public class ClientServiceImpl implements ClientService {
             throw new IllegalArgumentException("Неверный логин или пароль");
         }
 
-        Client client = ID_TO_CLIENT.values().stream()
-                .filter(c -> login.equals(c.getPhone()) || login.equalsIgnoreCase(c.getEmail()))
-                .findFirst()
-                .get();
+        try {
+            Client client = null;
+            Optional<Client> byPhone = clientRepository.findByPhone(login);
+            if (byPhone.isPresent()) {
+                client = byPhone.get();
+            } else {
+                Optional<Client> byEmail = clientRepository.findByEmail(login);
+                if (byEmail.isPresent()) {
+                    client = byEmail.get();
+                }
+            }
 
-        String authToken = JWTUtil.generateToken(client.getId());
+            if (client == null) {
+                throw new IllegalArgumentException("Клиент не найден");
+            }
 
-        // Меняем статус на AUTHORIZED
-        client.setStatus(ClientStatus.AUTHORIZED);
+            String authToken = JWTUtil.generateToken(client.getId());
 
-        logger.info("Клиент {} авторизован, токен: {}", login, authToken);
+            // Меняем статус на AUTHORIZED
+            client.setStatus(ClientStatus.AUTHORIZED);
+            clientRepository.update(client);
 
-        return new AuthResponse(client.getId(), authToken, client.getStatus());
+            logger.info("Клиент {} авторизован, токен: {}", login, authToken);
+
+            return new AuthResponse(client.getId(), authToken, client.getStatus());
+        } catch (SQLException e) {
+            logger.error("Ошибка при авторизации", e);
+            throw new RuntimeException("Не удалось авторизовать клиента", e);
+        }
     }
 
 
@@ -152,71 +181,83 @@ public class ClientServiceImpl implements ClientService {
     public Client update(Long clientId, String name, String email, Address address) {
         logger.info("Обновление данных клиента id={}", clientId);
 
-        Client client = ID_TO_CLIENT.get(clientId);
-        if (client == null) {
-            logger.warn("Клиент id={} не найден", clientId);
-            throw new IllegalArgumentException("Клиент не найден");
-        }
-
-        if (Objects.equals(client.getName(), name)
-                && Objects.equals(client.getEmail(), email)
-                && Objects.equals(client.getAddress(), address)) {
-
-            logger.warn("Изменений не обнаружено для id={}", clientId);
-            throw new IllegalArgumentException("Изменений нет");
-        }
-
-        // Email можно менять
-        if (email != null && !email.equals(client.getEmail())) {
-            if (!ValidationUtils.isValidEmail(email)) {
-                logger.warn("Некорректный email {}", email);
-                throw new IllegalArgumentException("Неверный email");
+        try {
+            Optional<Client> clientOpt = clientRepository.findById(clientId);
+            if (clientOpt.isEmpty()) {
+                logger.warn("Клиент id={} не найден", clientId);
+                throw new IllegalArgumentException("Клиент не найден");
             }
-            if (isEmailExists(email)) {
-                logger.warn("Email {} уже используется", email);
-                throw new IllegalArgumentException("Email уже используется другим пользователем");
+
+            Client client = clientOpt.get();
+
+            if (Objects.equals(client.getName(), name)
+                    && Objects.equals(client.getEmail(), email)
+                    && Objects.equals(client.getAddress(), address)) {
+
+                logger.warn("Изменений не обнаружено для id={}", clientId);
+                throw new IllegalArgumentException("Изменений нет");
             }
-            client.setEmail(email);
-            logger.info("Email обновлен для id={} → {}", clientId, email);
-        }
 
-        if (address != null && !address.equals(client.getAddress())) {
-            if (!ValidationUtils.isValidAddress(address)) {
-                logger.warn("Некорректный адрес для id={}", clientId);
-                throw new IllegalArgumentException("Неверный адрес");
+            // Email можно менять
+            if (email != null && !email.equals(client.getEmail())) {
+                if (!ValidationUtils.isValidEmail(email)) {
+                    logger.warn("Некорректный email {}", email);
+                    throw new IllegalArgumentException("Неверный email");
+                }
+                if (isEmailExists(email)) {
+                    logger.warn("Email {} уже используется", email);
+                    throw new IllegalArgumentException("Email уже используется другим пользователем");
+                }
+                client.setEmail(email);
+                logger.info("Email обновлен для id={} → {}", clientId, email);
             }
-            client.setAddress(address);
-            logger.info("Адрес обновлён для id={}", clientId);
-        }
 
-        if (name != null && !name.equals(client.getName())) {
-            client.setName(name);
-            logger.info("Имя обновлено id={} → {}", clientId, name);
-        }
+            if (address != null && !address.equals(client.getAddress())) {
+                if (!ValidationUtils.isValidAddress(address)) {
+                    logger.warn("Некорректный адрес для id={}", clientId);
+                    throw new IllegalArgumentException("Неверный адрес");
+                }
+                client.setAddress(address);
+                logger.info("Адрес обновлён для id={}", clientId);
+            }
 
-        client.setStatus(ClientStatus.UPDATED);
-        logger.info("Обновление клиента id={} завершено успешно", clientId);
-        return client;
+            if (name != null && !name.equals(client.getName())) {
+                client.setName(name);
+                logger.info("Имя обновлено id={} → {}", clientId, name);
+            }
+
+            client.setStatus(ClientStatus.UPDATED);
+            clientRepository.update(client);
+            logger.info("Обновление клиента id={} завершено успешно", clientId);
+            return client;
+        } catch (SQLException e) {
+            logger.error("Ошибка при обновлении клиента", e);
+            throw new RuntimeException("Не удалось обновить клиента", e);
+        }
     }
 
     // =====================
     // Поиск клиента по телефону
     // =====================
     public Client getByPhone(String phone) {
-        return ID_TO_CLIENT.values().stream()
-                .filter(c -> c.getPhone().equals(phone))
-                .findFirst()
-                .orElse(null);
+        try {
+            return clientRepository.findByPhone(phone).orElse(null);
+        } catch (SQLException e) {
+            logger.error("Ошибка при поиске клиента по телефону", e);
+            return null;
+        }
     }
 
     // =====================
     // Поиск клиента по email
     // =====================
     public Client getByEmail(String email) {
-        return ID_TO_CLIENT.values().stream()
-                .filter(c -> c.getEmail().equalsIgnoreCase(email))
-                .findFirst()
-                .orElse(null);
+        try {
+            return clientRepository.findByEmail(email).orElse(null);
+        } catch (SQLException e) {
+            logger.error("Ошибка при поиске клиента по email", e);
+            return null;
+        }
     }
 
     // =====================
@@ -225,41 +266,49 @@ public class ClientServiceImpl implements ClientService {
     public boolean changePassword(Long clientId, String oldPassword, String newPassword) {
         logger.info("попытка смены пароля id={}", clientId);
 
-        Client client = ID_TO_CLIENT.get(clientId);
-        if (client == null) {
-            logger.warn("Смена пароля не удалась: Клиент id={} не найден", clientId);
-            throw new IllegalArgumentException("Клиент не найден");
+        try {
+            Optional<Client> clientOpt = clientRepository.findById(clientId);
+            if (clientOpt.isEmpty()) {
+                logger.warn("Смена пароля не удалась: Клиент id={} не найден", clientId);
+                throw new IllegalArgumentException("Клиент не найден");
+            }
+
+            Client client = clientOpt.get();
+
+            if (!client.isActive()) {
+                logger.warn("Смена пароля не удалась: Клиент id={} деактивирован", clientId);
+                throw new IllegalStateException("Клиент деактивирован");
+            }
+
+            if (oldPassword == null || newPassword == null
+                    || oldPassword.isBlank() || newPassword.isBlank()) {
+                logger.warn("Смена пароля не удалась: Пустые пароли при смене id={}", clientId);
+                throw new IllegalArgumentException("Пароли не могут быть пустыми");
+            }
+
+            if (!PasswordUtils.checkPassword(oldPassword, client.getPasswordHash())) {
+                logger.warn("Смена пароля не удалась: Неверный старый пароль id={}", clientId);
+                throw new IllegalArgumentException("Неверный старый пароль");
+            }
+
+            // Проверка сложности нового пароля
+            if (!ValidationUtils.isValidPassword(newPassword)) {
+                logger.warn("Смена пароля не удалась: Новый пароль слабый id={}", clientId);
+                throw new IllegalArgumentException("Новый пароль не проходит валидацию");
+            }
+
+            // Хэширование и установка нового пароля
+            String hashedNewPassword = PasswordUtils.hashPassword(newPassword);
+            client.setPasswordHash(hashedNewPassword);
+            client.setStatus(ClientStatus.UPDATED_PASSWORD);
+            clientRepository.update(client);
+            logger.info("Пароль успешно изменён для клиента id=" + clientId);
+
+            return true;
+        } catch (SQLException e) {
+            logger.error("Ошибка при смене пароля", e);
+            throw new RuntimeException("Не удалось изменить пароль", e);
         }
-
-        if (!client.isActive()) {
-            logger.warn("Смена пароля не удалась: Клиент id={} деактивирован", clientId);
-            throw new IllegalStateException("Клиент деактивирован");
-        }
-
-        if (oldPassword == null || newPassword == null
-                || oldPassword.isBlank() || newPassword.isBlank()) {
-            logger.warn("Смена пароля не удалась: Пустые пароли при смене id={}", clientId);
-            throw new IllegalArgumentException("Пароли не могут быть пустыми");
-        }
-
-        if (!PasswordUtils.checkPassword(oldPassword, client.getPasswordHash())) {
-            logger.warn("Смена пароля не удалась: Неверный старый пароль id={}", clientId);
-            throw new IllegalArgumentException("Неверный старый пароль");
-        }
-
-        // Проверка сложности нового пароля
-        if (!ValidationUtils.isValidPassword(newPassword)) {
-            logger.warn("Смена пароля не удалась: Новый пароль слабый id={}", clientId);
-            throw new IllegalArgumentException("Новый пароль не проходит валидацию");
-        }
-
-        // Хэширование и установка нового пароля
-        String hashedNewPassword = PasswordUtils.hashPassword(newPassword);
-        client.setPasswordHash(hashedNewPassword);
-        client.setStatus(ClientStatus.UPDATED_PASSWORD);
-        logger.info("Пароль успешно изменён для клиента id=" + clientId);
-
-        return true;
     }
 
     // =====================
@@ -267,28 +316,42 @@ public class ClientServiceImpl implements ClientService {
     // =====================
     @Override
     public boolean deactivate(Long clientId) {
-        Client client = ID_TO_CLIENT.get(clientId);
-        if (client == null) {
-            logger.warn("Деактивация: клиент id={} не найден", clientId);
+        try {
+            Optional<Client> clientOpt = clientRepository.findById(clientId);
+            if (clientOpt.isEmpty()) {
+                logger.warn("Деактивация: клиент id={} не найден", clientId);
+                return false;
+            }
+            Client client = clientOpt.get();
+            client.setActive(false);
+            client.setStatus(ClientStatus.INACTIVE);
+            clientRepository.update(client);
+            logger.info("Клиент деактивирован id={}", clientId);
+            return true;
+        } catch (SQLException e) {
+            logger.error("Ошибка при деактивации клиента", e);
             return false;
         }
-        client.setActive(false);
-        client.setStatus(ClientStatus.INACTIVE);
-        logger.info("Клиент деактивирован id={}", clientId);
-        return true;
     }
 
     @Override
     public boolean activate(Long clientId) {
-        Client client = ID_TO_CLIENT.get(clientId);
-        if (client == null) {
-            logger.warn("Активация: клиент id={} не найден", clientId);
+        try {
+            Optional<Client> clientOpt = clientRepository.findById(clientId);
+            if (clientOpt.isEmpty()) {
+                logger.warn("Активация: клиент id={} не найден", clientId);
+                return false;
+            }
+            Client client = clientOpt.get();
+            client.setActive(true);
+            client.setStatus(ClientStatus.ACTIVE);
+            clientRepository.update(client);
+            logger.info("Клиент активирован id={}", clientId);
+            return true;
+        } catch (SQLException e) {
+            logger.error("Ошибка при активации клиента", e);
             return false;
         }
-        client.setActive(true);
-        client.setStatus(ClientStatus.ACTIVE);
-        logger.info("Клиент активирован id={}", clientId);
-        return true;
     }
 
     // =====================
@@ -296,29 +359,52 @@ public class ClientServiceImpl implements ClientService {
     // =====================
     @Override
     public Client getById(Long clientId) {
-        Client client = ID_TO_CLIENT.get(clientId);
-        if (client != null)
-            logger.info("Получение клиента id={}", clientId);
-        else
-            logger.warn("Клиент id={} не найден", clientId);
-        return client;
+        try {
+            Optional<Client> clientOpt = clientRepository.findById(clientId);
+            if (clientOpt.isPresent()) {
+                logger.info("Получение клиента id={}", clientId);
+                return clientOpt.get();
+            } else {
+                logger.warn("Клиент id={} не найден", clientId);
+                return null;
+            }
+        } catch (SQLException e) {
+            logger.error("Ошибка при получении клиента", e);
+            return null;
+        }
     }
 
     @Override
     public List<Client> listAll() {
-        logger.info("Получение всех клиентов. total={}", ID_TO_CLIENT.size());
-        return new ArrayList<>(ID_TO_CLIENT.values());
+        try {
+            List<Client> clients = clientRepository.findAll();
+            logger.info("Получение всех клиентов. total={}", clients.size());
+            return clients;
+        } catch (SQLException e) {
+            logger.error("Ошибка при получении списка клиентов", e);
+            return new ArrayList<>();
+        }
     }
 
     @Override
     public List<String> getOrderHistory(Long clientId) {
-        List<String> history = ID_TO_ORDER_HISTORY.get(clientId);
-        if (history == null) {
-            logger.warn("История заказов пустая id={}", clientId);
+        try {
+            Optional<Client> clientOpt = clientRepository.findById(clientId);
+            if (clientOpt.isEmpty()) {
+                logger.warn("История заказов пустая id={}", clientId);
+                return new ArrayList<>();
+            }
+            Client client = clientOpt.get();
+            List<String> history = client.getOrderHistory();
+            if (history == null) {
+                history = new ArrayList<>();
+            }
+            logger.info("История заказов id={}, entries={}", clientId, history.size());
+            return new ArrayList<>(history);
+        } catch (SQLException e) {
+            logger.error("Ошибка при получении истории заказов", e);
             return new ArrayList<>();
         }
-        logger.info("История заказов id={}, entries={}", clientId, history.size());
-        return new ArrayList<>(history);
     }
 
 
@@ -328,36 +414,53 @@ public class ClientServiceImpl implements ClientService {
     public void addOrderHistoryEntry(Long clientId, String entry) {
         logger.info("Добавление записи в историю id={}, entry={}", clientId, entry);
 
-        Client client = ID_TO_CLIENT.get(clientId);
-        if (client == null || !client.isActive()) {
-            logger.warn("Добавление записи не удалось: id={} отсутствует или деактивирован", clientId);
-            throw new IllegalStateException("Клиент не найден или деактивирован");
+        try {
+            Optional<Client> clientOpt = clientRepository.findById(clientId);
+            if (clientOpt.isEmpty() || !clientOpt.get().isActive()) {
+                logger.warn("Добавление записи не удалось: id={} отсутствует или деактивирован", clientId);
+                throw new IllegalStateException("Клиент не найден или деактивирован");
+            }
+
+            Client client = clientOpt.get();
+            List<String> history = client.getOrderHistory();
+            if (history == null) {
+                history = new ArrayList<>();
+            }
+            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            history.add("[" + timestamp + "] " + entry);
+            client.setOrderHistory(history);
+            clientRepository.update(client);
+
+            logger.info("Запись добавлена id={}", clientId);
+        } catch (SQLException e) {
+            logger.error("Ошибка при добавлении записи в историю", e);
+            throw new RuntimeException("Не удалось добавить запись в историю", e);
         }
-
-        List<String> history = ID_TO_ORDER_HISTORY.computeIfAbsent(clientId, k -> new ArrayList<>());
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        history.add("[" + timestamp + "] " + entry);
-
-        logger.info("Запись добавлена id={}", clientId);
     }
 
     // =====================
     // Проверка уникальности
     // =====================
     private boolean isEmailExists(String email) {
-        boolean exists = ID_TO_CLIENT.values().stream()
-                .anyMatch(c -> c.getEmail().equalsIgnoreCase(email));
-
-        logger.info("Проверка email '{}': {}", email, exists ? "занят" : "свободен");
-        return exists;
+        try {
+            boolean exists = clientRepository.findByEmail(email).isPresent();
+            logger.info("Проверка email '{}': {}", email, exists ? "занят" : "свободен");
+            return exists;
+        } catch (SQLException e) {
+            logger.error("Ошибка при проверке email", e);
+            return false;
+        }
     }
 
     private boolean isPhoneExists(String phone) {
-        boolean existing = ID_TO_CLIENT.values().stream()
-                .anyMatch(c -> c.getPhone().equals(phone));
-
-        logger.info("Проверка телефона '{}': {}", phone, existing ? "занят" : "свободен");
-        return existing;
+        try {
+            boolean existing = clientRepository.findByPhone(phone).isPresent();
+            logger.info("Проверка телефона '{}': {}", phone, existing ? "занят" : "свободен");
+            return existing;
+        } catch (SQLException e) {
+            logger.error("Ошибка при проверке телефона", e);
+            return false;
+        }
     }
 
 }
