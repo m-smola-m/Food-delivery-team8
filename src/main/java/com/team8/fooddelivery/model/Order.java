@@ -5,14 +5,14 @@ import java.util.List;
 import lombok.*;
 
 @Data
-@AllArgsConstructor
 public class Order {
   private Long orderId;
   private Long shopId;
+  private Long courierId;
   private Long clientId; // Long clientId
   private List<Product> items;
   private Address deliveryAddress;
-  private StoreOrderStatus status;
+  private OrderStatus status;
   private Double totalAmount;
   private Double storeRevenue;
   private Duration orderTime;
