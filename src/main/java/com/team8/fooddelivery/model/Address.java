@@ -13,8 +13,8 @@ public class Address {
   private String apartment;
   private String entrance;
   private Integer floor;
-  private double latitude;
-  private double longitude;
+  private Double latitude;
+  private Double longitude;
   private String addressNote;
   private String district;
 }
