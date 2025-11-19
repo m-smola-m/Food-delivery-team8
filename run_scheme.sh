@@ -86,15 +86,36 @@ done
 # Проверяем созданные таблицы
 echo "🔍 Проверка созданных таблиц..."
 PGPASSWORD="$DB_PASSWORD" psql -U "$DB_USER" -d "$DB_NAME" -c "
-SELECT 
+SELECT
     COUNT(*) as total_tables,
     string_agg(table_name, ', ' ORDER BY table_name) as tables_list
-FROM information_schema.tables 
+FROM information_schema.tables
 WHERE table_schema = 'public';"
 
 echo ""
 echo "🎉 База данных успешно настроена!"
 echo "📊 Схема Food Delivery готова к использованию"
+
+# Возвращаемся в корень проекта для запуска check_db_connection.sh
+cd ../../../../
 echo ""
-echo "🚀 Для проверки выполните: ./check_db_connection.sh"
-echo "🧪 Для запуска тестов: ./RUN_TESTS.sh"
+echo "🔍 Запуск автоматической проверки..."
+echo ""
+
+# Проверяем существование скрипта проверки
+if [ -f "check_db_connection.sh" ]; then
+    # Даем права на выполнение если нужно
+    chmod +x check_db_connection.sh 2>/dev/null || true
+    # Запускаем проверку
+    bash check_db_connection.sh
+else
+    echo "⚠️  Скрипт проверки check_db_connection.sh не найден"
+    echo "📝 Ручная проверка:"
+    echo "   PGPASSWORD=fooddelivery_pass psql -U fooddelivery_user -d food_delivery -c \"\dt\""
+fi
+
+echo ""
+echo "🚀 Для запуска тестов выполните:"
+echo "   mvn test -Ddb.user=fooddelivery_user -Ddb.password='fooddelivery_pass'"
+echo "   или"
+echo "   ./RUN_TESTS.sh"
