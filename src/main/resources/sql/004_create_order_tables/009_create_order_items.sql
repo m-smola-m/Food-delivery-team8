@@ -1,4 +1,3 @@
--- Таблица элементов заказа
 CREATE TABLE order_items (
     id BIGSERIAL PRIMARY KEY,
     order_id BIGINT REFERENCES orders(id) ON DELETE CASCADE,
