@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Интеграционные тесты магазинов и продуктов")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class ShopProductsIntegrationTest {
+public class ShopProductIntegrationTest {
 
   private AddressRepository addressRepository;
   private WorkingHoursRepository workingHoursRepository;
