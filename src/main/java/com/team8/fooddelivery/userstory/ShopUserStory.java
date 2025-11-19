@@ -3,7 +3,7 @@ package com.team8.fooddelivery.userstory;
 import com.team8.fooddelivery.model.Shop;
 import com.team8.fooddelivery.service.impl.ShopInfoServiceImpl;
 
-public class ClientUserStories {
+public class ShopUserStory {
   public static void main(String[] args) {
     ShopInfoServiceImpl service = new ShopInfoServiceImpl();
 
