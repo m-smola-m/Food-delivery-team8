@@ -253,3 +253,72 @@ BUILD SUCCESS
 
 Подробнее см. [TESTING.md](TESTING.md)
 
+# 🧪 Тестирование проекта
+
+## Быстрый старт
+
+### 1. Автоматическая проверка и запуск тестов
+
+```bash
+# Проверка подключения к БД
+./check_db_connection.sh
+
+# Запуск всех тестов
+./RUN_TESTS.sh
+```
+
+### 2. Ручной запуск
+
+#### macOS:
+```bash
+# Создание БД и схемы
+createdb food_delivery
+psql -d food_delivery -f src/main/resources/schema.sql
+
+# Запуск тестов
+mvn test -Ddb.user=$(whoami) -Ddb.password=""
+```
+
+#### Linux:
+```bash
+# Создание БД и схемы
+createdb -U postgres food_delivery
+psql -U postgres -d food_delivery -f src/main/resources/schema.sql
+
+# Запуск тестов
+mvn test -Ddb.user=postgres -Ddb.password=postgres
+```
+
+## Результаты тестов
+
+При успешном запуске вы увидите:
+```
+Tests run: 20, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+## Структура тестов
+
+1. **SimpleConnectionTest** - проверка подключения к БД
+2. **DatabaseConnectionTest** - тесты класса DatabaseConnection
+3. **ClientRepositoryTest** - тесты работы с клиентами (7 тестов)
+4. **CartRepositoryTest** - тесты работы с корзинами (5 тестов)
+5. **DatabaseIntegrationTest** - полные интеграционные тесты (3 теста)
+
+**Всего: 20 тестов**
+
+## Что проверяют тесты
+
+✅ Подключение к PostgreSQL  
+✅ CRUD операции для всех сущностей  
+✅ Связи между сущностями (foreign keys)  
+✅ Полные сценарии использования системы  
+✅ Валидация данных  
+✅ Обработка ошибок  
+
+## Дополнительная информация
+
+- Подробная документация: [TESTING.md](TESTING.md)
+- Быстрый старт: [QUICK_TEST.md](QUICK_TEST.md)
+- Настройка БД: [DATABASE_SETUP.md](DATABASE_SETUP.md)
+
