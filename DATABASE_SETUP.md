@@ -78,7 +78,7 @@ if (DatabaseConnection.testConnection()) {
 - `WorkingHoursRepository` - работа с рабочими часами
 
 ### Пример использования:
-java
+```java
 ClientRepository clientRepository = new ClientRepository();
 
 // Сохранение клиента
@@ -109,7 +109,7 @@ clientRepository.delete(clientId);
 
 Все методы Repository могут выбрасывать `SQLException`. Рекомендуется обрабатывать их в сервисном слое:
 
-java
+```java
 try {
     Long clientId = clientRepository.save(client);
 } catch (SQLException e) {
@@ -117,3 +117,4 @@ try {
     throw new RuntimeException("Не удалось сохранить клиента", e);
 }
 ```
+

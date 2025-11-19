@@ -56,3 +56,4 @@ echo "   Password: $DB_PASSWORD"
 echo ""
 echo "🚀 Запуск тестов:"
 echo "   mvn test -Ddb.user=$DB_USER -Ddb.password=\"$DB_PASSWORD\""
+

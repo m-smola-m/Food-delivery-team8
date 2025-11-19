@@ -97,16 +97,16 @@ BUILD SUCCESS
    ```
 
 2. Проверьте параметры подключения:
-
+   
    **macOS (Homebrew):**
-    - URL: `jdbc:postgresql://localhost:5432/food_delivery`
-    - User: ваше имя пользователя (проверьте через `whoami`)
-    - Password: обычно пустой или ваш системный пароль
+   - URL: `jdbc:postgresql://localhost:5432/food_delivery`
+   - User: ваше имя пользователя (проверьте через `whoami`)
+   - Password: обычно пустой или ваш системный пароль
 
    **Linux:**
-    - URL: `jdbc:postgresql://localhost:5432/food_delivery`
-    - User: `postgres`
-    - Password: `postgres` (или ваш пароль)
+   - URL: `jdbc:postgresql://localhost:5432/food_delivery`
+   - User: `postgres`
+   - Password: `postgres` (или ваш пароль)
 
 3. Измените параметры при необходимости:
    ```bash

@@ -10,7 +10,7 @@ public class ShopUserStory {
     Shop shop = new Shop();
     shop.setNaming("Test Shop");
     shop.setPhoneForAuth("+79123456789");
-    Shop registered = service.registerShop(shop, "Test@mail.com", "Password123!", "89123456789");
+    Shop registered = service.registerShop(shop, "Test@mail.com", "Password123!", "+79123456789");
     System.out.println("Магазин зарегистрирован: " + registered.getShopId() + ", статус: " + registered.getStatus());
 
     boolean approved = service.approveShop(registered.getShopId());
