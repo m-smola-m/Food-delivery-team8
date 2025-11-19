@@ -13,21 +13,7 @@ DROP TABLE IF EXISTS couriers CASCADE;
 DROP TABLE IF EXISTS addresses CASCADE;
 DROP TABLE IF EXISTS working_hours CASCADE;
 
--- Таблица адресов
-CREATE TABLE addresses (
-    id BIGSERIAL PRIMARY KEY,
-    country VARCHAR(100),
-    city VARCHAR(100),
-    street VARCHAR(200),
-    building VARCHAR(50),
-    apartment VARCHAR(50),
-    entrance VARCHAR(50),
-    floor INTEGER,
-    latitude DOUBLE PRECISION,
-    longitude DOUBLE PRECISION,
-    address_note TEXT,
-    district VARCHAR(100)
-);
+
 
 -- Таблица клиентов
 CREATE TABLE clients (
