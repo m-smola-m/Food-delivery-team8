@@ -34,6 +34,13 @@ public class ClientServiceImpl implements ClientService {
     }
 
 
+    private final CartServiceImpl cartService;
+
+    public ClientServiceImpl(CartServiceImpl cartService) {
+        this.cartService = cartService;
+    }
+
+
     // =====================
     // Регистрация
     // =====================
@@ -132,6 +139,27 @@ public class ClientServiceImpl implements ClientService {
             logger.error("Ошибка при аутентификации", e);
             return false;
         }
+    }
+    // =====================
+// Проверка логина и пароля (аутентификация)
+// =====================
+    public boolean authenticate(String login, String password) {
+        Client client = ID_TO_CLIENT.values().stream()
+                .filter(c -> c.isActive() &&
+                        (login.equals(c.getPhone()) || login.equalsIgnoreCase(c.getEmail())))
+                .findFirst()
+                .orElse(null);
+
+        if (client == null) {
+            logger.warn("Клиент {} не найден или деактивирован", login);
+            return false;
+        }
+
+        boolean ok = PasswordUtils.checkPassword(password, client.getPasswordHash());
+        if (ok) logger.info("Аутентификация успешна для {}", login);
+        else logger.warn("Неверный пароль для {}", login);
+
+        return ok;
     }
 
     // =====================
