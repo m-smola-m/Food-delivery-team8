@@ -1,10 +1,5 @@
 package com.team8.fooddelivery.model;
 
 public enum OrderStatus {
-    PENDING,          
-    READY_FOR_PICKUP, 
-    DELIVERING,       
-    PICKED_UP,       
-    COMPLETED,        
-    CANCELLED         
+  PENDING, CONFIRMED, PREPARING, READY, PICKED_UP, COMPLETED, REJECTED, CANCELLED
 }
