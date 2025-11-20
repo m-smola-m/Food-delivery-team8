@@ -2,20 +2,20 @@ package com.team8.fooddelivery.service.impl;
 
 import com.team8.fooddelivery.model.Shop;
 import com.team8.fooddelivery.model.ShopStatus;
+import com.team8.fooddelivery.repository.ShopRepository;
 import com.team8.fooddelivery.service.ShopInfoService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
+import java.sql.SQLException;
+import java.util.Optional;
 
 import static com.team8.fooddelivery.util.ValidationUtils.*;
 
 public class ShopInfoServiceImpl implements ShopInfoService {
 
-  private Map<Long, Shop> shopRepository = new HashMap<>();
-  private Map<String, String> authRepository = new HashMap<>(); // email -> password
-  private Map<String, Long> phoneToShopIdMap = new HashMap<>(); // phone -> shopId
-  private AtomicLong idGenerator = new AtomicLong(1);
+  private static final Logger logger = LoggerFactory.getLogger(ShopInfoServiceImpl.class);
+  private final ShopRepository shopRepository = new ShopRepository();
 
   @Override
   public Shop registerShop(Shop infoAbout, String emailForAuth, String password, String phoneForAuth) {
@@ -36,65 +36,79 @@ public class ShopInfoServiceImpl implements ShopInfoService {
       throw new IllegalArgumentException("Некорректный формат пароля");
     }
 
-    if (authRepository.containsKey(emailForAuth)) {
-      throw new IllegalArgumentException("Email уже используется");
+    try {
+      if (shopRepository.findByEmailForAuth(emailForAuth).isPresent()) {
+        throw new IllegalArgumentException("Email уже используется");
+      }
+
+      if (shopRepository.findByPhoneForAuth(phoneForAuth).isPresent()) {
+        throw new IllegalArgumentException("Телефон уже используется");
+      }
+
+      infoAbout.setStatus(ShopStatus.PENDING);
+      infoAbout.setEmailForAuth(emailForAuth);
+      infoAbout.setPhoneForAuth(phoneForAuth);
+      infoAbout.setPassword(password);
+
+      Long shopId = shopRepository.save(infoAbout);
+      infoAbout.setShopId(shopId);
+
+      logger.info("Магазин зарегистрирован с ID: {}. Ожидает подтверждения.", shopId);
+      return infoAbout;
+    } catch (SQLException e) {
+      logger.error("Ошибка при регистрации магазина", e);
+      throw new RuntimeException("Не удалось зарегистрировать магазин", e);
     }
-
-    if (phoneToShopIdMap.containsKey(infoAbout.getPhoneForAuth())) {
-      throw new IllegalArgumentException("Телефон уже используется");
-    }
-
-    Long shopId = generateId();
-    infoAbout.setStatus(ShopStatus.PENDING);
-    infoAbout.setShopId(shopId);
-    infoAbout.setEmailForAuth(emailForAuth);
-    infoAbout.setPhoneForAuth(phoneForAuth);
-    infoAbout.setPassword(password);
-
-    authRepository.put(emailForAuth, password);
-    phoneToShopIdMap.put(infoAbout.getPhoneForAuth(), shopId);
-    shopRepository.put(shopId, infoAbout);
-
-    System.out.println("Магазин зарегистрирован с ID: " + shopId + ". Ожидает подтверждения.");
-    return infoAbout;
   }
 
   @Override
   public boolean approveShop(Long shopId) {
-    Shop shop = shopRepository.get(shopId);
-    if (shop == null) {
-      System.out.println("Магазин с ID " + shopId + " не найден");
+    try {
+      Optional<Shop> shopOpt = shopRepository.findById(shopId);
+      if (shopOpt.isEmpty()) {
+        logger.warn("Магазин с ID {} не найден", shopId);
+        return false;
+      }
+
+      Shop shop = shopOpt.get();
+      if (shop.getStatus() != ShopStatus.PENDING) {
+        logger.warn("Магазин с ID {} уже был обработан. Текущий статус: {}", shopId, shop.getStatus());
+        return false;
+      }
+
+      shop.setStatus(ShopStatus.APPROVED);
+      shopRepository.update(shop);
+      logger.info("Магазин с ID {} одобрен", shopId);
+      return true;
+    } catch (SQLException e) {
+      logger.error("Ошибка при одобрении магазина", e);
       return false;
     }
-
-    if (shop.getStatus() != ShopStatus.PENDING) {
-      System.out.println("Магазин с ID " + shopId + " уже был обработан. Текущий статус: " + shop.getStatus());
-      return false;
-    }
-
-    shop.setStatus(ShopStatus.APPROVED);
-    shopRepository.put(shopId, shop);
-    System.out.println("Магазин с ID " + shopId + " одобрен");
-    return true;
   }
 
   @Override
   public boolean rejectShop(String rejectionReason, Long shopId) {
-    Shop shop = shopRepository.get(shopId);
-    if (shop == null) {
-      System.out.println("Магазин с ID " + shopId + " не найден");
+    try {
+      Optional<Shop> shopOpt = shopRepository.findById(shopId);
+      if (shopOpt.isEmpty()) {
+        logger.warn("Магазин с ID {} не найден", shopId);
+        return false;
+      }
+
+      Shop shop = shopOpt.get();
+      if (shop.getStatus() != ShopStatus.PENDING) {
+        logger.warn("Магазин с ID {} уже был обработан. Текущий статус: {}", shopId, shop.getStatus());
+        return false;
+      }
+
+      shop.setStatus(ShopStatus.REJECTED);
+      shopRepository.update(shop);
+      logger.info("Магазин с ID {} отклонен. Причина: {}", shopId, rejectionReason);
+      return true;
+    } catch (SQLException e) {
+      logger.error("Ошибка при отклонении магазина", e);
       return false;
     }
-
-    if (shop.getStatus() != ShopStatus.PENDING) {
-      System.out.println("Магазин с ID " + shopId + " уже был обработан. Текущий статус: " + shop.getStatus());
-      return false;
-    }
-
-    shop.setStatus(ShopStatus.REJECTED);
-    shopRepository.put(shopId, shop);
-    System.out.println("Магазин с ID " + shopId + " отклонен. Причина: " + rejectionReason);
-    return true;
   }
 
   @Override
@@ -111,21 +125,27 @@ public class ShopInfoServiceImpl implements ShopInfoService {
       throw new IllegalArgumentException("Новый пароль не корректный");
     }
 
-    Shop shop = shopRepository.get(shopId);
+    try {
+      Optional<Shop> shopOpt = shopRepository.findById(shopId);
+      if (shopOpt.isEmpty()) {
+        throw new IllegalArgumentException("Магазин с ID " + shopId + " не найден");
+      }
 
-    if (shop == null) {
-      throw new IllegalArgumentException("Магазин с ID " + shopId + " не найден");
-    }
+      Shop shop = shopOpt.get();
+      if (!shop.getEmailForAuth().equals(emailForAuth) || !shop.getPhoneForAuth().equals(phoneForAuth)) {
+        throw new SecurityException("Неверные аутентификационные данные");
+      }
 
-    if (!shop.getEmailForAuth().equals(emailForAuth) || !shop.getPhoneForAuth().equals(phoneForAuth)) {
-      throw new SecurityException("Неверные аутентификационные данные");
+      if (password.equals(shop.getPassword())) {
+        shop.setPassword(newPassword);
+        shopRepository.update(shop);
+        logger.info("Пароль для магазина с ID {} успешно изменен", shopId);
+      }
+      return "Пароль успешно изменен";
+    } catch (SQLException e) {
+      logger.error("Ошибка при смене пароля магазина", e);
+      throw new RuntimeException("Не удалось изменить пароль", e);
     }
-
-    if (password.equals(authRepository.get(emailForAuth))) {
-      authRepository.put(emailForAuth, newPassword);
-      System.out.println("Пароль для магазина с ID " + shopId + " успешно изменен");
-    }
-    return "Пароль успешно изменен";
   }
 
   @Override
@@ -138,32 +158,35 @@ public class ShopInfoServiceImpl implements ShopInfoService {
       throw new IllegalArgumentException("Некорректный формат нового email");
     }
 
-    Shop shop = shopRepository.get(shopId);
-    if (shop == null) {
-      throw new IllegalArgumentException("Магазин с ID " + shopId + " не найден");
+    try {
+      Optional<Shop> shopOpt = shopRepository.findById(shopId);
+      if (shopOpt.isEmpty()) {
+        throw new IllegalArgumentException("Магазин с ID " + shopId + " не найден");
+      }
+
+      Shop shop = shopOpt.get();
+      if (!shop.getPhoneForAuth().equals(phoneForAuth)) {
+        throw new SecurityException("Неверный телефон для аутентификации");
+      }
+
+      if (!shop.getPassword().equals(password)) {
+        throw new SecurityException("Неверный пароль");
+      }
+
+      if (shopRepository.findByEmailForAuth(newEmailForAuth).isPresent()) {
+        throw new IllegalArgumentException("Новый email уже используется другим магазином");
+      }
+
+      String oldEmail = shop.getEmailForAuth();
+      shop.setEmailForAuth(newEmailForAuth);
+      shopRepository.update(shop);
+
+      logger.info("Email для магазина с ID {} изменен с {} на {}", shopId, oldEmail, newEmailForAuth);
+      return "Email для аутентификации успешно изменен";
+    } catch (SQLException e) {
+      logger.error("Ошибка при смене email магазина", e);
+      throw new RuntimeException("Не удалось изменить email", e);
     }
-
-    if (!shop.getPhoneForAuth().equals(phoneForAuth)) {
-      throw new SecurityException("Неверный телефон для аутентификации");
-    }
-
-    String currentPassword = authRepository.get(shop.getEmailForAuth());
-    if (currentPassword == null || !currentPassword.equals(password)) {
-      throw new SecurityException("Неверный пароль");
-    }
-
-    if (authRepository.containsKey(newEmailForAuth)) {
-      throw new IllegalArgumentException("Новый email уже используется другим магазином");
-    }
-
-    String oldEmail = shop.getEmailForAuth();
-    authRepository.remove(oldEmail);
-    authRepository.put(newEmailForAuth, password);
-    shop.setEmailForAuth(newEmailForAuth);
-    shopRepository.put(shopId, shop);
-
-    System.out.println("Email для магазина с ID " + shopId + " изменен с " + oldEmail + " на " + newEmailForAuth);
-    return "Email для аутентификации успешно изменен";
   }
 
   @Override
@@ -172,34 +195,33 @@ public class ShopInfoServiceImpl implements ShopInfoService {
       throw new IllegalArgumentException("Новый телефон не может быть пустым");
     }
 
-    Shop shop = shopRepository.get(shopId);
-    if (shop == null) {
-      throw new IllegalArgumentException("Магазин с ID " + shopId + " не найден");
+    try {
+      Optional<Shop> shopOpt = shopRepository.findById(shopId);
+      if (shopOpt.isEmpty()) {
+        throw new IllegalArgumentException("Магазин с ID " + shopId + " не найден");
+      }
+
+      Shop shop = shopOpt.get();
+      if (!shop.getEmailForAuth().equals(emailForAuth)) {
+        throw new SecurityException("Неверный email для аутентификации");
+      }
+
+      if (!shop.getPassword().equals(password)) {
+        throw new SecurityException("Неверный пароль");
+      }
+
+      if (shopRepository.findByPhoneForAuth(newPhoneForAuth).isPresent()) {
+        throw new IllegalArgumentException("Новый телефон уже используется другим магазином");
+      }
+
+      shop.setPhoneForAuth(newPhoneForAuth);
+      shopRepository.update(shop);
+
+      logger.info("Телефон для магазина с ID {} изменен", shopId);
+      return "Телефон для аутентификации успешно изменен";
+    } catch (SQLException e) {
+      logger.error("Ошибка при смене телефона магазина", e);
+      throw new RuntimeException("Не удалось изменить телефон", e);
     }
-
-    if (!shop.getEmailForAuth().equals(emailForAuth)) {
-      throw new SecurityException("Неверный email для аутентификации");
-    }
-
-    String currentPassword = authRepository.get(emailForAuth);
-    if (currentPassword == null || !currentPassword.equals(password)) {
-      throw new SecurityException("Неверный пароль");
-    }
-
-    if (phoneToShopIdMap.containsKey(newPhoneForAuth)) {
-      throw new IllegalArgumentException("Новый телефон уже используется другим магазином");
-    }
-
-    String oldPhone = shop.getPhoneForAuth();
-    phoneToShopIdMap.remove(oldPhone);
-    phoneToShopIdMap.put(newPhoneForAuth, shopId);
-    shop.setPhoneForAuth(newPhoneForAuth);
-    shopRepository.put(shopId, shop);
-
-    return "Телефон для аутентификации успешно изменен";
-  }
-
-  private Long generateId() {
-    return idGenerator.getAndIncrement();
   }
 }
