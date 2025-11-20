@@ -177,12 +177,12 @@ public class OrderCourierIntegrationTest {
       assertEquals(OrderStatus.PREPARING, preparingOrder.get().getStatus());
 
       // Изменение статуса на DELIVERED
-      order.setStatus(OrderStatus.DELIVERED);
+      order.setStatus(OrderStatus.COMPLETED);
       orderRepository.update(order);
 
       Optional<com.team8.fooddelivery.model.Order> deliveredOrder = orderRepository.findById(orderId);
       assertTrue(deliveredOrder.isPresent());
-      assertEquals(OrderStatus.DELIVERED, deliveredOrder.get().getStatus());
+      assertEquals(OrderStatus.COMPLETED, deliveredOrder.get().getStatus());
 
     } finally {
       if (orderId != null) orderRepository.delete(orderId);

@@ -16,7 +16,7 @@ public class Order {
     private Long customerId;
     private Long restaurantId;
     private String deliveryAddress;
-    private Long courierId; 
+    private Long courierId;
     private Double totalPrice;
     private List<String> items;
 
@@ -25,16 +25,16 @@ public class Order {
     static {
         Order o1 = new Order();
         o1.setId(101L);
-        o1.setStatus(OrderStatus.READY_FOR_PICKUP); 
+        o1.setStatus(OrderStatus.READY_FOR_PICKUP);
         o1.setCustomerId(1L);
         o1.setRestaurantId(1L);
         o1.setDeliveryAddress("ул. Пушкина, д. 10");
         o1.setTotalPrice(1500.0);
         o1.setItems(List.of("Пицца Пепперони", "Кола"));
-        
+
         Order o2 = new Order();
         o2.setId(102L);
-        o2.setStatus(OrderStatus.PENDING); 
+        o2.setStatus(OrderStatus.PENDING);
         o2.setCustomerId(2L);
         o2.setRestaurantId(2L);
         o2.setDeliveryAddress("пр. Ленина, д. 5");
