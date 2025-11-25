@@ -25,8 +25,8 @@ public class ShopProductIntegrationTest {
   @BeforeAll
   static void setupDatabaseConnection() {
     String dbUrl = System.getProperty("db.url", "jdbc:postgresql://localhost:5432/food_delivery");
-    String dbUser = System.getProperty("db.user", "fooddelivery_user");
-    String dbPassword = System.getProperty("db.password", "fooddelivery_pass");
+    String dbUser = System.getProperty("db.user", "postgres");
+    String dbPassword = System.getProperty("db.password", "postgres");
     DatabaseConnection.setConnectionParams(dbUrl, dbUser, dbPassword);
 
     if (!DatabaseConnection.testConnection()) {
