@@ -37,6 +37,7 @@ class OrderInteractionIntegrationTest {
     if (!DatabaseConnection.testConnection()) {
       throw new RuntimeException("Не удалось подключиться к базе данных");
     }
+
   }
 
   @BeforeEach
