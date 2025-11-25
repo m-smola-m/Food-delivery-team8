@@ -36,6 +36,9 @@
 \echo '📁 Выполнение файла: 010_create_carts.sql'
 \i ./004_create_order_tables/010_create_carts.sql
 
+\echo '📁 Выполнение файла: 011_create_payments.sql'
+\i ./004_create_order_tables/011_create_payments.sql
+
 \echo '📁 Выполнение файла: 011_create_cart_items.sql'
 \i ./005_create_cart_tables/011_create_cart_items.sql
 
@@ -44,6 +47,15 @@
 
 \echo '📁 Выполнение файла: 013_create_indexes.sql'
 \i ./006_create_indexes/013_create_indexes.sql
+
+\echo '📁 Выполнение файла: 014_add_delivery_address_columns.sql'
+\i ./004_create_order_tables/014_add_delivery_address_columns.sql
+
+\echo '📁 Выполнение файла: 015_add_payment_columns.sql'
+\i ./004_create_order_tables/015_add_payment_columns.sql
+
+\echo '📁 Выполнение файла: 016_add_estimated_delivery_time_column.sql'
+\i ./004_create_order_tables/016_add_estimated_delivery_time_column.sql
 
 \echo '🎉 Все SQL файлы выполнены успешно!'
 \echo '📊 База данных food_delivery готова к использованию.'

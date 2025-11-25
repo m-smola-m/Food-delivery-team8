@@ -71,9 +71,13 @@ SQL_FILES=(
     "004_create_order_tables/008_create_orders.sql"
     "004_create_order_tables/009_create_order_items.sql"
     "004_create_order_tables/010_create_carts.sql"
+    "004_create_order_tables/011_create_payments.sql"
     "005_create_cart_tables/011_create_cart_items.sql"
     "005_create_cart_tables/012_add_cart_foreign_keys.sql"
     "006_create_indexes/013_create_indexes.sql"
+    "004_create_order_tables/014_add_delivery_address_columns.sql"
+    "004_create_order_tables/015_add_payment_columns.sql"
+    "004_create_order_tables/016_add_estimated_delivery_time_column.sql"
 )
 
 # Выполняем все SQL файлы

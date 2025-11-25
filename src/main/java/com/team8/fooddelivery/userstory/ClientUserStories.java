@@ -45,7 +45,7 @@ public class ClientUserStories {
 
         if (clientService.authenticate(phone, password)) {
             Client client = clientService.getByPhone(phone); // новый метод getByPhone
-            client.setStatus(com.team8.fooddelivery.model.ClientStatus.AUTHORIZED);
+            client.setStatus(ClientStatus.AUTHORIZED);
 
             String token = JWTUtil.generateToken(client.getId());
             System.out.println("Иван авторизован:");
