@@ -1,6 +1,4 @@
-package com.team8.fooddelivery.model;
-
-import java.math.BigDecimal;
+package com.team8.fooddelivery.model.product;
 
 import lombok.Builder;
 import lombok.Data;

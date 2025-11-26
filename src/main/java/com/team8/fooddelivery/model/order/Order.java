@@ -1,11 +1,9 @@
-package com.team8.fooddelivery.model;
+package com.team8.fooddelivery.model.order;
 
-import java.time.Duration;
 import java.util.List;
-import lombok.*;
 
 import lombok.Data;
-import java.util.List;
+
 import java.util.Map;
 import java.util.HashMap;
 

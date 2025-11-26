@@ -1,8 +1,10 @@
-package com.team8.fooddelivery.model;
+package com.team8.fooddelivery.model.client;
 
 import java.time.Instant;
 import java.util.*;
 
+import com.team8.fooddelivery.model.Address;
+import com.team8.fooddelivery.model.product.Cart;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;

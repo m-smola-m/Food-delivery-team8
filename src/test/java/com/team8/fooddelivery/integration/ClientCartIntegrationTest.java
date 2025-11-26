@@ -1,6 +1,14 @@
 package com.team8.fooddelivery.integration;
 
 import com.team8.fooddelivery.model.*;
+import com.team8.fooddelivery.model.client.Client;
+import com.team8.fooddelivery.model.client.ClientStatus;
+import com.team8.fooddelivery.model.product.Cart;
+import com.team8.fooddelivery.model.product.CartItem;
+import com.team8.fooddelivery.model.product.Product;
+import com.team8.fooddelivery.model.product.ProductCategory;
+import com.team8.fooddelivery.model.shop.Shop;
+import com.team8.fooddelivery.model.shop.ShopStatus;
 import com.team8.fooddelivery.repository.*;
 import com.team8.fooddelivery.util.DatabaseConnection;
 import org.junit.jupiter.api.*;
@@ -26,6 +34,7 @@ public class ClientCartIntegrationTest {
 
     @BeforeAll
     static void setupDatabaseConnection() {
+        DatabaseConnection.initializeDatabase();
         String dbUrl = System.getProperty("db.url", "jdbc:postgresql://localhost:5432/food_delivery");
         String dbUser = System.getProperty("db.user", "postgres");
         String dbPassword = System.getProperty("db.password", "postgres");

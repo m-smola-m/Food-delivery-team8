@@ -1,9 +1,9 @@
 package com.team8.fooddelivery.userstory;
 
-import com.team8.fooddelivery.dto.AuthResponse;
+import com.team8.fooddelivery.model.AuthResponse;
 import com.team8.fooddelivery.model.Address;
-import com.team8.fooddelivery.model.Client;
-import com.team8.fooddelivery.model.ClientStatus;
+import com.team8.fooddelivery.model.client.Client;
+import com.team8.fooddelivery.model.client.ClientStatus;
 import com.team8.fooddelivery.service.impl.CartServiceImpl;
 import com.team8.fooddelivery.service.impl.ClientServiceImpl;
 import com.team8.fooddelivery.util.JWTUtil;
@@ -45,7 +45,7 @@ public class ClientUserStories {
 
         if (clientService.authenticate(phone, password)) {
             Client client = clientService.getByPhone(phone); // новый метод getByPhone
-            client.setStatus(com.team8.fooddelivery.model.ClientStatus.AUTHORIZED);
+            client.setStatus(ClientStatus.AUTHORIZED);
 
             String token = JWTUtil.generateToken(client.getId());
             System.out.println("Иван авторизован:");

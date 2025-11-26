@@ -1,6 +1,9 @@
 package com.team8.fooddelivery.userstory;
 
 import com.team8.fooddelivery.model.*;
+import com.team8.fooddelivery.model.client.Client;
+import com.team8.fooddelivery.model.product.Cart;
+import com.team8.fooddelivery.model.product.CartItem;
 import com.team8.fooddelivery.service.impl.CartServiceImpl;
 import com.team8.fooddelivery.service.impl.ClientServiceImpl;
 

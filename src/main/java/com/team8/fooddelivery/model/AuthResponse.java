@@ -1,6 +1,6 @@
 package com.team8.fooddelivery.model;
 
-import com.team8.fooddelivery.model.ClientStatus;
+import com.team8.fooddelivery.model.client.ClientStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

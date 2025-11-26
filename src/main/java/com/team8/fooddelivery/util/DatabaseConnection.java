@@ -13,7 +13,7 @@ import java.sql.SQLException;
 public class DatabaseConnection {
   private static final Logger logger = LoggerFactory.getLogger(DatabaseConnection.class);
 
-  private static final String DEFAULT_URL = "jdbc:postgresql://db:5432/food_delivery";
+  private static final String DEFAULT_URL = "jdbc:postgresql://localhost:5432/food_delivery";
   private static final String DEFAULT_USER = "postgres"; // Используем пользователя, которого мы настроили
   private static final String DEFAULT_PASSWORD = "postgres"; // Используем пароль, который мы настроили
 
@@ -47,6 +47,14 @@ public class DatabaseConnection {
     dbUser = user;
     dbPassword = password;
     logger.info("Параметры подключения обновлены: url={}, user={}", url, user);
+  }
+
+  public static void initializeDatabase() {
+    if (!DatabaseInitializer.isDatabaseInitialized()) {
+      DatabaseInitializer.initializeDatabase();
+    } else {
+      logger.info("База данных уже инициализирована");
+    }
   }
 
   public static boolean testConnection() {

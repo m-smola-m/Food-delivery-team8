@@ -1,4 +1,4 @@
-package com.team8.fooddelivery.model;
+package com.team8.fooddelivery.model.notification;
 
 public enum NotificationType {
     ACCOUNT_REGISTERED,
