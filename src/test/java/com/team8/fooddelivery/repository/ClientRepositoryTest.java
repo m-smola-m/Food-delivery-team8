@@ -35,6 +35,14 @@ public class ClientRepositoryTest {
             throw new RuntimeException("Не удалось подключиться к базе данных. Убедитесь, что PostgreSQL запущен и БД создана.");
         }
 
+        try {
+            DatabaseConnection.initializeDatabase();
+            System.out.println("✅ База данных успешно инициализирована");
+        } catch (Exception e) {
+            System.err.println("❌ Ошибка инициализации БД: " + e.getMessage());
+            throw new RuntimeException("Не удалось инициализировать тестовую БД", e);
+        }
+
         clientRepository = new ClientRepository();
     }
 

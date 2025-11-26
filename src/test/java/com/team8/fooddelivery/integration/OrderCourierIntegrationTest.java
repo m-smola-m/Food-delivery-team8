@@ -29,7 +29,7 @@ public class OrderCourierIntegrationTest {
   private OrderRepository orderRepository;
 
   @BeforeAll
-  static void setupDatabaseConnection() {
+  static void setupDatabaseConnection() throws SQLException {
     String dbUrl = System.getProperty("db.url", "jdbc:postgresql://localhost:5432/food_delivery");
     String dbUser = System.getProperty("db.user", "postgres");
     String dbPassword = System.getProperty("db.password", "postgres");

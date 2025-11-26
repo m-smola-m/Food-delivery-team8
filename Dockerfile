@@ -1,33 +1,14 @@
-# 1. Используем официальный JDK/Maven образ для сборки
-FROM maven:3.9.6-eclipse-temurin-17 AS build
+# Берем готовый образ с Tomcat + Java
+FROM tomcat:10.1-jdk17
 
-WORKDIR /app
+# Очищаем дефолтные приложения (чтобы было только наше)
+RUN rm -rf /usr/local/tomcat/webapps/*
 
-# Копируем ВСЕ файлы проекта
-COPY . .
+# Копируем наш WAR в папку развертывания Tomcat
+# ROOT.war = приложение будет доступно по корневому URL (http://localhost:8080/)
+COPY ./target/*.war /usr/local/tomcat/webapps/ROOT.war
 
-# Даем права на выполнение скриптов
-RUN chmod +x run_scheme.sh
-
-# Собираем jar
-RUN mvn -q -e -DskipTests package
-
-# 2. Lightweight образ для запуска
-FROM eclipse-temurin:17-jre
-
-WORKDIR /app
-
-# Копируем собранный jar
-COPY --from=build /app/target/*.jar app.jar
-
-# Копируем скрипты из stage сборки
-COPY --from=build /app/run_scheme.sh /app/run_scheme.sh
-
-# Устанавливаем postgresql-client для использования psql и pg_isready
-RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
-
-# Порт приложения
+# Открываем порт
 EXPOSE 8080
 
-# Запуск
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Команда запуска уже встроена в образ Tomcat!

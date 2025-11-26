@@ -1,19 +1,9 @@
-package com.team8.fooddelivery;
+package com.team8.fooddelivery.util;
 
-import com.team8.fooddelivery.model.Address;
-import com.team8.fooddelivery.model.client.Client;
-import com.team8.fooddelivery.model.client.ClientStatus;
-import com.team8.fooddelivery.repository.ClientRepository;
-import com.team8.fooddelivery.util.DatabaseConnection;
-import com.team8.fooddelivery.util.DatabaseInitializer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
-import java.time.Instant;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Простая проверка подключения к БД")
 public class SimpleConnectionTest {
@@ -27,6 +17,7 @@ public class SimpleConnectionTest {
         String dbPassword = System.getProperty("db.password", "postgres");
 
         DatabaseConnection.setConnectionParams(dbUrl, dbUser, dbPassword);
+        DatabaseInitializer.fullCleanDatabase();
         try {
             DatabaseConnection.initializeDatabase();
             System.out.println("✅ База данных успешно инициализирована");

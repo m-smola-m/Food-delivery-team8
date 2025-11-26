@@ -1,14 +1,18 @@
 package com.team8.fooddelivery.util;
 
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Slf4j
 @DisplayName("Тесты подключения к базе данных")
 public class DatabaseConnectionTest {
 
@@ -30,15 +34,6 @@ public class DatabaseConnectionTest {
     System.out.println("URL: " + dbUrl);
     System.out.println("User: " + dbUser);
     System.out.println("Password: " + (dbPassword.isEmpty() ? "(empty)" : "***"));
-
-    // Инициализируем структуру БД
-    try {
-      DatabaseConnection.initializeDatabase();
-      System.out.println("✅ База данных успешно инициализирована");
-    } catch (Exception e) {
-      System.err.println("❌ Ошибка инициализации БД: " + e.getMessage());
-      throw new RuntimeException("Не удалось инициализировать тестовую БД", e);
-    }
   }
 
   @Test
@@ -122,11 +117,9 @@ public class DatabaseConnectionTest {
     // Ожидаем, что тест подключения вернет false
     boolean connected = DatabaseConnection.testConnection();
     assertFalse(connected, "Подключение с неверными параметрами должно завершиться ошибкой");
-
     // Проверяем, что получение подключения бросает исключение
-    assertThrows(SQLException.class, () -> {
-      DatabaseConnection.getConnection();
-    }, "При неверных параметрах должно бросаться SQLException");
+    assertThrows(SQLException.class, DatabaseConnection::getConnection,
+        "При неверных параметрах должно бросаться SQLException");
 
     // Возвращаем валидные параметры
     DatabaseConnection.setConnectionParams(DEFAULT_DB_URL, DEFAULT_DB_USER, DEFAULT_DB_PASSWORD);

@@ -50,6 +50,13 @@ public class ClientCartIntegrationTest {
                             "4. Параметры подключения корректны"
             );
         }
+        try {
+            DatabaseConnection.initializeDatabase();
+            System.out.println("✅ База данных успешно инициализирована");
+        } catch (Exception e) {
+            System.err.println("❌ Ошибка инициализации БД: " + e.getMessage());
+            throw new RuntimeException("Не удалось инициализировать тестовую БД", e);
+        }
     }
 
     @BeforeEach
