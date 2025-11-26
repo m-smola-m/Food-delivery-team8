@@ -8,6 +8,8 @@ import com.team8.fooddelivery.model.order.OrderStatus;
 import com.team8.fooddelivery.model.client.Payment;
 import com.team8.fooddelivery.model.client.PaymentMethodForOrder;
 import com.team8.fooddelivery.model.client.PaymentStatus;
+import com.team8.fooddelivery.model.client.Client;
+import com.team8.fooddelivery.repository.ClientRepository;
 import com.team8.fooddelivery.repository.OrderRepository;
 import com.team8.fooddelivery.repository.PaymentRepository;
 import com.team8.fooddelivery.service.OrderService;
@@ -27,17 +29,25 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final PaymentRepository paymentRepository;
     private final NotificationServiceImpl notificationService;
+    private final ClientRepository clientRepository;
 
     public OrderServiceImpl(CartServiceImpl cartService) {
         this.cartService = cartService;
         this.orderRepository = new OrderRepository();
         this.paymentRepository = new PaymentRepository();
         this.notificationService = new NotificationServiceImpl();
+        this.clientRepository = new ClientRepository();
     }
 
     @Override
     public Order placeOrder(Long clientId, Address deliveryAddress, PaymentMethodForOrder paymentMethod) {
         try {
+            Client client = clientRepository.findById(clientId)
+                    .orElseThrow(() -> new IllegalArgumentException("Клиент не найден"));
+            if (!client.isActive()) {
+                throw new IllegalStateException("Деактивированный клиент не может оформлять заказы");
+            }
+
             Cart cart = cartService.getCartForClient(clientId);
             if (cart == null) {
                 throw new IllegalStateException("Корзина для клиента не найдена");

@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Утилитный класс для управления подключениями к PostgreSQL базе данных
@@ -22,7 +21,6 @@ public class DatabaseConnection {
   private static String dbUrl = resolve("db.url", "DB_URL", DEFAULT_URL_LOCAL, DEFAULT_URL_CONTAINER);
   private static String dbUser = resolve("db.user", "DB_USER", DEFAULT_USER, DEFAULT_USER);
   private static String dbPassword = resolve("db.password", "DB_PASSWORD", DEFAULT_PASSWORD, DEFAULT_PASSWORD);
-  private static final AtomicBoolean schemaChecked = new AtomicBoolean(false);
 
   static {
     try {
@@ -38,17 +36,10 @@ public class DatabaseConnection {
     try {
       Connection connection = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
       logger.debug("Подключение к БД установлено: {}", dbUrl);
-      runSchemaBootstrap(connection);
       return connection;
     } catch (SQLException e) {
       logger.error("Ошибка подключения к БД: {}", dbUrl, e);
       throw e;
-    }
-  }
-
-  private static void runSchemaBootstrap(Connection connection) {
-    if (schemaChecked.compareAndSet(false, true)) {
-      SchemaBootstrap.ensureOrderColumns(connection);
     }
   }
 

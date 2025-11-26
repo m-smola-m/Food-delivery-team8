@@ -9,9 +9,12 @@ import com.team8.fooddelivery.model.order.Order;
 import com.team8.fooddelivery.service.impl.CartServiceImpl;
 import com.team8.fooddelivery.service.impl.ClientServiceImpl;
 import com.team8.fooddelivery.service.impl.OrderServiceImpl;
+import com.team8.fooddelivery.util.DatabaseInitializer;
 
 public class CartUserStory {
     public static void main(String[] args) {
+
+        DatabaseInitializer.initializeDatabase();
 
         // =====================
         // 0. Инициализация сервисов
@@ -28,7 +31,8 @@ public class CartUserStory {
                 55.7558, 37.6173, "Квартира с видом на Кремль", "ЦАО"
         );
 
-        Client client = clientService.register(
+        Client existingClient = clientService.getByPhone("89991112233");
+        Client client = existingClient != null ? existingClient : clientService.register(
                 "89991112233",
                 "Ivan123!",
                 "Иван Иванов",
@@ -43,25 +47,29 @@ public class CartUserStory {
         // =====================
         // 2. Создание корзины автоматически (US5)
         // =====================
-        Cart cart = cartService.createCartForClient(client.getId());
+        Cart cart = cartService.getCartForClient(client.getId());
+        if (cart == null) {
+            cart = cartService.createCartForClient(client.getId());
+        }
+        cartService.clear(client.getId());
         client.setCart(cart);
-        System.out.println("Корзина создана для клиента: " + cart);
+        System.out.println("Корзина создана/получена для клиента: " + cart);
 
         // =====================
         // 3. Добавление товаров в корзину (US5)
         // =====================
         cartService.addItem(client.getId(), CartItem.builder()
-                .productId(101L)
-                .productName("Пицца Маргарита")
+                .productId(5001L)
+                .productName("Пицца Пепперони")
                 .quantity(2)
-                .price(1200L)
+                .price(520.0)
                 .build());
 
         cartService.addItem(client.getId(), CartItem.builder()
-                .productId(102L)
-                .productName("Суши сет")
+                .productId(5003L)
+                .productName("Ролл Филадельфия")
                 .quantity(1)
-                .price(2500L)
+                .price(540.0)
                 .build());
 
         cart = cartService.getCartForClient(client.getId());
@@ -76,10 +84,10 @@ public class CartUserStory {
 
         try {
             cartService.addItem(client.getId(), CartItem.builder()
-                    .productId(103L)
-                    .productName("Салат Цезарь")
+                    .productId(5007L)
+                    .productName("Боул Зелёный")
                     .quantity(1)
-                    .price(800L)
+                    .price(450.0)
                     .build());
         } catch (IllegalStateException e) {
             System.out.println("Ошибка при добавлении товара деактивированным клиентом: " + e.getMessage());

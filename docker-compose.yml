@@ -1,29 +1,6 @@
 services:
-  app:
-    build: .
-    image: food-delivery-app
-    container_name: food-delivery-app
-    depends_on:
-      db:
-        condition: service_healthy
-    environment:
-      DB_URL: jdbc:postgresql://db:5432/food_delivery
-      DB_USER: fooddelivery_user
-      DB_PASSWORD: fooddelivery_pass
-      DB_HOST: db
-      DB_PORT: 5432
-    command: ./run_scheme.sh && java -jar app.jar
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./src/main/resources/sql:/app/src/main/resources/sql
-
   tests:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: build
-    image: food-delivery-tests
+    image: maven:3.9.6-eclipse-temurin-17
     container_name: food-delivery-tests
     depends_on:
       db:
@@ -34,10 +11,11 @@ services:
       DB_PASSWORD: fooddelivery_pass
       DB_HOST: db
       DB_PORT: 5432
-    entrypoint: ["/bin/sh", "-c"]
-    command: ./run_scheme.sh && mvn test -Ddb.user=$$DB_USER -Ddb.password=$$DB_PASSWORD
+    working_dir: /app
+    entrypoint: ["/bin/bash", "-lc"]
+    command: "./run_scheme.sh && mvn test -Ddb.user=$$DB_USER -Ddb.password=$$DB_PASSWORD"
     volumes:
-      - ./src/main/resources/sql:/app/src/main/resources/sql
+      - ./:/app
 
   db:
     image: postgres:15

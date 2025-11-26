@@ -30,7 +30,6 @@ public class DatabaseInitializer {
       "sql/004_create_order_tables/009_create_order_items.sql",  // БЕЗ внешних ключей
       "sql/004_create_order_tables/010_create_carts.sql",  // БЕЗ внешних ключей
       "sql/004_create_order_tables/011_create_cart_items.sql",  // БЕЗ внешних ключей
-      "sql/004_create_order_tables/012_add_cart_foreign_keys.sql",
       // Потом добавляем внешние ключи
       "sql/002_create_shop_tables/006_add_shop_foreign_keys.sql",
       "sql/004_create_order_tables/012_add_cart_foreign_keys.sql",
@@ -41,6 +40,11 @@ public class DatabaseInitializer {
    * Инициализирует всю структуру базы данных
    */
   public static void initializeDatabase() {
+    if (isDatabaseInitialized()) {
+      logger.info("База данных уже инициализирована, повторная загрузка схемы пропущена");
+      return;
+    }
+
     logger.info("Начинается инициализация базы данных...");
 
     try (Connection conn = DatabaseConnection.getConnection()) {
