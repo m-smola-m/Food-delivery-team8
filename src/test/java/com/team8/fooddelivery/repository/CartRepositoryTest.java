@@ -47,34 +47,36 @@ public class CartRepositoryTest {
         productRepository = new ProductRepository();
         shopRepository = new ShopRepository();
 
+        long suffix = System.currentTimeMillis();
+
         // Создаем тестового клиента для корзины
-        Client testClient = Client.builder()
-                .name("Тест Клиент для Корзины")
-                .phone("+79999999999")
-                .email("carttest@example.com")
+        com.team8.fooddelivery.model.Client testClient = com.team8.fooddelivery.model.Client.builder()
+                .name("Тест Клиент для Корзины " + suffix)
+                .phone("+7999" + (suffix % 1_000_0000))
+                .email("carttest" + suffix + "@example.com")
                 .passwordHash("hash")
-                .status(ClientStatus.ACTIVE)
+                .status(com.team8.fooddelivery.model.ClientStatus.ACTIVE)
                 .isActive(true)
                 .orderHistory(List.of())
                 .build();
         testClientId = clientRepository.save(testClient);
 
         // Создаем тестовый магазин и продукт
-        Shop testShop = new Shop();
-        testShop.setNaming("Тестовый Магазин");
-        testShop.setEmailForAuth("testshop@example.com");
-        testShop.setPhoneForAuth("+79998887766");
-        testShop.setStatus(ShopStatus.APPROVED);
+        com.team8.fooddelivery.model.Shop testShop = new com.team8.fooddelivery.model.Shop();
+        testShop.setNaming("Тестовый Магазин " + suffix);
+        testShop.setEmailForAuth("testshop" + suffix + "@example.com");
+        testShop.setPhoneForAuth("+7888" + (suffix % 1_000_0000));
+        testShop.setStatus(com.team8.fooddelivery.model.ShopStatus.APPROVED);
         testShop.setPassword("password");
         testShopId = shopRepository.save(testShop);
 
-        Product testProduct = new Product(
+        com.team8.fooddelivery.model.Product testProduct = new com.team8.fooddelivery.model.Product(
                 null,
                 "Тестовый продукт",
                 "Описание",
                 100.0,
                 200.0,
-                ProductCategory.OTHER,
+                com.team8.fooddelivery.model.ProductCategory.OTHER,
                 true,
                 java.time.Duration.ofMinutes(10)
         );

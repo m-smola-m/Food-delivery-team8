@@ -6,6 +6,7 @@ import com.team8.fooddelivery.model.Cart;
 import com.team8.fooddelivery.model.CartItem;
 import com.team8.fooddelivery.service.impl.CartServiceImpl;
 import com.team8.fooddelivery.service.impl.ClientServiceImpl;
+import com.team8.fooddelivery.service.impl.OrderServiceImpl;
 
 import java.util.List;
 
@@ -17,6 +18,7 @@ public class CartUserStory {
         // =====================
         CartServiceImpl cartService = new CartServiceImpl();
         ClientServiceImpl clientService = new ClientServiceImpl(cartService);
+        OrderServiceImpl orderService = new OrderServiceImpl(cartService);
 
         // =====================
         // 1. Регистрация клиента (US1)
@@ -92,15 +94,23 @@ public class CartUserStory {
         // =====================
         // 6. Оформление заказа (US7)
         // =====================
-        List<CartItem> orderItems = cartService.listItems(client.getId());
-        long totalPrice = cartService.calculateTotal(client.getId());
+        Order order = orderService.placeOrder(
+                client.getId(),
+                Address.builder()
+                    .country("Россия")
+                    .city("Москва")
+                    .street("Пример")
+                    .building("1")
+                    .build(),
+                PaymentMethodForOrder.CARD
+        );
 
-        System.out.println("Оформляем заказ с товарами: " + orderItems);
-        System.out.println("Общая сумма заказа: " + totalPrice + " коп.");
-
-        // ---------------------
-        // Здесь можно интегрировать OrderService и PaymentService для полного завершения US7
-        // ---------------------
+        System.out.println("Создан заказ: " + order.getId());
+        System.out.println("Статус оплаты: " + order.getPaymentStatus());
+        System.out.println("Статус заказа: " + order.getStatus());
+        System.out.println("Состав заказа: " + order.getItems());
+        System.out.println("Сумма заказа: " + order.getTotalPrice());
+        System.out.println("ETA: " + order.getEstimatedDeliveryTime());
 
         // =====================
         // 7. Очистка корзины после заказа (US5)

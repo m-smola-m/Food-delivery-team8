@@ -1,14 +1,12 @@
-SET session_replication_role = 'replica';
-
-DELETE FROM carts;
-DELETE FROM order_items;
-DELETE FROM orders;
-DELETE FROM couriers;
-DELETE FROM products;
-DELETE FROM shops;
-DELETE FROM clients;
-DELETE FROM working_hours;
-DELETE FROM addresses;
-DELETE FROM cart_items;
-
-SET session_replication_role = 'origin';
+-- Удаление таблиц если они существуют (для пересоздания)
+DROP TABLE IF EXISTS cart_items CASCADE;
+DROP TABLE IF EXISTS carts CASCADE;
+DROP TABLE IF EXISTS order_items CASCADE;
+DROP TABLE IF EXISTS orders CASCADE;
+DROP TABLE IF EXISTS payments CASCADE;
+DROP TABLE IF EXISTS clients CASCADE;
+DROP TABLE IF EXISTS shops CASCADE;
+DROP TABLE IF EXISTS products CASCADE;
+DROP TABLE IF EXISTS couriers CASCADE;
+DROP TABLE IF EXISTS addresses CASCADE;
+DROP TABLE IF EXISTS working_hours CASCADE;

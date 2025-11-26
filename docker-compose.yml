@@ -1,7 +1,8 @@
 services:
   app:
     build: .
-    image: my-java-app
+    image: food-delivery-app
+    container_name: food-delivery-app
     depends_on:
       db:
         condition: service_healthy
@@ -9,17 +10,38 @@ services:
       DB_URL: jdbc:postgresql://db:5432/food_delivery
       DB_USER: fooddelivery_user
       DB_PASSWORD: fooddelivery_pass
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/food_delivery
-      SPRING_DATASOURCE_USERNAME: fooddelivery_user
-      SPRING_DATASOURCE_PASSWORD: fooddelivery_pass
+      DB_HOST: db
+      DB_PORT: 5432
+    command: ./run_scheme.sh && java -jar app.jar
     ports:
       - "8080:8080"
     volumes:
       - ./src/main/resources/sql:/app/src/main/resources/sql
 
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: build
+    image: food-delivery-tests
+    container_name: food-delivery-tests
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/food_delivery
+      DB_USER: fooddelivery_user
+      DB_PASSWORD: fooddelivery_pass
+      DB_HOST: db
+      DB_PORT: 5432
+    entrypoint: ["/bin/sh", "-c"]
+    command: ./run_scheme.sh && mvn test -Ddb.user=$$DB_USER -Ddb.password=$$DB_PASSWORD
+    volumes:
+      - ./src/main/resources/sql:/app/src/main/resources/sql
+
   db:
     image: postgres:15
-    container_name: pgdb
+    container_name: food-delivery-db
     restart: always
     environment:
       POSTGRES_USER: fooddelivery_user
