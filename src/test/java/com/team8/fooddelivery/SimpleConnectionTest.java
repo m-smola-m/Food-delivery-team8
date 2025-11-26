@@ -1,19 +1,11 @@
 package com.team8.fooddelivery;
 
-import com.team8.fooddelivery.model.Address;
-import com.team8.fooddelivery.model.client.Client;
-import com.team8.fooddelivery.model.client.ClientStatus;
-import com.team8.fooddelivery.repository.ClientRepository;
 import com.team8.fooddelivery.util.DatabaseConnection;
 import com.team8.fooddelivery.util.DatabaseInitializer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
-import java.time.Instant;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Простая проверка подключения к БД")
 public class SimpleConnectionTest {

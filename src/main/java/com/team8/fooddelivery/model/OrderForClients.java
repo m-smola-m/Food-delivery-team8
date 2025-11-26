@@ -1,11 +1,8 @@
-package com.team8.fooddelivery.model.order;
+package com.team8.fooddelivery.model;
 
 import java.time.Duration;
 import java.util.List;
 
-import com.team8.fooddelivery.model.Address;
-import com.team8.fooddelivery.model.client.PaymentMethodForOrder;
-import com.team8.fooddelivery.model.product.Product;
 import lombok.*;
 
 @Data

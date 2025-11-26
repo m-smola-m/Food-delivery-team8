@@ -1,4 +1,4 @@
-package com.team8.fooddelivery.model.notification;
+package com.team8.fooddelivery.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,6 +1,6 @@
 package com.team8.fooddelivery.userstory;
 
-import com.team8.fooddelivery.model.notification.Notification;
+import com.team8.fooddelivery.model.Notification;
 import com.team8.fooddelivery.service.NotificationService;
 
 import java.util.List;

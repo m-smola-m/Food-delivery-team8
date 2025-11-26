@@ -1,4 +1,4 @@
-package com.team8.fooddelivery.model.order;
+package com.team8.fooddelivery.model;
 
 public enum OrderStatus {
     PENDING,

@@ -1,12 +1,12 @@
 package com.team8.fooddelivery.integration;
 
 import com.team8.fooddelivery.model.*;
-import com.team8.fooddelivery.model.product.Product;
-import com.team8.fooddelivery.model.product.ProductCategory;
-import com.team8.fooddelivery.model.shop.Shop;
-import com.team8.fooddelivery.model.shop.ShopStatus;
-import com.team8.fooddelivery.model.shop.ShopType;
-import com.team8.fooddelivery.model.shop.WorkingHours;
+import com.team8.fooddelivery.model.Product;
+import com.team8.fooddelivery.model.ProductCategory;
+import com.team8.fooddelivery.model.Shop;
+import com.team8.fooddelivery.model.ShopStatus;
+import com.team8.fooddelivery.model.ShopType;
+import com.team8.fooddelivery.model.WorkingHours;
 import com.team8.fooddelivery.repository.*;
 import com.team8.fooddelivery.util.DatabaseConnection;
 import org.junit.jupiter.api.*;

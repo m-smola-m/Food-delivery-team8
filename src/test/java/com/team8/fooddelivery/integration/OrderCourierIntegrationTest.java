@@ -1,13 +1,13 @@
 package com.team8.fooddelivery.integration;
 
-import com.team8.fooddelivery.model.client.Client;
-import com.team8.fooddelivery.model.client.ClientStatus;
-import com.team8.fooddelivery.model.courier.Courier;
-import com.team8.fooddelivery.model.courier.CourierStatus;
-import com.team8.fooddelivery.model.order.Order;
-import com.team8.fooddelivery.model.order.OrderStatus;
-import com.team8.fooddelivery.model.shop.Shop;
-import com.team8.fooddelivery.model.shop.ShopStatus;
+import com.team8.fooddelivery.model.Client;
+import com.team8.fooddelivery.model.ClientStatus;
+import com.team8.fooddelivery.model.Courier;
+import com.team8.fooddelivery.model.CourierStatus;
+import com.team8.fooddelivery.model.Order;
+import com.team8.fooddelivery.model.OrderStatus;
+import com.team8.fooddelivery.model.Shop;
+import com.team8.fooddelivery.model.ShopStatus;
 import com.team8.fooddelivery.repository.*;
 import com.team8.fooddelivery.util.DatabaseConnection;
 import org.junit.jupiter.api.*;

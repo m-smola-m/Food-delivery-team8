@@ -1,6 +1,6 @@
 package com.team8.fooddelivery.service;
 
-import com.team8.fooddelivery.model.shop.Shop;
+import com.team8.fooddelivery.model.Shop;
 
 public interface ShopInfoService {
 

@@ -1,7 +1,7 @@
 package com.team8.fooddelivery.service.impl;
 
-import com.team8.fooddelivery.model.product.Cart;
-import com.team8.fooddelivery.model.product.CartItem;
+import com.team8.fooddelivery.model.Cart;
+import com.team8.fooddelivery.model.CartItem;
 import com.team8.fooddelivery.repository.CartRepository;
 import com.team8.fooddelivery.service.CartService;
 import org.slf4j.Logger;

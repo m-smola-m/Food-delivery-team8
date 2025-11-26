@@ -1,4 +1,4 @@
-package com.team8.fooddelivery.model.shop;
+package com.team8.fooddelivery.model;
 
 import lombok.*;
 
