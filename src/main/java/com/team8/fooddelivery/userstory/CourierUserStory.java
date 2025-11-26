@@ -1,6 +1,6 @@
 package com.team8.fooddelivery.userstory;
 
-import com.team8.fooddelivery.model.Courier;
+import com.team8.fooddelivery.model.courier.Courier;
 import com.team8.fooddelivery.service.impl.CourierServiceImpl;
 
 public class CourierUserStory {

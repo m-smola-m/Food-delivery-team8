@@ -1,6 +1,15 @@
 package com.team8.fooddelivery.integration;
 
 import com.team8.fooddelivery.model.*;
+import com.team8.fooddelivery.model.client.Client;
+import com.team8.fooddelivery.model.client.ClientStatus;
+import com.team8.fooddelivery.model.courier.Courier;
+import com.team8.fooddelivery.model.courier.CourierStatus;
+import com.team8.fooddelivery.model.order.Order;
+import com.team8.fooddelivery.model.order.OrderStatus;
+import com.team8.fooddelivery.model.product.CartItem;
+import com.team8.fooddelivery.model.shop.Shop;
+import com.team8.fooddelivery.model.shop.ShopStatus;
 import com.team8.fooddelivery.repository.*;
 import com.team8.fooddelivery.util.DatabaseConnection;
 import org.junit.jupiter.api.*;
@@ -95,7 +104,7 @@ public class OrderCourierIntegrationTest {
         .addressNote("Позвонить за 5 минут")
         .build();
 
-    com.team8.fooddelivery.model.Order order = new com.team8.fooddelivery.model.Order();
+    Order order = new Order();
     order.setStatus(OrderStatus.PENDING);
     order.setCustomerId(clientId);
     order.setRestaurantId(shopId);
@@ -115,7 +124,7 @@ public class OrderCourierIntegrationTest {
     order.setStatus(OrderStatus.DELIVERING);
     orderRepository.update(order);
 
-    Optional<com.team8.fooddelivery.model.Order> retrievedOrder = orderRepository.findById(orderId);
+    Optional<Order> retrievedOrder = orderRepository.findById(orderId);
     assertTrue(retrievedOrder.isPresent());
     assertEquals(courierId, retrievedOrder.get().getCourierId());
     assertEquals(OrderStatus.DELIVERING, retrievedOrder.get().getStatus());
@@ -158,7 +167,7 @@ public class OrderCourierIntegrationTest {
         .addressNote("Домофон 12")
         .build();
 
-    com.team8.fooddelivery.model.Order order = new com.team8.fooddelivery.model.Order();
+    Order order = new Order();
     order.setStatus(OrderStatus.PENDING);
     order.setCustomerId(clientId);
     order.setRestaurantId(shopId);
@@ -172,7 +181,7 @@ public class OrderCourierIntegrationTest {
     Long orderId = orderRepository.save(order);
 
     // Проверка начального статуса
-    Optional<com.team8.fooddelivery.model.Order> initialOrder = orderRepository.findById(orderId);
+    Optional<Order> initialOrder = orderRepository.findById(orderId);
     assertTrue(initialOrder.isPresent());
     assertEquals(OrderStatus.PENDING, initialOrder.get().getStatus());
 
@@ -181,7 +190,7 @@ public class OrderCourierIntegrationTest {
     order.setStatus(OrderStatus.PREPARING);
     orderRepository.update(order);
 
-    Optional<com.team8.fooddelivery.model.Order> preparingOrder = orderRepository.findById(orderId);
+    Optional<Order> preparingOrder = orderRepository.findById(orderId);
     assertTrue(preparingOrder.isPresent());
     assertEquals(OrderStatus.PREPARING, preparingOrder.get().getStatus());
 
@@ -189,7 +198,7 @@ public class OrderCourierIntegrationTest {
     order.setStatus(OrderStatus.COMPLETED);
     orderRepository.update(order);
 
-    Optional<com.team8.fooddelivery.model.Order> deliveredOrder = orderRepository.findById(orderId);
+    Optional<Order> deliveredOrder = orderRepository.findById(orderId);
     assertTrue(deliveredOrder.isPresent());
     assertEquals(OrderStatus.COMPLETED, deliveredOrder.get().getStatus());
   }

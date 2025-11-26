@@ -1,4 +1,4 @@
-package com.team8.fooddelivery.model;
+package com.team8.fooddelivery.model.order;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -6,10 +6,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.team8.fooddelivery.model.Address;
+import com.team8.fooddelivery.model.product.CartItem;
+import com.team8.fooddelivery.model.client.PaymentStatus;
+import com.team8.fooddelivery.model.client.PaymentMethodForOrder;
 import lombok.Data;
-
-import java.util.Map;
-import java.util.HashMap;
 
 @Data
 public class Order {

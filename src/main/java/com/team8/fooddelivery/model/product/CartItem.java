@@ -1,4 +1,4 @@
-package com.team8.fooddelivery.model;
+package com.team8.fooddelivery.model.product;
 
 import lombok.Builder;
 import lombok.Data;

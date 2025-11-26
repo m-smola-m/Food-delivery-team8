@@ -1,13 +1,13 @@
 package com.team8.fooddelivery.service.impl;
 
 import com.team8.fooddelivery.model.Address;
-import com.team8.fooddelivery.model.Cart;
-import com.team8.fooddelivery.model.CartItem;
-import com.team8.fooddelivery.model.Order;
-import com.team8.fooddelivery.model.OrderStatus;
-import com.team8.fooddelivery.model.Payment;
-import com.team8.fooddelivery.model.PaymentMethodForOrder;
-import com.team8.fooddelivery.model.PaymentStatus;
+import com.team8.fooddelivery.model.product.Cart;
+import com.team8.fooddelivery.model.product.CartItem;
+import com.team8.fooddelivery.model.order.Order;
+import com.team8.fooddelivery.model.order.OrderStatus;
+import com.team8.fooddelivery.model.client.Payment;
+import com.team8.fooddelivery.model.client.PaymentMethodForOrder;
+import com.team8.fooddelivery.model.client.PaymentStatus;
 import com.team8.fooddelivery.repository.OrderRepository;
 import com.team8.fooddelivery.repository.PaymentRepository;
 import com.team8.fooddelivery.service.OrderService;

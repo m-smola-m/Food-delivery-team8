@@ -1,4 +1,4 @@
-package com.team8.fooddelivery.model;
+package com.team8.fooddelivery.model.courier;
 
 public enum CourierStatus {
     OFF_SHIFT,   

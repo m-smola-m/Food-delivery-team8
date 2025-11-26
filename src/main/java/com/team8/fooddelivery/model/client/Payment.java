@@ -1,4 +1,4 @@
-package com.team8.fooddelivery.model;
+package com.team8.fooddelivery.model.client;
 
 import java.time.Instant;
 

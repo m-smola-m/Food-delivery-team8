@@ -1,8 +1,8 @@
 package com.team8.fooddelivery.repository;
 
-import com.team8.fooddelivery.model.Payment;
-import com.team8.fooddelivery.model.PaymentMethodForOrder;
-import com.team8.fooddelivery.model.PaymentStatus;
+import com.team8.fooddelivery.model.client.Payment;
+import com.team8.fooddelivery.model.client.PaymentMethodForOrder;
+import com.team8.fooddelivery.model.client.PaymentStatus;
 import com.team8.fooddelivery.util.DatabaseConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +12,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.time.Instant;
 import java.util.Optional;
 
 public class PaymentRepository {

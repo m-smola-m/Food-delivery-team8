@@ -2,8 +2,8 @@ package com.team8.fooddelivery.userstory;
 
 import com.team8.fooddelivery.model.AuthResponse;
 import com.team8.fooddelivery.model.Address;
-import com.team8.fooddelivery.model.Client;
-import com.team8.fooddelivery.model.ClientStatus;
+import com.team8.fooddelivery.model.client.Client;
+import com.team8.fooddelivery.model.client.ClientStatus;
 import com.team8.fooddelivery.service.impl.CartServiceImpl;
 import com.team8.fooddelivery.service.impl.ClientServiceImpl;
 import com.team8.fooddelivery.util.JWTUtil;

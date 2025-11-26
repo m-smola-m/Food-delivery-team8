@@ -1,5 +1,6 @@
-package com.team8.fooddelivery.model;
+package com.team8.fooddelivery.model.courier;
 
+import com.team8.fooddelivery.model.notification.Notification;
 import lombok.Data;
 import java.util.*;
 
