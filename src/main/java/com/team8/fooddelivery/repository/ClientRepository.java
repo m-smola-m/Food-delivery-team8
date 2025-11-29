@@ -2,7 +2,8 @@ package com.team8.fooddelivery.repository;
 
 import com.team8.fooddelivery.model.client.Client;
 import com.team8.fooddelivery.model.client.ClientStatus;
-import com.team8.fooddelivery.util.DatabaseConnection;
+import com.team8.fooddelivery.service.DatabaseConnectionService;
+import com.team8.fooddelivery.service.DatabaseConnectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +21,7 @@ public class ClientRepository {
         String sql = "INSERT INTO clients (name, phone, password_hash, email, address_id, status, created_at, is_active, order_history) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
 
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnectionService.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             Long addressId = null;
@@ -54,7 +55,7 @@ public class ClientRepository {
     public Optional<Client> findById(Long id) throws SQLException {
         String sql = "SELECT * FROM clients WHERE id = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnectionService.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setLong(1, id);
@@ -70,7 +71,7 @@ public class ClientRepository {
     public Optional<Client> findByPhone(String phone) throws SQLException {
         String sql = "SELECT * FROM clients WHERE phone = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnectionService.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, phone);
@@ -86,7 +87,7 @@ public class ClientRepository {
     public Optional<Client> findByEmail(String email) throws SQLException {
         String sql = "SELECT * FROM clients WHERE email = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnectionService.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, email);
@@ -102,7 +103,7 @@ public class ClientRepository {
     public List<Client> findAll() throws SQLException {
         String sql = "SELECT * FROM clients";
 
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnectionService.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
@@ -118,7 +119,7 @@ public class ClientRepository {
         String sql = "UPDATE clients SET name=?, phone=?, password_hash=?, email=?, address_id=?, " +
                      "status=?, is_active=?, order_history=? WHERE id=?";
 
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnectionService.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             Long addressId = null;
@@ -153,7 +154,7 @@ public class ClientRepository {
     public void delete(Long id) throws SQLException {
         String sql = "DELETE FROM clients WHERE id = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnectionService.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setLong(1, id);

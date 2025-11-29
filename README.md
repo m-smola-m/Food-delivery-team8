@@ -50,7 +50,7 @@ java -Ddb.url=jdbc:postgresql://localhost:5432/food_delivery \
 
 #### Способ 2: Программно
 ```java
-DatabaseConnection.setConnectionParams(
+DatabaseConnectionService.setConnectionParams(
     "jdbc:postgresql://localhost:5432/food_delivery",
     "your_user",
     "your_password"
@@ -59,7 +59,7 @@ DatabaseConnection.setConnectionParams(
 
 ### 5. Проверка подключения
 ```java
-if (DatabaseConnection.testConnection()) {
+if (DatabaseConnectionService.testConnection()) {
     System.out.println("Подключение к БД успешно!");
 } else {
     System.out.println("Ошибка подключения к БД");
@@ -246,7 +246,7 @@ BUILD SUCCESS
 ## Структура тестов
 
 - **SimpleConnectionTest** - самый простой, проверяет только подключение
-- **DatabaseConnectionTest** - тесты класса подключения
+- **DatabaseConnectionServiceTest** - тесты класса подключения
 - **ClientRepositoryTest** - тесты работы с клиентами
 - **CartRepositoryTest** - тесты работы с корзинами
 - **DatabaseIntegrationTest** - полные интеграционные тесты
@@ -300,7 +300,7 @@ BUILD SUCCESS
 ## Структура тестов
 
 1. **SimpleConnectionTest** - проверка подключения к БД
-2. **DatabaseConnectionTest** - тесты класса DatabaseConnection
+2. **DatabaseConnectionServiceTest** - тесты класса DatabaseConnectionService
 3. **ClientRepositoryTest** - тесты работы с клиентами (7 тестов)
 4. **CartRepositoryTest** - тесты работы с корзинами (5 тестов)
 5. **DatabaseIntegrationTest** - полные интеграционные тесты (3 теста)
@@ -358,7 +358,7 @@ mvn test
 ### Запуск конкретного теста:
 ```bash
 mvn test -Dtest=SimpleConnectionTest
-mvn test -Dtest=DatabaseConnectionTest
+mvn test -Dtest=DatabaseConnectionServiceTest
 mvn test -Dtest=ClientRepositoryTest
 mvn test -Dtest=CartRepositoryTest
 mvn test -Dtest=DatabaseIntegrationTest
@@ -375,8 +375,8 @@ mvn test -Dtest=DatabaseIntegrationTest
 **Самый простой тест** - проверяет только подключение к БД.
 **Запустите его первым**, чтобы убедиться, что подключение работает.
 
-### 2. DatabaseConnectionTest
-Проверяет работу класса `DatabaseConnection`:
+### 2. DatabaseConnectionServiceTest
+Проверяет работу класса `DatabaseConnectionService`:
 - Тестовое подключение
 - Получение подключения
 - Закрытие подключения

@@ -1,7 +1,7 @@
 package com.team8.fooddelivery.repository;
 
 import com.team8.fooddelivery.model.Address;
-import com.team8.fooddelivery.util.DatabaseConnection;
+import com.team8.fooddelivery.service.DatabaseConnectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +16,7 @@ public class AddressRepository {
                      "latitude, longitude, address_note, district) " +
                      "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
 
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnectionService.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, address.getCountry());
@@ -44,7 +44,7 @@ public class AddressRepository {
     public Optional<Address> findById(Long id) throws SQLException {
         String sql = "SELECT * FROM addresses WHERE id = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnectionService.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setLong(1, id);
@@ -61,7 +61,7 @@ public class AddressRepository {
         String sql = "UPDATE addresses SET country=?, city=?, street=?, building=?, apartment=?, " +
                      "entrance=?, floor=?, latitude=?, longitude=?, address_note=?, district=? WHERE id=?";
 
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnectionService.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, address.getCountry());
@@ -85,7 +85,7 @@ public class AddressRepository {
     public void delete(Long id) throws SQLException {
         String sql = "DELETE FROM addresses WHERE id = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnectionService.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setLong(1, id);

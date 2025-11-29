@@ -1,5 +1,7 @@
 package com.team8.fooddelivery.util;
 
+import com.team8.fooddelivery.service.DatabaseConnectionService;
+import com.team8.fooddelivery.service.DatabaseInitializerService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -10,16 +12,16 @@ public class SimpleConnectionTest {
 
     @Test
     @DisplayName("Проверка подключения к PostgreSQL")
-    void testDatabaseConnection() throws SQLException {
+    void testDatabaseConnectionService() throws SQLException {
         // Настройка параметров подключения
         String dbUrl = System.getProperty("db.url", "jdbc:postgresql://localhost:5432/food_delivery");
         String dbUser = System.getProperty("db.user", "postgres");
         String dbPassword = System.getProperty("db.password", "postgres");
 
-        DatabaseConnection.setConnectionParams(dbUrl, dbUser, dbPassword);
-        DatabaseInitializer.fullCleanDatabase();
+        DatabaseConnectionService.setConnectionParams(dbUrl, dbUser, dbPassword);
+        DatabaseInitializerService.fullCleanDatabase();
         try {
-            DatabaseConnection.initializeDatabase();
+            DatabaseConnectionService.initializeDatabase();
             System.out.println("✅ База данных успешно инициализирована");
         } catch (Exception e) {
             System.err.println("❌ Ошибка инициализации БД: " + e.getMessage());
@@ -27,7 +29,7 @@ public class SimpleConnectionTest {
         }
         
         // Проверка подключения
-        boolean connected = DatabaseConnection.testConnection();
+        boolean connected = DatabaseConnectionService.testConnection();
         
         if (!connected) {
             System.err.println("\n❌ ОШИБКА: Не удалось подключиться к базе данных!");
@@ -41,6 +43,6 @@ public class SimpleConnectionTest {
             System.err.println("\nДля изменения параметров используйте системные свойства:");
             System.err.println("   -Ddb.url=... -Ddb.user=... -Ddb.password=...");
         }
-        DatabaseInitializer.isDatabaseInitialized();
+        DatabaseInitializerService.isDatabaseInitialized();
     }
 }

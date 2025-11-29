@@ -1,11 +1,10 @@
 package com.team8.fooddelivery.util;
 
+import com.team8.fooddelivery.service.DatabaseConnectionService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -23,12 +22,12 @@ public class DatabaseConnectionTest {
 
   @BeforeEach
   void setUp() {
-    //DatabaseConnection.initializeDatabase();
+    //DatabaseConnectionService.initializeDatabase();
     // Используем системные свойства или значения по умолчанию
     String dbUrl = System.getProperty("db.url", DEFAULT_DB_URL);
     String dbUser = System.getProperty("db.user", DEFAULT_DB_USER);
     String dbPassword = System.getProperty("db.password", DEFAULT_DB_PASSWORD);
-    DatabaseConnection.setConnectionParams(dbUrl, dbUser, dbPassword);
+    DatabaseConnectionService.setConnectionParams(dbUrl, dbUser, dbPassword);
 
     System.out.println("Тестовые параметры подключения:");
     System.out.println("URL: " + dbUrl);
@@ -39,7 +38,7 @@ public class DatabaseConnectionTest {
   @Test
   @DisplayName("Проверка тестового подключения к БД")
   void testConnection() {
-    boolean connected = DatabaseConnection.testConnection();
+    boolean connected = DatabaseConnectionService.testConnection();
 
     if (!connected) {
       System.err.println("\n❌ Не удалось подключиться к БД с параметрами:");
@@ -55,7 +54,7 @@ public class DatabaseConnectionTest {
   @Test
   @DisplayName("Получение подключения к БД")
   void testGetConnection() throws SQLException {
-    try (Connection connection = DatabaseConnection.getConnection()) {
+    try (Connection connection = DatabaseConnectionService.getConnection()) {
       assertNotNull(connection, "Подключение не должно быть null");
       assertFalse(connection.isClosed(), "Подключение должно быть открытым");
 
@@ -67,7 +66,7 @@ public class DatabaseConnectionTest {
   @Test
   @DisplayName("Проверка закрытия подключения")
   void testCloseConnection() throws SQLException {
-    Connection connection = DatabaseConnection.getConnection();
+    Connection connection = DatabaseConnectionService.getConnection();
     assertNotNull(connection);
     assertFalse(connection.isClosed());
 
@@ -85,20 +84,20 @@ public class DatabaseConnectionTest {
 
     // Проверяем, что метод не бросает исключений
     assertDoesNotThrow(() ->
-        DatabaseConnection.setConnectionParams(testUrl, testUser, testPassword)
+        DatabaseConnectionService.setConnectionParams(testUrl, testUser, testPassword)
     );
 
     // Возвращаем оригинальные параметры для следующих тестов
-    DatabaseConnection.setConnectionParams(DEFAULT_DB_URL, DEFAULT_DB_USER, DEFAULT_DB_PASSWORD);
+    DatabaseConnectionService.setConnectionParams(DEFAULT_DB_URL, DEFAULT_DB_USER, DEFAULT_DB_PASSWORD);
   }
 
   @Test
   @DisplayName("Проверка работы с параметрами по умолчанию")
   void testDefaultParameters() throws SQLException {
     // Явно устанавливаем параметры по умолчанию
-    DatabaseConnection.setConnectionParams(DEFAULT_DB_URL, DEFAULT_DB_USER, DEFAULT_DB_PASSWORD);
+    DatabaseConnectionService.setConnectionParams(DEFAULT_DB_URL, DEFAULT_DB_USER, DEFAULT_DB_PASSWORD);
 
-    try (Connection connection = DatabaseConnection.getConnection()) {
+    try (Connection connection = DatabaseConnectionService.getConnection()) {
       assertNotNull(connection, "Должно быть возможно подключение с параметрами по умолчанию");
       assertTrue(connection.isValid(2), "Подключение должно быть валидным");
     }
@@ -108,29 +107,29 @@ public class DatabaseConnectionTest {
   @DisplayName("Проверка поведения при неверных параметрах")
   void testInvalidParameters() {
     // Устанавливаем неверные параметры
-    DatabaseConnection.setConnectionParams(
+    DatabaseConnectionService.setConnectionParams(
         "jdbc:postgresql://localhost:5432/nonexistent_db",
         "invalid_user",
         "wrong_password"
     );
 
     // Ожидаем, что тест подключения вернет false
-    boolean connected = DatabaseConnection.testConnection();
+    boolean connected = DatabaseConnectionService.testConnection();
     assertFalse(connected, "Подключение с неверными параметрами должно завершиться ошибкой");
     // Проверяем, что получение подключения бросает исключение
-    assertThrows(SQLException.class, DatabaseConnection::getConnection,
+    assertThrows(SQLException.class, DatabaseConnectionService::getConnection,
         "При неверных параметрах должно бросаться SQLException");
 
     // Возвращаем валидные параметры
-    DatabaseConnection.setConnectionParams(DEFAULT_DB_URL, DEFAULT_DB_USER, DEFAULT_DB_PASSWORD);
+    DatabaseConnectionService.setConnectionParams(DEFAULT_DB_URL, DEFAULT_DB_USER, DEFAULT_DB_PASSWORD);
   }
 
   @Test
   @DisplayName("Проверка многократного открытия/закрытия подключения")
   void testMultipleConnections() throws SQLException {
     // Открываем несколько подключений и проверяем их независимость
-    try (Connection conn1 = DatabaseConnection.getConnection();
-        Connection conn2 = DatabaseConnection.getConnection()) {
+    try (Connection conn1 = DatabaseConnectionService.getConnection();
+        Connection conn2 = DatabaseConnectionService.getConnection()) {
 
       assertNotNull(conn1);
       assertNotNull(conn2);

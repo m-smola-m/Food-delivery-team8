@@ -9,7 +9,7 @@ import com.team8.fooddelivery.model.order.OrderStatus;
 import com.team8.fooddelivery.model.shop.Shop;
 import com.team8.fooddelivery.model.shop.ShopStatus;
 import com.team8.fooddelivery.repository.*;
-import com.team8.fooddelivery.util.DatabaseConnection;
+import com.team8.fooddelivery.service.DatabaseConnectionService;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.DisplayName;
 
@@ -29,13 +29,13 @@ public class OrderCourierIntegrationTest {
   private OrderRepository orderRepository;
 
   @BeforeAll
-  static void setupDatabaseConnection() throws SQLException {
+  static void setupDatabaseConnectionService() throws SQLException {
     String dbUrl = System.getProperty("db.url", "jdbc:postgresql://localhost:5432/food_delivery");
     String dbUser = System.getProperty("db.user", "postgres");
     String dbPassword = System.getProperty("db.password", "postgres");
-    DatabaseConnection.setConnectionParams(dbUrl, dbUser, dbPassword);
+    DatabaseConnectionService.setConnectionParams(dbUrl, dbUser, dbPassword);
 
-    if (!DatabaseConnection.testConnection()) {
+    if (!DatabaseConnectionService.testConnection()) {
       throw new RuntimeException("Не удалось подключиться к базе данных");
     }
   }

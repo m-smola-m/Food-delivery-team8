@@ -1,6 +1,6 @@
-package com.team8.fooddelivery.util;
+package com.team8.fooddelivery.service;
 
-import org.postgresql.util.PSQLException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,8 +11,8 @@ import java.sql.SQLException;
 /**
  * Утилитный класс для управления подключениями к PostgreSQL базе данных
  */
-public class DatabaseConnection {
-  private static final Logger logger = LoggerFactory.getLogger(DatabaseConnection.class);
+public class DatabaseConnectionService {
+  private static final Logger logger = LoggerFactory.getLogger(DatabaseConnectionService.class);
 
   private static final String DEFAULT_URL = "jdbc:postgresql://localhost:5432/food_delivery";
   private static final String DEFAULT_USER = "postgres"; // Используем пользователя, которого мы настроили
@@ -51,8 +51,8 @@ public class DatabaseConnection {
   }
 
   public static void initializeDatabase() {
-    if (!DatabaseInitializer.isDatabaseInitialized()) {
-      DatabaseInitializer.initializeDatabase();
+    if (!DatabaseInitializerService.isDatabaseInitialized()) {
+      DatabaseInitializerService.initializeDatabase();
     } else {
       logger.info("База данных уже инициализирована");
     }

@@ -1,4 +1,4 @@
-package com.team8.fooddelivery.util;
+package com.team8.fooddelivery.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,9 +14,12 @@ import java.util.List;
 /**
  * Класс для инициализации структуры базы данных
  */
-public class DatabaseInitializer {
-  private static final Logger logger = LoggerFactory.getLogger(DatabaseInitializer.class);
+public class DatabaseInitializerService {
+  private static final Logger logger = LoggerFactory.getLogger(DatabaseInitializerService.class);
 
+  private static final List<String> SQL_TEST_FILES = Arrays.asList(
+
+  );
   // Добавляем файл очистки в начало
   private static final List<String> SQL_FILES = Arrays.asList(
       // Сначала создаем все таблицы без внешних ключей
@@ -34,7 +37,9 @@ public class DatabaseInitializer {
       // Потом добавляем внешние ключи
       "sql/002_create_shop_tables/006_add_shop_foreign_keys.sql",
       "sql/004_create_order_tables/012_add_cart_foreign_keys.sql",
-      "sql/005_create_indexes/013_create_indexes.sql"
+      "sql/004_create_order_tables/013_create_payments.sql",
+      "sql/005_create_indexes/013_create_indexes.sql",
+      "sql/test/testsData.sql"
   );
 
   /**
@@ -43,7 +48,7 @@ public class DatabaseInitializer {
   public static void initializeDatabase() {
     logger.info("Начинается инициализация базы данных...");
 
-    try (Connection conn = DatabaseConnection.getConnection()) {
+    try (Connection conn = DatabaseConnectionService.getConnection()) {
       // Создаем схему если не существует
       //executeSql(conn, "CREATE SCHEMA IF NOT EXISTS food_delivery");
 
@@ -101,7 +106,7 @@ public class DatabaseInitializer {
 
   // Обновите также метод проверки инициализации
   public static boolean isDatabaseInitialized() {
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
          Statement stmt = conn.createStatement()) {
 
       // Указываем схему явно
@@ -116,7 +121,7 @@ public class DatabaseInitializer {
   private static void executeSqlFile(Connection conn, String filePath) throws SQLException {
     logger.info("Выполнение SQL файла: {}", filePath);
 
-    try (InputStream inputStream = DatabaseInitializer.class.getClassLoader()
+    try (InputStream inputStream = DatabaseInitializerService.class.getClassLoader()
         .getResourceAsStream(filePath)) {
 
       if (inputStream == null) {
@@ -138,7 +143,7 @@ public class DatabaseInitializer {
   public static void refreshDataBase() throws SQLException {
     logger.info("Отчистка данных из таблиц");
 
-    try (Connection conn = DatabaseConnection.getConnection()) {
+    try (Connection conn = DatabaseConnectionService.getConnection()) {
       executeSqlFile(conn, "sql/000_drop_tables.sql");
     }
   }
@@ -146,7 +151,7 @@ public class DatabaseInitializer {
   public static void fullCleanDatabase() {
     logger.info("Удаление таблиц из БД...");
 
-    try (Connection conn = DatabaseConnection.getConnection()) {
+    try (Connection conn = DatabaseConnectionService.getConnection()) {
       // Отключаем auto-commit для выполнения всех команд в одной транзакции
       conn.setAutoCommit(false);
 
@@ -165,6 +170,7 @@ public class DatabaseInitializer {
         stmt.execute("DROP TABLE IF EXISTS clients CASCADE");
         stmt.execute("DROP TABLE IF EXISTS working_hours CASCADE");
         stmt.execute("DROP TABLE IF EXISTS addresses CASCADE");
+        stmt.execute("DROP TABLE IF EXISTS payments CASCADE");
 
         // Включаем проверку внешних ключей обратно
         stmt.execute("SET session_replication_role = 'origin'");
@@ -192,11 +198,11 @@ public class DatabaseInitializer {
     }
   }
 }
-/*
+  /*
   public static void cleanDatabase() {
     logger.info("Очистка базы данных...");
 
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
          Statement stmt = conn.createStatement()) {
 
       // Отключаем проверку внешних ключей
@@ -227,4 +233,4 @@ public class DatabaseInitializer {
       logger.error("❌ Ошибка очистки базы данных", e);
       throw new RuntimeException("Не удалось очистить базу данных", e);
     }
-  } */
+  }*/

@@ -2,7 +2,7 @@ package com.team8.fooddelivery.repository;
 
 import com.team8.fooddelivery.model.order.Order;
 import com.team8.fooddelivery.model.order.OrderStatus;
-import com.team8.fooddelivery.util.DatabaseConnection;
+import com.team8.fooddelivery.service.DatabaseConnectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +18,7 @@ public class OrderRepository {
     String sql = "INSERT INTO orders (status, customer_id, restaurant_id, delivery_address_id, courier_id, total_price) " +
         "VALUES (?, ?, ?, ?, ?, ?) RETURNING id";
 
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
         PreparedStatement stmt = conn.prepareStatement(sql)) {
 
       // deliveryAddress в Order это String, а не Address объект
@@ -52,7 +52,7 @@ public class OrderRepository {
   public Optional<Order> findById(Long id) throws SQLException {
     String sql = "SELECT * FROM orders WHERE id = ?";
 
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
         PreparedStatement stmt = conn.prepareStatement(sql)) {
 
       stmt.setLong(1, id);
@@ -68,7 +68,7 @@ public class OrderRepository {
   public List<Order> findByCustomerId(Long customerId) throws SQLException {
     String sql = "SELECT * FROM orders WHERE customer_id = ?";
 
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
         PreparedStatement stmt = conn.prepareStatement(sql)) {
 
       stmt.setLong(1, customerId);
@@ -85,7 +85,7 @@ public class OrderRepository {
   public List<Order> findByCourierId(Long courierId) throws SQLException {
     String sql = "SELECT * FROM orders WHERE courier_id = ?";
 
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
         PreparedStatement stmt = conn.prepareStatement(sql)) {
 
       stmt.setLong(1, courierId);
@@ -102,7 +102,7 @@ public class OrderRepository {
   public List<Order> findByStatus(OrderStatus status) throws SQLException {
     String sql = "SELECT * FROM orders WHERE status = ?";
 
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
         PreparedStatement stmt = conn.prepareStatement(sql)) {
 
       stmt.setString(1, status.name());
@@ -119,7 +119,7 @@ public class OrderRepository {
   public List<Order> findAll() throws SQLException {
     String sql = "SELECT * FROM orders";
 
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
         PreparedStatement stmt = conn.prepareStatement(sql);
         ResultSet rs = stmt.executeQuery()) {
 
@@ -135,7 +135,7 @@ public class OrderRepository {
     String sql = "UPDATE orders SET status=?, customer_id=?, restaurant_id=?, delivery_address_id=?, " +
         "courier_id=?, total_price=?, updated_at=CURRENT_TIMESTAMP WHERE id=?";
 
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
         PreparedStatement stmt = conn.prepareStatement(sql)) {
 
       // deliveryAddress в Order это String, а не Address объект
@@ -157,7 +157,7 @@ public class OrderRepository {
   public void delete(Long id) throws SQLException {
     String sql = "DELETE FROM orders WHERE id = ?";
 
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
         PreparedStatement stmt = conn.prepareStatement(sql)) {
 
       stmt.setLong(1, id);
