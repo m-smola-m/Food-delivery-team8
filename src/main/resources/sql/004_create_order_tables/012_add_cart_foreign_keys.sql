@@ -18,3 +18,16 @@ ALTER TABLE order_items ADD CONSTRAINT fk_order_items_product
 
 ALTER TABLE cart_items ADD CONSTRAINT fk_cart_items_cart
     FOREIGN KEY (cart_id) REFERENCES carts(id) ON DELETE CASCADE;
+
+ALTER TABLE orders
+    ADD COLUMN IF NOT EXISTS delivery_address TEXT,
+    ADD COLUMN IF NOT EXISTS delivery_address_id BIGINT REFERENCES addresses(id);
+
+ALTER TABLE orders
+  ADD COLUMN IF NOT EXISTS payment_status VARCHAR(50) NOT NULL DEFAULT 'PENDING';
+
+ALTER TABLE orders
+  ADD COLUMN IF NOT EXISTS payment_method VARCHAR(50);
+
+ALTER TABLE orders
+ADD COLUMN IF NOT EXISTS estimated_delivery_time TIMESTAMP;

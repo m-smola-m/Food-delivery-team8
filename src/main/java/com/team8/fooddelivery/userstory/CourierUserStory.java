@@ -8,7 +8,7 @@ import com.team8.fooddelivery.model.order.OrderStatus;
 import com.team8.fooddelivery.repository.CourierRepository;
 import com.team8.fooddelivery.repository.OrderRepository;
 import com.team8.fooddelivery.service.impl.CourierServiceImpl;
-import com.team8.fooddelivery.util.DatabaseInitializer;
+import com.team8.fooddelivery.service.DatabaseInitializerService;
 
 import java.sql.SQLException;
 import java.util.Comparator;
@@ -17,7 +17,7 @@ import java.util.Optional;
 public class CourierUserStory {
 
     public static void main(String[] args) {
-        DatabaseInitializer.initializeDatabase();
+        DatabaseInitializerService.initializeDatabase();
 
         CourierServiceImpl courierService = new CourierServiceImpl();
         CourierRepository courierRepository = new CourierRepository();

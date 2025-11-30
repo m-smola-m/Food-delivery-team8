@@ -3,7 +3,7 @@ package com.team8.fooddelivery.repository;
 import com.team8.fooddelivery.model.client.Payment;
 import com.team8.fooddelivery.model.client.PaymentMethodForOrder;
 import com.team8.fooddelivery.model.client.PaymentStatus;
-import com.team8.fooddelivery.util.DatabaseConnection;
+import com.team8.fooddelivery.service.DatabaseConnectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +21,7 @@ public class PaymentRepository {
     public Long save(Payment payment) throws SQLException {
         String sql = "INSERT INTO payments (order_id, amount, method, status, created_at) VALUES (?, ?, ?, ?, ?) RETURNING id";
 
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnectionService.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setObject(1, payment.getOrderId());
@@ -43,7 +43,7 @@ public class PaymentRepository {
     public Optional<Payment> findByOrderId(Long orderId) throws SQLException {
         String sql = "SELECT * FROM payments WHERE order_id = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnectionService.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setLong(1, orderId);

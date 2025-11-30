@@ -2,7 +2,7 @@ package com.team8.fooddelivery.repository;
 
 import com.team8.fooddelivery.model.product.Product;
 import com.team8.fooddelivery.model.product.ProductCategory;
-import com.team8.fooddelivery.util.DatabaseConnection;
+import com.team8.fooddelivery.service.DatabaseConnectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +19,7 @@ public class ProductRepository {
     String sql = "INSERT INTO products (shop_id, name, description, weight, price, category, is_available, cooking_time_minutes) " +
         "VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING product_id";
 
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
          PreparedStatement stmt = conn.prepareStatement(sql)) {
 
       stmt.setObject(1, product.getProductId() != null ? null : null, Types.BIGINT); // shop_id будет установлен отдельно
@@ -45,7 +45,7 @@ public class ProductRepository {
     String sql = "INSERT INTO products (shop_id, name, description, weight, price, category, is_available, cooking_time_minutes) " +
         "VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING product_id";
 
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
          PreparedStatement stmt = conn.prepareStatement(sql)) {
 
       stmt.setLong(1, shopId);
@@ -70,7 +70,7 @@ public class ProductRepository {
   public Optional<Product> findById(Long productId) throws SQLException {
     String sql = "SELECT * FROM products WHERE product_id = ?";
 
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
          PreparedStatement stmt = conn.prepareStatement(sql)) {
 
       stmt.setLong(1, productId);
@@ -86,7 +86,7 @@ public class ProductRepository {
   public List<Product> findByShopId(Long shopId) throws SQLException {
     String sql = "SELECT * FROM products WHERE shop_id = ?";
 
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
          PreparedStatement stmt = conn.prepareStatement(sql)) {
 
       stmt.setLong(1, shopId);
@@ -103,7 +103,7 @@ public class ProductRepository {
   public List<Product> findByShopIdAndCategory(Long shopId, ProductCategory category) throws SQLException {
     String sql = "SELECT * FROM products WHERE shop_id = ? AND category = ?";
 
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
          PreparedStatement stmt = conn.prepareStatement(sql)) {
 
       stmt.setLong(1, shopId);
@@ -121,7 +121,7 @@ public class ProductRepository {
   public void update(Product product) throws SQLException {
     String sql = "UPDATE products SET name=?, description=?, weight=?, price=?, category=?, is_available=?, cooking_time_minutes=? WHERE product_id=?";
 
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
          PreparedStatement stmt = conn.prepareStatement(sql)) {
 
       stmt.setString(1, product.getName());
@@ -141,7 +141,7 @@ public class ProductRepository {
   public void delete(Long productId) throws SQLException {
     String sql = "DELETE FROM products WHERE product_id = ?";
 
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
          PreparedStatement stmt = conn.prepareStatement(sql)) {
 
       stmt.setLong(1, productId);

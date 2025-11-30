@@ -1,7 +1,3 @@
--- Полная схема Food Delivery: создает все таблицы и индексы за один проход.
--- Выполнять после опционального 000_drop_tables.sql, если нужна переинициализация.
-
--- Адреса
 CREATE TABLE IF NOT EXISTS addresses (
     id BIGSERIAL PRIMARY KEY,
     country VARCHAR(100) DEFAULT 'Russia',
@@ -19,7 +15,6 @@ CREATE TABLE IF NOT EXISTS addresses (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Рабочие часы
 CREATE TABLE IF NOT EXISTS working_hours (
     id BIGSERIAL PRIMARY KEY,
     monday VARCHAR(50),
@@ -31,7 +26,6 @@ CREATE TABLE IF NOT EXISTS working_hours (
     sunday VARCHAR(50)
 );
 
--- Клиенты
 CREATE TABLE IF NOT EXISTS clients (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(200) NOT NULL,
@@ -45,7 +39,6 @@ CREATE TABLE IF NOT EXISTS clients (
     order_history TEXT[]
 );
 
--- Магазины
 CREATE TABLE IF NOT EXISTS shops (
     shop_id BIGSERIAL PRIMARY KEY,
     naming VARCHAR(200) NOT NULL,
@@ -65,7 +58,6 @@ CREATE TABLE IF NOT EXISTS shops (
     password VARCHAR(255) NOT NULL
 );
 
--- Продукты
 CREATE TABLE IF NOT EXISTS products (
     product_id BIGSERIAL PRIMARY KEY,
     shop_id BIGINT REFERENCES shops(shop_id) ON DELETE CASCADE,
@@ -78,7 +70,6 @@ CREATE TABLE IF NOT EXISTS products (
     cooking_time_minutes BIGINT
 );
 
--- Курьеры
 CREATE TABLE IF NOT EXISTS couriers (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(200) NOT NULL,
@@ -91,7 +82,6 @@ CREATE TABLE IF NOT EXISTS couriers (
     bank_card BIGINT
 );
 
--- Заказы
 CREATE TABLE IF NOT EXISTS orders (
     id BIGSERIAL PRIMARY KEY,
     status VARCHAR(50) NOT NULL,
@@ -108,7 +98,6 @@ CREATE TABLE IF NOT EXISTS orders (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Позиции заказа
 CREATE TABLE IF NOT EXISTS order_items (
     id BIGSERIAL PRIMARY KEY,
     order_id BIGINT REFERENCES orders(id) ON DELETE CASCADE,
@@ -118,14 +107,12 @@ CREATE TABLE IF NOT EXISTS order_items (
     price DOUBLE PRECISION NOT NULL
 );
 
--- Корзины
 CREATE TABLE IF NOT EXISTS carts (
     id BIGSERIAL PRIMARY KEY,
     client_id BIGINT REFERENCES clients(id) ON DELETE CASCADE,
     UNIQUE(client_id)
 );
 
--- Платежи
 CREATE TABLE IF NOT EXISTS payments (
     id BIGSERIAL PRIMARY KEY,
     order_id BIGINT REFERENCES orders(id) ON DELETE CASCADE,
@@ -135,7 +122,6 @@ CREATE TABLE IF NOT EXISTS payments (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Позиции корзины
 CREATE TABLE IF NOT EXISTS cart_items (
     id BIGSERIAL PRIMARY KEY,
     cart_id BIGINT REFERENCES carts(id) ON DELETE CASCADE,
@@ -145,7 +131,6 @@ CREATE TABLE IF NOT EXISTS cart_items (
     price DOUBLE PRECISION NOT NULL
 );
 
--- Индексы
 CREATE INDEX IF NOT EXISTS idx_clients_phone ON clients(phone);
 CREATE INDEX IF NOT EXISTS idx_clients_email ON clients(email);
 CREATE INDEX IF NOT EXISTS idx_shops_email_auth ON shops(email_for_auth);

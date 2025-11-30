@@ -2,7 +2,7 @@ package com.team8.fooddelivery.repository;
 
 import com.team8.fooddelivery.model.product.Cart;
 import com.team8.fooddelivery.model.product.CartItem;
-import com.team8.fooddelivery.util.DatabaseConnection;
+import com.team8.fooddelivery.service.DatabaseConnectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +17,7 @@ public class CartRepository {
     public Long save(Cart cart) throws SQLException {
         String sql = "INSERT INTO carts (client_id) VALUES (?) RETURNING id";
 
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnectionService.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setLong(1, cart.getClientId());
@@ -35,7 +35,7 @@ public class CartRepository {
     public Optional<Cart> findByClientId(Long clientId) throws SQLException {
         String sql = "SELECT * FROM carts WHERE client_id = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnectionService.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setLong(1, clientId);
@@ -59,7 +59,7 @@ public class CartRepository {
     public Optional<Cart> findById(Long cartId) throws SQLException {
         String sql = "SELECT * FROM carts WHERE id = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnectionService.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setLong(1, cartId);
@@ -84,7 +84,7 @@ public class CartRepository {
         // Удаление элементов корзины происходит автоматически через CASCADE
         String sql = "DELETE FROM carts WHERE id = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnectionService.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setLong(1, cartId);
@@ -98,7 +98,7 @@ public class CartRepository {
         String sql = "INSERT INTO cart_items (cart_id, product_id, product_name, quantity, price) " +
                      "VALUES (?, ?, ?, ?, ?) RETURNING id";
 
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnectionService.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setLong(1, item.getCartId());
@@ -133,7 +133,7 @@ public class CartRepository {
     }
 
     public List<CartItem> findCartItemsByCartId(Long cartId) throws SQLException {
-        try (Connection conn = DatabaseConnection.getConnection()) {
+        try (Connection conn = DatabaseConnectionService.getConnection()) {
             return findCartItemsByCartId(cartId, conn);
         }
     }
@@ -141,7 +141,7 @@ public class CartRepository {
     public void updateCartItem(CartItem item) throws SQLException {
         String sql = "UPDATE cart_items SET quantity=?, price=? WHERE id=?";
 
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnectionService.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, item.getQuantity());
@@ -156,7 +156,7 @@ public class CartRepository {
     public void deleteCartItem(Long itemId) throws SQLException {
         String sql = "DELETE FROM cart_items WHERE id = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnectionService.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setLong(1, itemId);
@@ -168,7 +168,7 @@ public class CartRepository {
     public void deleteCartItemByProductId(Long cartId, Long productId) throws SQLException {
         String sql = "DELETE FROM cart_items WHERE cart_id = ? AND product_id = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnectionService.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setLong(1, cartId);
@@ -181,7 +181,7 @@ public class CartRepository {
     public void clearCart(Long cartId) throws SQLException {
         String sql = "DELETE FROM cart_items WHERE cart_id = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();
+        try (Connection conn = DatabaseConnectionService.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setLong(1, cartId);

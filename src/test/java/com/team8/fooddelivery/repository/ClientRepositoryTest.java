@@ -3,7 +3,7 @@ package com.team8.fooddelivery.repository;
 import com.team8.fooddelivery.model.Address;
 import com.team8.fooddelivery.model.client.Client;
 import com.team8.fooddelivery.model.client.ClientStatus;
-import com.team8.fooddelivery.util.DatabaseConnection;
+import com.team8.fooddelivery.service.DatabaseConnectionService;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.DisplayName;
 
@@ -31,11 +31,19 @@ public class ClientRepositoryTest {
         String dbUrl = System.getProperty("db.url", "jdbc:postgresql://localhost:5432/food_delivery");
         String dbUser = System.getProperty("db.user", "postgres");
         String dbPassword = System.getProperty("db.password", "postgres");
-        DatabaseConnection.setConnectionParams(dbUrl, dbUser, dbPassword);
+        DatabaseConnectionService.setConnectionParams(dbUrl, dbUser, dbPassword);
 
         // Проверка подключения
-        if (!DatabaseConnection.testConnection()) {
+        if (!DatabaseConnectionService.testConnection()) {
             throw new RuntimeException("Не удалось подключиться к базе данных. Убедитесь, что PostgreSQL запущен и БД создана.");
+        }
+
+        try {
+            DatabaseConnectionService.initializeDatabase();
+            System.out.println("✅ База данных успешно инициализирована");
+        } catch (Exception e) {
+            System.err.println("❌ Ошибка инициализации БД: " + e.getMessage());
+            throw new RuntimeException("Не удалось инициализировать тестовую БД", e);
         }
 
         clientRepository = new ClientRepository();

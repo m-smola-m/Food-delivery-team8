@@ -2,14 +2,14 @@ package com.team8.fooddelivery.userstory;
 
 import com.team8.fooddelivery.model.notification.Notification;
 import com.team8.fooddelivery.service.impl.NotificationServiceImpl;
-import com.team8.fooddelivery.util.DatabaseInitializer;
+import com.team8.fooddelivery.service.DatabaseInitializerService;
 
 import java.util.List;
 
 public class NotificationsUserStory {
 
     public static void main(String[] args) {
-        DatabaseInitializer.initializeDatabase();
+        DatabaseInitializerService.initializeDatabase();
         NotificationServiceImpl notificationService = new NotificationServiceImpl();
         Long clientId = 1L;
 

@@ -3,13 +3,13 @@ package com.team8.fooddelivery.userstory;
 import com.team8.fooddelivery.model.shop.Shop;
 import com.team8.fooddelivery.repository.ShopRepository;
 import com.team8.fooddelivery.service.impl.ShopInfoServiceImpl;
-import com.team8.fooddelivery.util.DatabaseInitializer;
+import com.team8.fooddelivery.service.DatabaseInitializerService;
 
 import java.sql.SQLException;
 
 public class ShopUserStory {
   public static void main(String[] args) {
-    DatabaseInitializer.initializeDatabase();
+    DatabaseInitializerService.initializeDatabase();
 
     ShopInfoServiceImpl service = new ShopInfoServiceImpl();
     ShopRepository shopRepository = new ShopRepository();
