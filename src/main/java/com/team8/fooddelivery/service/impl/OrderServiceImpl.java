@@ -19,7 +19,11 @@ import org.slf4j.LoggerFactory;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class OrderServiceImpl implements OrderService {
 
@@ -99,6 +103,62 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    @Override
+    public List<Order> getAvailableOrdersForCourier() {
+        try {
+            List<Order> allOrders = orderRepository.findAll();
+            return allOrders.stream()
+                    .filter(order -> order.getStatus() == OrderStatus.PAID)
+                    .filter(order -> order.getCourierId() == null || order.getCourierId() == 0)
+                    .collect(Collectors.toList());
+        } catch (SQLException e) {
+            logger.error("Ошибка при получении доступных заказов", e);
+            return List.of();
+        }
+    }
+
+    @Override
+    public List<Order> getCourierDeliveryHistoryByDate(Long courierId, LocalDate date) {
+        try {
+            ZoneId zoneId = ZoneId.systemDefault();
+            List<Order> allOrders = orderRepository.findAll();
+
+            return allOrders.stream()
+                    .filter(order -> order.getCourierId() != null && order.getCourierId().equals(courierId))
+                    .filter(order -> order.getStatus() == OrderStatus.COMPLETED)
+                    .filter(order -> {
+                        LocalDate orderDate = order.getCreatedAt().atZone(zoneId).toLocalDate();
+                        return orderDate.equals(date);
+                    })
+                    .sorted((o1, o2) -> o1.getCreatedAt().compareTo(o2.getCreatedAt()))
+                    .collect(Collectors.toList());
+
+        } catch (SQLException e) {
+            logger.error("Ошибка при получении истории доставок", e);
+            return List.of();
+        }
+    }
+
+    @Override
+    public Optional<Order> getOrderById(Long orderId) {
+        try {
+            return orderRepository.findById(orderId);
+        } catch (SQLException e) {
+            logger.error("Ошибка при получении заказа по ID", e);
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    public void updateOrder(Order order) {
+        try {
+            orderRepository.update(order);
+        } catch (SQLException e) {
+            logger.error("Ошибка при обновлении заказа", e);
+            throw new RuntimeException("Не удалось обновить заказ", e);
+        }
+    }
+
     private void validateCartItems(List<CartItem> items) {
         boolean invalid = items.stream()
                 .anyMatch(i -> i.getQuantity() <= 0 || i.getPrice() <= 0 || i.getProductName() == null || i.getProductName().isBlank());
@@ -127,3 +187,4 @@ public class OrderServiceImpl implements OrderService {
                 .build();
     }
 }
+
