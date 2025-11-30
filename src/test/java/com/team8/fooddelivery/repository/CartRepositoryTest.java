@@ -47,11 +47,13 @@ public class CartRepositoryTest {
         productRepository = new ProductRepository();
         shopRepository = new ShopRepository();
 
+        long suffix = System.currentTimeMillis();
+
         // Создаем тестового клиента для корзины
         Client testClient = Client.builder()
-                .name("Тест Клиент для Корзины")
-                .phone("+79999999999")
-                .email("carttest@example.com")
+                .name("Тест Клиент для Корзины " + suffix)
+                .phone("+7999" + (suffix % 1_000_0000))
+                .email("carttest" + suffix + "@example.com")
                 .passwordHash("hash")
                 .status(ClientStatus.ACTIVE)
                 .isActive(true)
@@ -61,9 +63,9 @@ public class CartRepositoryTest {
 
         // Создаем тестовый магазин и продукт
         Shop testShop = new Shop();
-        testShop.setNaming("Тестовый Магазин");
-        testShop.setEmailForAuth("testshop@example.com");
-        testShop.setPhoneForAuth("+79998887766");
+        testShop.setNaming("Тестовый Магазин " + suffix);
+        testShop.setEmailForAuth("testshop" + suffix + "@example.com");
+        testShop.setPhoneForAuth("+7888" + (suffix % 1_000_0000));
         testShop.setStatus(ShopStatus.APPROVED);
         testShop.setPassword("password");
         testShopId = shopRepository.save(testShop);

@@ -7,10 +7,13 @@ import com.team8.fooddelivery.model.client.ClientStatus;
 import com.team8.fooddelivery.service.impl.CartServiceImpl;
 import com.team8.fooddelivery.service.impl.ClientServiceImpl;
 import com.team8.fooddelivery.util.JWTUtil;
+import com.team8.fooddelivery.util.DatabaseInitializer;
 
 public class ClientUserStories {
 
     public static void main(String[] args) {
+        DatabaseInitializer.initializeDatabase();
+
         CartServiceImpl cartService = new CartServiceImpl();
         ClientServiceImpl clientService = new ClientServiceImpl(cartService);
 
@@ -29,8 +32,15 @@ public class ClientUserStories {
                 59.9311, 30.3609, "Рядом с метро Площадь Восстания", "Центральный"
         );
 
-        Client c1 = clientService.register("89991112233", "Ivan123!", "Иван Иванов", "ivan@example.com", address1);
-        Client c2 = clientService.register("89995556677", "Maria456@", "Мария Петрова", "maria@example.com", address2);
+        Client c1 = clientService.getByPhone("89991112233");
+        if (c1 == null) {
+            c1 = clientService.register("89991112233", "Ivan123!", "Иван Иванов", "ivan@example.com", address1);
+        }
+
+        Client c2 = clientService.getByPhone("89995556677");
+        if (c2 == null) {
+            c2 = clientService.register("89995556677", "Maria456@", "Мария Петрова", "maria@example.com", address2);
+        }
 
         System.out.println("Клиенты зарегистрированы:");
         clientService.listAll().forEach(System.out::println);

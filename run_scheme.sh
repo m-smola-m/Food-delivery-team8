@@ -22,8 +22,8 @@ DB_USER=${DB_USER:-"fooddelivery_user"}
 DB_PASSWORD=${DB_PASSWORD:-"fooddelivery_pass"}
 DB_NAME=${DB_NAME:-"food_delivery"}
 
-# Путь к SQL файлам в контейнере
-SQL_DIR="/app/src/main/resources/sql"
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+SQL_DIR=${SQL_DIR:-"$SCRIPT_DIR/src/main/resources/sql"}
 
 echo "📊 База данных: $DB_NAME"
 echo "🌐 Хост: $DB_HOST:$DB_PORT"
@@ -54,7 +54,7 @@ wait_for_db
 if [ ! -d "$SQL_DIR" ]; then
     echo "❌ SQL директория не найдена: $SQL_DIR"
     echo "📋 Содержимое текущей директории:"
-    ls -la /app/
+    ls -la "$SCRIPT_DIR"
     exit 1
 fi
 

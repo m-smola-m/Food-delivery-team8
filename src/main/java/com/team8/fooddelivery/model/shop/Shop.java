@@ -1,6 +1,6 @@
 package com.team8.fooddelivery.model.shop;
 
-import com.team8.fooddelivery.model.*;
+import com.team8.fooddelivery.model.Address;
 import com.team8.fooddelivery.model.product.Product;
 import lombok.*;
 import java.time.Instant;
