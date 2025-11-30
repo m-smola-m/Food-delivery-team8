@@ -9,6 +9,7 @@ import com.team8.fooddelivery.model.shop.ShopType;
 import com.team8.fooddelivery.model.shop.WorkingHours;
 import com.team8.fooddelivery.repository.*;
 import com.team8.fooddelivery.service.DatabaseConnectionService;
+import com.team8.fooddelivery.service.DatabaseInitializerService;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.DisplayName;
 
@@ -30,7 +31,6 @@ public class ShopProductIntegrationTest {
 
   @BeforeAll
   static void setupDatabaseConnectionService() {
-    DatabaseConnectionService.initializeDatabase();
     String dbUrl = System.getProperty("db.url", "jdbc:postgresql://localhost:5432/food_delivery");
     String dbUser = System.getProperty("db.user", "postgres");
     String dbPassword = System.getProperty("db.password", "postgres");
@@ -39,6 +39,9 @@ public class ShopProductIntegrationTest {
     if (!DatabaseConnectionService.testConnection()) {
       throw new RuntimeException("Не удалось подключиться к базе данных");
     }
+
+    DatabaseInitializerService.fullCleanDatabase();
+    DatabaseConnectionService.initializeDatabase();
   }
 
   @BeforeEach

@@ -1,11 +1,14 @@
 package com.team8.fooddelivery.integration;
 
+import com.team8.fooddelivery.model.Address;
 import com.team8.fooddelivery.model.client.Client;
 import com.team8.fooddelivery.model.client.ClientStatus;
 import com.team8.fooddelivery.model.courier.Courier;
 import com.team8.fooddelivery.model.courier.CourierStatus;
 import com.team8.fooddelivery.model.order.Order;
 import com.team8.fooddelivery.model.order.OrderStatus;
+import com.team8.fooddelivery.model.product.Cart;
+import com.team8.fooddelivery.model.product.CartItem;
 import com.team8.fooddelivery.model.shop.Shop;
 import com.team8.fooddelivery.model.shop.ShopStatus;
 import com.team8.fooddelivery.repository.*;
@@ -14,6 +17,7 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.DisplayName;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -101,9 +105,19 @@ public class OrderCourierIntegrationTest {
       order.setStatus(OrderStatus.PENDING);
       order.setCustomerId(clientId);
       order.setRestaurantId(shopId);
-      order.setDeliveryAddress("ул. Тестовая, д. 1");
+      order.setDeliveryAddress(Address.builder()
+              .city("Москва")
+              .street("ул. Тестовая")
+              .building("д. 1")
+          .build());
       order.setTotalPrice(1000.0);
-      order.setItems(List.of("Пицца", "Кола"));
+      CartItem item1 = new CartItem();
+      CartItem item2 = new CartItem();
+      item1.setPrice(54);
+      item1.setProductName("Пицца");
+      item2.setProductName("Кола");
+      item2.setPrice(120);
+      order.setItems(List.of(item1, item2));
 
       orderId = orderRepository.save(order);
       assertNotNull(orderId);
@@ -163,9 +177,19 @@ public class OrderCourierIntegrationTest {
       order.setStatus(OrderStatus.PENDING);
       order.setCustomerId(clientId);
       order.setRestaurantId(shopId);
-      order.setDeliveryAddress("ул. Статусная, д. 5");
+      order.setDeliveryAddress(Address.builder()
+          .street("ул. Страусная")
+          .city("Москва")
+          .building("д. 5")
+          .build());
       order.setTotalPrice(750.0);
-      order.setItems(List.of("Бургер", "Фри"));
+      CartItem item1 = new CartItem();
+      CartItem item2 = new CartItem();
+      item1.setProductName("Бургер");
+      item1.setPrice(450);
+      item2.setProductName("Фри");
+      item2.setPrice(90);
+      order.setItems(List.of(item1, item2));
 
       orderId = orderRepository.save(order);
 

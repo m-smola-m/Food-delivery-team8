@@ -1,6 +1,5 @@
 package com.team8.fooddelivery.service;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,12 +15,12 @@ public class DatabaseConnectionService {
 
   private static final String DEFAULT_URL_CONTAINER = "jdbc:postgresql://db:5432/food_delivery";
   private static final String DEFAULT_URL_LOCAL = "jdbc:postgresql://localhost:5432/food_delivery";
-  private static final String DEFAULT_USER = "fooddelivery_user"; // Используем пользователя, которого мы настроили
-  private static final String DEFAULT_PASSWORD = "fooddelivery_pass"; // Используем пароль, который мы настроили
+  private static final String DEFAULT_USER = "fooddelivery_user";
+  private static final String DEFAULT_PASSWORD = "fooddelivery_pass";
 
-  private static String dbUrl = resolve("db.url", "DB_URL", DEFAULT_URL_LOCAL, DEFAULT_URL_CONTAINER);
-  private static String dbUser = resolve("db.user", "DB_USER", DEFAULT_USER, DEFAULT_USER);
-  private static String dbPassword = resolve("db.password", "DB_PASSWORD", DEFAULT_PASSWORD, DEFAULT_PASSWORD);
+  private static String dbUrl = resolveDatabaseUrl();
+  private static String dbUser = resolve("db.user", "DB_USER", DEFAULT_USER);
+  private static String dbPassword = resolve("db.password", "DB_PASSWORD", DEFAULT_PASSWORD);
 
   static {
     try {
@@ -36,10 +35,12 @@ public class DatabaseConnectionService {
   public static Connection getConnection() throws SQLException {
     try {
       Connection connection = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
-      logger.debug("Подключение к БД установлено: {}", dbUrl);
+      if (logger.isDebugEnabled()) {
+        logger.debug("Подключение к БД установлено: {}", getSafeConnectionString());
+      }
       return connection;
     } catch (SQLException e) {
-      logger.error("Ошибка подключения к БД: {}", dbUrl, e);
+      logger.error("Ошибка подключения к БД: {}", getSafeConnectionString(), e);
       throw e;
     }
   }
@@ -51,23 +52,51 @@ public class DatabaseConnectionService {
     logger.info("Параметры подключения обновлены: url={}, user={}", url, user);
   }
 
-  private static String resolve(String sysPropKey, String envKey, String localDefault, String containerDefault) {
+  private static String resolveDatabaseUrl() {
+    // Сначала проверяем системные свойства и переменные окружения
+    String fromSystem = System.getProperty("db.url");
+    if (fromSystem != null && !fromSystem.isBlank()) {
+      logger.info("Используем URL БД из системного свойства db.url");
+      return fromSystem;
+    }
+
+    String fromEnv = System.getenv("DB_URL");
+    if (fromEnv != null && !fromEnv.isBlank()) {
+      logger.info("Используем URL БД из переменной окружения DB_URL");
+      return fromEnv;
+    }
+
+    // Автоматическое определение: контейнерная среда или локальная
+    boolean isContainerEnv = isContainerEnvironment();
+    String url = isContainerEnv ? DEFAULT_URL_CONTAINER : DEFAULT_URL_LOCAL;
+    logger.info("Автоопределение среды: {} -> URL: {}",
+        isContainerEnv ? "контейнер" : "локальная", url);
+    return url;
+  }
+
+  private static boolean isContainerEnvironment() {
+    // Проверяем, работаем ли мы в контейнерной среде
+    return System.getenv("CONTAINER_ENV") != null ||
+        System.getenv("KUBERNETES_SERVICE_HOST") != null ||
+        System.getenv("DOCKER_CONTAINER") != null ||
+        "true".equals(System.getProperty("container.env"));
+  }
+
+  private static String resolve(String sysPropKey, String envKey, String defaultValue) {
     String fromSystem = System.getProperty(sysPropKey);
     if (fromSystem != null && !fromSystem.isBlank()) {
-      logger.info("Используем параметры подключения из системного свойства {}", sysPropKey);
+      logger.info("Используем параметр из системного свойства {}", sysPropKey);
       return fromSystem;
     }
 
     String fromEnv = System.getenv(envKey);
     if (fromEnv != null && !fromEnv.isBlank()) {
-      logger.info("Используем параметры подключения из переменной окружения {}", envKey);
+      logger.info("Используем параметр из переменной окружения {}", envKey);
       return fromEnv;
     }
 
-    // По умолчанию сначала пробуем локальный хост, а в контейнерной среде можно переопределить DB_URL
-    String fallback = localDefault != null ? localDefault : containerDefault;
-    logger.info("Используем параметры подключения по умолчанию: {}", fallback);
-    return fallback;
+    logger.info("Используем параметр по умолчанию для {}", sysPropKey);
+    return defaultValue;
   }
 
   public static void initializeDatabase() {
@@ -80,9 +109,11 @@ public class DatabaseConnectionService {
 
   public static boolean testConnection() {
     try (Connection conn = getConnection()) {
-      return conn != null && !conn.isClosed();
+      boolean isValid = conn != null && !conn.isClosed() && conn.isValid(2);
+      logger.info("Тест подключения: {}", isValid ? "УСПЕХ" : "НЕУДАЧА");
+      return isValid;
     } catch (SQLException e) {
-      logger.error("Тест подключения не пройден", e);
+      logger.error("Тест подключения не пройден: {}", e.getMessage());
       return false;
     }
   }
@@ -90,11 +121,23 @@ public class DatabaseConnectionService {
   public static void closeConnection(Connection connection) {
     if (connection != null) {
       try {
-        connection.close();
-        logger.debug("Подключение закрыто");
+        if (!connection.isClosed()) {
+          connection.close();
+          logger.debug("Подключение закрыто");
+        }
       } catch (SQLException e) {
         logger.error("Ошибка при закрытии подключения", e);
       }
     }
+  }
+
+  private static String getSafeConnectionString() {
+    // Безопасное логирование без пароля
+    return dbUrl.replaceAll("://[^@]+@", "://***@");
+  }
+
+  // Метод для получения информации о подключении (для отладки)
+  public static String getConnectionInfo() {
+    return String.format("URL: %s, User: %s", getSafeConnectionString(), dbUser);
   }
 }

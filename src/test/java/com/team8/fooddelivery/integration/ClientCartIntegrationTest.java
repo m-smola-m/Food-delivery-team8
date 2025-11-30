@@ -11,6 +11,7 @@ import com.team8.fooddelivery.model.shop.Shop;
 import com.team8.fooddelivery.model.shop.ShopStatus;
 import com.team8.fooddelivery.repository.*;
 import com.team8.fooddelivery.service.DatabaseConnectionService;
+import com.team8.fooddelivery.service.DatabaseInitializerService;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.DisplayName;
 
@@ -34,7 +35,6 @@ public class ClientCartIntegrationTest {
 
     @BeforeAll
     static void setupDatabaseConnectionService() {
-        DatabaseConnectionService.initializeDatabase();
         String dbUrl = System.getProperty("db.url", "jdbc:postgresql://localhost:5432/food_delivery");
         String dbUser = System.getProperty("db.user", "postgres");
         String dbPassword = System.getProperty("db.password", "postgres");
@@ -50,6 +50,7 @@ public class ClientCartIntegrationTest {
                             "4. Параметры подключения корректны"
             );
         }
+        DatabaseInitializerService.fullCleanDatabase();
         try {
             DatabaseConnectionService.initializeDatabase();
             System.out.println("✅ База данных успешно инициализирована");

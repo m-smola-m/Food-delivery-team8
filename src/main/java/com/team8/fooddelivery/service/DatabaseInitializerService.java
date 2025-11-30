@@ -17,28 +17,24 @@ import java.util.List;
 public class DatabaseInitializerService {
   private static final Logger logger = LoggerFactory.getLogger(DatabaseInitializerService.class);
 
-  private static final List<String> SQL_TEST_FILES = Arrays.asList(
-
-  );
-  // Добавляем файл очистки в начало
+  // Порядок выполнения SQL файлов
   private static final List<String> SQL_FILES = Arrays.asList(
       // Сначала создаем все таблицы без внешних ключей
       "sql/001_create_base_tables/001_create_addresses.sql",
       "sql/001_create_base_tables/002_create_working_hours.sql",
       "sql/001_create_base_tables/003_create_clients.sql",
-      "sql/002_create_shop_tables/004_create_shops.sql",  // БЕЗ внешних ключей
-      "sql/002_create_shop_tables/005_create_products.sql",  // БЕЗ внешних ключей
+      "sql/002_create_shop_tables/004_create_shops.sql",
+      "sql/002_create_shop_tables/005_create_products.sql",
       "sql/003_create_courier_tables/007_create_courier_tables.sql",
-      "sql/004_create_order_tables/008_create_orders.sql",  // БЕЗ внешних ключей
-      "sql/004_create_order_tables/009_create_order_items.sql",  // БЕЗ внешних ключей
-      "sql/004_create_order_tables/010_create_carts.sql",  // БЕЗ внешних ключей
-      "sql/004_create_order_tables/011_create_cart_items.sql",  // БЕЗ внешних ключей
+      "sql/004_create_order_tables/008_create_orders.sql",
+      "sql/004_create_order_tables/009_create_order_items.sql",
+      "sql/004_create_order_tables/010_create_carts.sql",
+      "sql/004_create_order_tables/011_create_cart_items.sql",
       // Потом добавляем внешние ключи
       "sql/002_create_shop_tables/006_add_shop_foreign_keys.sql",
       "sql/004_create_order_tables/012_add_cart_foreign_keys.sql",
       "sql/004_create_order_tables/013_create_payments.sql",
-      "sql/005_create_indexes/013_create_indexes.sql",
-      "sql/test/testsData.sql"
+      "sql/005_create_indexes/013_create_indexes.sql"
   );
 
   /**
@@ -53,22 +49,28 @@ public class DatabaseInitializerService {
     logger.info("Начинается инициализация базы данных...");
 
     try (Connection conn = DatabaseConnectionService.getConnection()) {
-      // Создаем схему если не существует
-      //executeSql(conn, "CREATE SCHEMA IF NOT EXISTS food_delivery");
+      conn.setAutoCommit(false); // Начинаем транзакцию
 
-      // Устанавливаем схему по умолчанию для этой сессии
-      //executeSql(conn, "SET search_path TO food_delivery, public");
+      try {
+        // Выполняем все SQL файлы в правильном порядке
+        for (String sqlFile : SQL_FILES) {
+          executeSqlFile(conn, sqlFile);
+        }
 
-      // Выполняем все SQL файлы в правильном порядке
-      for (String sqlFile : SQL_FILES) {
-        executeSqlFile(conn, sqlFile);
+        conn.commit(); // Коммитим транзакцию
+        logger.info("✅ База данных успешно инициализирована");
+
+      } catch (SQLException e) {
+        conn.rollback(); // Откатываем при ошибке
+        logger.error("❌ Ошибка инициализации базы данных, транзакция откачена", e);
+        throw new RuntimeException("Не удалось инициализировать базу данных", e);
+      } finally {
+        conn.setAutoCommit(true); // Восстанавливаем auto-commit
       }
 
-      logger.info("✅ База данных успешно инициализирована");
-
     } catch (SQLException e) {
-      logger.error("❌ Ошибка инициализации базы данных", e);
-      throw new RuntimeException("Не удалось инициализировать базу данных", e);
+      logger.error("❌ Ошибка подключения при инициализации базы данных", e);
+      throw new RuntimeException("Не удалось подключиться к базе данных", e);
     }
   }
 
@@ -76,49 +78,50 @@ public class DatabaseInitializerService {
    * Выполняет SQL команды с улучшенной обработкой ошибок
    */
   private static void executeSqlStatements(Connection conn, String sql) throws SQLException {
+    // Разделяем SQL на отдельные команды, игнорируя точки с запятой внутри кавычек
     String[] statements = sql.split(";(?=(?:[^']*'[^']*')*[^']*$)");
 
     for (String statement : statements) {
       String trimmed = statement.trim();
 
-      if (!trimmed.isEmpty() && !trimmed.startsWith("--") && !trimmed.startsWith("/*")) {
+      if (isExecutableStatement(trimmed)) {
         try (Statement stmt = conn.createStatement()) {
           stmt.execute(trimmed);
-          logger.debug("Выполнено: {}", trimmed.substring(0, Math.min(50, trimmed.length())) + "...");
-        } catch (SQLException e) {
-          // Игнорируем только ошибки "уже существует", для остальных - бросаем исключение
-          if (e.getMessage().contains("already exists") ||
-              e.getMessage().contains("существует") ||
-              e.getMessage().contains("exists")) {
-            logger.debug("Объект уже существует: {}", e.getMessage());
-          } else {
-            logger.error("❌ Критическая ошибка выполнения SQL: {}", e.getMessage());
-            logger.error("SQL: {}", trimmed);
-            throw e;
+          if (logger.isDebugEnabled()) {
+            logger.debug("Выполнено: {}", getStatementPreview(trimmed));
           }
+        } catch (SQLException e) {
+          handleSqlException(trimmed, e);
         }
       }
     }
   }
 
-  // Вспомогательный метод для выполнения одиночных SQL
-  private static void executeSql(Connection conn, String sql) throws SQLException {
-    try (Statement stmt = conn.createStatement()) {
-      stmt.execute(sql);
-    }
+  private static boolean isExecutableStatement(String statement) {
+    return !statement.isEmpty() &&
+        !statement.startsWith("--") &&
+        !statement.startsWith("/*") &&
+        !statement.startsWith("//");
   }
 
-  // Обновите также метод проверки инициализации
-  public static boolean isDatabaseInitialized() {
-    try (Connection conn = DatabaseConnectionService.getConnection();
-         Statement stmt = conn.createStatement()) {
+  private static String getStatementPreview(String statement) {
+    return statement.substring(0, Math.min(80, statement.length())) +
+        (statement.length() > 80 ? "..." : "");
+  }
 
-      // Указываем схему явно
-      stmt.executeQuery("SELECT 1 FROM addresses LIMIT 1");
-      return true;
+  private static void handleSqlException(String statement, SQLException e) throws SQLException {
+    String errorMessage = e.getMessage().toLowerCase();
 
-    } catch (SQLException e) {
-      return false;
+    // Игнорируем ошибки "уже существует"
+    if (errorMessage.contains("already exists") ||
+        errorMessage.contains("существует") ||
+        errorMessage.contains("exists") ||
+        errorMessage.contains("duplicate")) {
+      logger.debug("Объект уже существует: {}", e.getMessage());
+    } else {
+      logger.error("❌ Критическая ошибка выполнения SQL: {}", e.getMessage());
+      logger.error("Проблемный SQL: {}", getStatementPreview(statement));
+      throw e;
     }
   }
 
@@ -129,12 +132,12 @@ public class DatabaseInitializerService {
         .getResourceAsStream(filePath)) {
 
       if (inputStream == null) {
-        logger.error("Файл не найден: {}", filePath);
+        logger.error("Файл не найден в classpath: {}", filePath);
         throw new SQLException("SQL файл не найден: " + filePath);
       }
 
       String sql = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-      executeSqlStatements(conn, sql);  // ← вот здесь он вызывает другой метод
+      executeSqlStatements(conn, sql);
 
       logger.info("✅ Файл выполнен: {}", filePath);
 
@@ -144,97 +147,100 @@ public class DatabaseInitializerService {
     }
   }
 
-  public static void refreshDataBase() throws SQLException {
-    logger.info("Отчистка данных из таблиц");
-
-    try (Connection conn = DatabaseConnectionService.getConnection()) {
-      executeSqlFile(conn, "sql/000_drop_tables.sql");
-    }
-  }
-
-  public static void fullCleanDatabase() {
-    logger.info("Удаление таблиц из БД...");
-
-    try (Connection conn = DatabaseConnectionService.getConnection()) {
-      // Отключаем auto-commit для выполнения всех команд в одной транзакции
-      conn.setAutoCommit(false);
-
-      try (Statement stmt = conn.createStatement()) {
-        // Отключаем проверку внешних ключей
-        stmt.execute("SET session_replication_role = 'replica'");
-
-        // Удаляем таблицы
-        stmt.execute("DROP TABLE IF EXISTS cart_items CASCADE");
-        stmt.execute("DROP TABLE IF EXISTS carts CASCADE");
-        stmt.execute("DROP TABLE IF EXISTS order_items CASCADE");
-        stmt.execute("DROP TABLE IF EXISTS orders CASCADE");
-        stmt.execute("DROP TABLE IF EXISTS products CASCADE");
-        stmt.execute("DROP TABLE IF EXISTS couriers CASCADE");
-        stmt.execute("DROP TABLE IF EXISTS shops CASCADE");
-        stmt.execute("DROP TABLE IF EXISTS clients CASCADE");
-        stmt.execute("DROP TABLE IF EXISTS working_hours CASCADE");
-        stmt.execute("DROP TABLE IF EXISTS addresses CASCADE");
-        stmt.execute("DROP TABLE IF EXISTS payments CASCADE");
-
-        // Включаем проверку внешних ключей обратно
-        stmt.execute("SET session_replication_role = 'origin'");
-
-        // Коммитим транзакцию
-        conn.commit();
-        logger.info("✅ Таблицы успешно удалены");
-
-      } catch (SQLException e) {
-        // Откатываем транзакцию при ошибке
-        conn.rollback();
-        throw e;
-      } finally {
-        // Восстанавливаем auto-commit
-        conn.setAutoCommit(true);
-      }
-
-    } catch (SQLException e) {
-      logger.error("❌ Ошибка удаления таблиц из БД: {}", e.getMessage());
-      // Игнорируем ошибки "таблица не существует"
-      if (!e.getMessage().contains("does not exist")) {
-        throw new RuntimeException("Не удалось удалить таблицы зи БД", e);
-      }
-      logger.info("✅ Таблицы уже удалены или не существовали");
-    }
-  }
-}
-  /*
-  public static void cleanDatabase() {
-    logger.info("Очистка базы данных...");
+  public static boolean isDatabaseInitialized() {
+    // Проверяем наличие ключевых таблиц
+    String[] testTables = {"addresses", "clients", "shops", "orders", "products"};
 
     try (Connection conn = DatabaseConnectionService.getConnection();
          Statement stmt = conn.createStatement()) {
 
-      // Отключаем проверку внешних ключей
-      stmt.execute("SET session_replication_role = 'replica'");
+      for (String table : testTables) {
+        stmt.executeQuery("SELECT 1 FROM " + table + " LIMIT 1");
+      }
+      return true;
 
-      // Удаляем таблицы в правильном порядке (от дочерних к родительским)
-      String[] tables = {
-          "cart_items", "carts", "order_items", "orders",
-          "products", "couriers", "shops", "clients",
-          "working_hours", "addresses"
+    } catch (SQLException e) {
+      logger.debug("База данных не инициализирована: {}", e.getMessage());
+      return false;
+    }
+  }
+
+  public static void fullCleanDatabase() {
+    logger.info("Полная очистка базы данных...");
+
+    try (Connection conn = DatabaseConnectionService.getConnection()) {
+      conn.setAutoCommit(false);
+
+      try (Statement stmt = conn.createStatement()) {
+        // Отключаем проверку внешних ключей для безопасного удаления
+        stmt.execute("SET session_replication_role = 'replica'");
+
+        // Удаляем таблицы в правильном порядке (от дочерних к родительским)
+        String[] tables = {
+            "cart_items", "carts", "order_items", "payments", "orders",
+            "products", "couriers", "shops", "clients",
+            "working_hours", "addresses"
+        };
+
+        int droppedTables = 0;
+        for (String table : tables) {
+          try {
+            stmt.execute("DROP TABLE IF EXISTS " + table + " CASCADE");
+            droppedTables++;
+            logger.debug("Таблица {} удалена", table);
+          } catch (SQLException e) {
+            logger.warn("Не удалось удалить таблицу {}: {}", table, e.getMessage());
+          }
+        }
+
+        // Включаем проверку внешних ключей обратно
+        stmt.execute("SET session_replication_role = 'origin'");
+        conn.commit();
+
+        logger.info("✅ Удалено таблиц: {}/{}", droppedTables, tables.length);
+
+      } catch (SQLException e) {
+        conn.rollback();
+        throw e;
+      } finally {
+        conn.setAutoCommit(true);
+      }
+
+    } catch (SQLException e) {
+      logger.error("❌ Ошибка полной очистки базы данных: {}", e.getMessage());
+      throw new RuntimeException("Не удалось очистить базу данных", e);
+    }
+  }
+
+  public static void cleanTestData() {
+    logger.info("Очистка тестовых данных...");
+
+    try (Connection conn = DatabaseConnectionService.getConnection();
+         Statement stmt = conn.createStatement()) {
+
+      // Очищаем таблицы в правильном порядке (из-за foreign keys)
+      String[] tablesToClean = {
+          "cart_items", "carts", "order_items", "payments", "orders",
+          "products", "couriers", "shops", "clients", "addresses"
       };
 
-      for (String table : tables) {
+      int cleanedTables = 0;
+      for (String table : tablesToClean) {
         try {
-          stmt.execute("DROP TABLE IF EXISTS " + table + " CASCADE");
-          logger.debug("✅ Таблица {} удалена", table);
+          int rows = stmt.executeUpdate("DELETE FROM " + table);
+          if (rows > 0) {
+            logger.debug("Очищено {} строк из {}", rows, table);
+          }
+          cleanedTables++;
         } catch (SQLException e) {
-          logger.warn("⚠️ Не удалось удалить таблицу {}: {}", table, e.getMessage());
+          logger.warn("Не удалось очистить таблицу {}: {}", table, e.getMessage());
         }
       }
 
-      // Включаем проверку внешних ключей обратно
-      stmt.execute("SET session_replication_role = 'origin'");
-
-      logger.info("✅ База данных успешно очищена");
+      logger.info("✅ Очищено таблиц: {}/{}", cleanedTables, tablesToClean.length);
 
     } catch (SQLException e) {
-      logger.error("❌ Ошибка очистки базы данных", e);
-      throw new RuntimeException("Не удалось очистить базу данных", e);
+      logger.error("❌ Ошибка очистки тестовых данных: {}", e.getMessage());
     }
-  }*/
+  }
+}
