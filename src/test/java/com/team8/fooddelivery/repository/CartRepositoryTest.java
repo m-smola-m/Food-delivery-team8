@@ -8,7 +8,7 @@ import com.team8.fooddelivery.model.product.Product;
 import com.team8.fooddelivery.model.product.ProductCategory;
 import com.team8.fooddelivery.model.shop.Shop;
 import com.team8.fooddelivery.model.shop.ShopStatus;
-import com.team8.fooddelivery.util.DatabaseConnection;
+import com.team8.fooddelivery.service.DatabaseConnectionService;
 import org.junit.jupiter.api.*;
 
 import java.sql.SQLException;
@@ -34,11 +34,11 @@ public class CartRepositoryTest {
     @BeforeAll
     static void setUp() throws SQLException {
         String dbUrl = System.getProperty("db.url", "jdbc:postgresql://localhost:5432/food_delivery");
-        String dbUser = System.getProperty("db.user", "fooddelivery_user");
-        String dbPassword = System.getProperty("db.password", "fooddelivery_pass");
-        DatabaseConnection.setConnectionParams(dbUrl, dbUser, dbPassword);
+        String dbUser = System.getProperty("db.user", "postgres");
+        String dbPassword = System.getProperty("db.password", "postgres");
+        DatabaseConnectionService.setConnectionParams(dbUrl, dbUser, dbPassword);
 
-        if (!DatabaseConnection.testConnection()) {
+        if (!DatabaseConnectionService.testConnection()) {
             throw new RuntimeException("Не удалось подключиться к базе данных");
         }
 

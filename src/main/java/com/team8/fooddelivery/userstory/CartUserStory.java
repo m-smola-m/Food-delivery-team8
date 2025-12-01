@@ -9,12 +9,12 @@ import com.team8.fooddelivery.model.order.Order;
 import com.team8.fooddelivery.service.impl.CartServiceImpl;
 import com.team8.fooddelivery.service.impl.ClientServiceImpl;
 import com.team8.fooddelivery.service.impl.OrderServiceImpl;
-import com.team8.fooddelivery.util.DatabaseInitializer;
+import com.team8.fooddelivery.service.DatabaseInitializerService;
 
 public class CartUserStory {
     public static void main(String[] args) {
 
-        DatabaseInitializer.initializeDatabase();
+        DatabaseInitializerService.initializeDatabase();
 
         // =====================
         // 0. Инициализация сервисов
@@ -27,7 +27,7 @@ public class CartUserStory {
         // 1. Регистрация клиента (US1)
         // =====================
         Address address = new Address(
-                "Россия", "Москва", "Тверская", "1", "10", "1", 3,
+                100L, "Россия", "Москва", "Тверская", "1", "10", "1", 3,
                 55.7558, 37.6173, "Квартира с видом на Кремль", "ЦАО"
         );
 

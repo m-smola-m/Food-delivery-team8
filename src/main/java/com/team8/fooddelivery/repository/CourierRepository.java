@@ -2,7 +2,7 @@ package com.team8.fooddelivery.repository;
 
 import com.team8.fooddelivery.model.courier.Courier;
 import com.team8.fooddelivery.model.courier.CourierStatus;
-import com.team8.fooddelivery.util.DatabaseConnection;
+import com.team8.fooddelivery.service.DatabaseConnectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +18,7 @@ public class CourierRepository {
     String sql = "INSERT INTO couriers (name, password, phone_number, status, transport_type, current_order_id, current_balance, bank_card) " +
         "VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id";
 
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
         PreparedStatement stmt = conn.prepareStatement(sql)) {
 
       stmt.setString(1, courier.getName());
@@ -43,8 +43,8 @@ public class CourierRepository {
   public Optional<Courier> findById(Long id) throws SQLException {
     String sql = "SELECT * FROM couriers WHERE id = ?";
 
-    try (Connection conn = DatabaseConnection.getConnection();
-        PreparedStatement stmt = conn.prepareStatement(sql)) {
+    try (Connection conn = DatabaseConnectionService.getConnection();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
 
       stmt.setLong(1, id);
       ResultSet rs = stmt.executeQuery();
@@ -59,7 +59,7 @@ public class CourierRepository {
   public Optional<Courier> findByPhoneNumber(String phoneNumber) throws SQLException {
     String sql = "SELECT * FROM couriers WHERE phone_number = ?";
 
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
         PreparedStatement stmt = conn.prepareStatement(sql)) {
 
       stmt.setString(1, phoneNumber);
@@ -75,7 +75,7 @@ public class CourierRepository {
   public List<Courier> findAll() throws SQLException {
     String sql = "SELECT * FROM couriers";
 
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
         PreparedStatement stmt = conn.prepareStatement(sql);
         ResultSet rs = stmt.executeQuery()) {
 
@@ -91,7 +91,7 @@ public class CourierRepository {
     String sql = "UPDATE couriers SET name=?, password=?, phone_number=?, status=?, transport_type=?, " +
         "current_order_id=?, current_balance=?, bank_card=? WHERE id=?";
 
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
         PreparedStatement stmt = conn.prepareStatement(sql)) {
 
       stmt.setString(1, courier.getName());
@@ -112,7 +112,7 @@ public class CourierRepository {
   public void delete(Long id) throws SQLException {
     String sql = "DELETE FROM couriers WHERE id = ?";
 
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
         PreparedStatement stmt = conn.prepareStatement(sql)) {
 
       stmt.setLong(1, id);

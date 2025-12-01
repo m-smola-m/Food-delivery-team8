@@ -3,7 +3,7 @@ package com.team8.fooddelivery.repository;
 import com.team8.fooddelivery.model.shop.Shop;
 import com.team8.fooddelivery.model.shop.ShopStatus;
 import com.team8.fooddelivery.model.shop.ShopType;
-import com.team8.fooddelivery.util.DatabaseConnection;
+import com.team8.fooddelivery.service.DatabaseConnectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +23,7 @@ public class ShopRepository {
         "status, address_id, working_hours_id, owner_name, owner_contact_phone, registration_date, rating, type, password) " +
         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING shop_id";
 
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
          PreparedStatement stmt = conn.prepareStatement(sql)) {
 
       Long addressId = null;
@@ -65,7 +65,7 @@ public class ShopRepository {
   public Optional<Shop> findById(Long shopId) throws SQLException {
     String sql = "SELECT * FROM shops WHERE shop_id = ?";
 
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
          PreparedStatement stmt = conn.prepareStatement(sql)) {
 
       stmt.setLong(1, shopId);
@@ -81,7 +81,7 @@ public class ShopRepository {
   public Optional<Shop> findByEmailForAuth(String email) throws SQLException {
     String sql = "SELECT * FROM shops WHERE email_for_auth = ?";
 
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
          PreparedStatement stmt = conn.prepareStatement(sql)) {
 
       stmt.setString(1, email);
@@ -97,7 +97,7 @@ public class ShopRepository {
   public Optional<Shop> findByPhoneForAuth(String phone) throws SQLException {
     String sql = "SELECT * FROM shops WHERE phone_for_auth = ?";
 
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
          PreparedStatement stmt = conn.prepareStatement(sql)) {
 
       stmt.setString(1, phone);
@@ -113,7 +113,7 @@ public class ShopRepository {
   public List<Shop> findAll() throws SQLException {
     String sql = "SELECT * FROM shops";
 
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
          PreparedStatement stmt = conn.prepareStatement(sql);
          ResultSet rs = stmt.executeQuery()) {
 
@@ -130,7 +130,7 @@ public class ShopRepository {
         "public_phone=?, status=?, address_id=?, working_hours_id=?, owner_name=?, owner_contact_phone=?, " +
         "rating=?, type=?, password=? WHERE shop_id=?";
 
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
          PreparedStatement stmt = conn.prepareStatement(sql)) {
 
       Long addressId = null;
@@ -179,7 +179,7 @@ public class ShopRepository {
   public void delete(Long shopId) throws SQLException {
     String sql = "DELETE FROM shops WHERE shop_id = ?";
 
-    try (Connection conn = DatabaseConnection.getConnection();
+    try (Connection conn = DatabaseConnectionService.getConnection();
          PreparedStatement stmt = conn.prepareStatement(sql)) {
 
       stmt.setLong(1, shopId);

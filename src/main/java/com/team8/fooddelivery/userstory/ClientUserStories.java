@@ -7,12 +7,12 @@ import com.team8.fooddelivery.model.client.ClientStatus;
 import com.team8.fooddelivery.service.impl.CartServiceImpl;
 import com.team8.fooddelivery.service.impl.ClientServiceImpl;
 import com.team8.fooddelivery.util.JWTUtil;
-import com.team8.fooddelivery.util.DatabaseInitializer;
+import com.team8.fooddelivery.service.DatabaseInitializerService;
 
 public class ClientUserStories {
 
     public static void main(String[] args) {
-        DatabaseInitializer.initializeDatabase();
+        DatabaseInitializerService.initializeDatabase();
 
         CartServiceImpl cartService = new CartServiceImpl();
         ClientServiceImpl clientService = new ClientServiceImpl(cartService);
@@ -23,12 +23,12 @@ public class ClientUserStories {
         System.out.println("\n1. Регистрация клиентов\n");
 
         Address address1 = new Address(
-                "Россия", "Москва", "Тверская", "1", "10", "1", 3,
+                100L, "Россия", "Москва", "Тверская", "1", "10", "1", 3,
                 55.7558, 37.6173, "Квартира с видом на Кремль", "ЦАО"
         );
 
         Address address2 = new Address(
-                "Россия", "Санкт-Петербург", "Невский", "10", "5", "2", 2,
+                101L, "Россия", "Санкт-Петербург", "Невский", "10", "5", "2", 2,
                 59.9311, 30.3609, "Рядом с метро Площадь Восстания", "Центральный"
         );
 
