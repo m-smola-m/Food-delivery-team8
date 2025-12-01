@@ -2,6 +2,7 @@ package com.team8.fooddelivery.util;
 
 import com.team8.fooddelivery.model.client.Client;
 import com.team8.fooddelivery.model.courier.Courier;
+import com.team8.fooddelivery.model.shop.Shop;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +28,14 @@ public class SessionManager {
         log.debug("Created courier session for user: {}", courier.getId());
     }
 
+    public static void createSession(HttpSession session, Shop shop) {
+        session.setAttribute("userId", shop.getShopId());
+        session.setAttribute("userRole", "SHOP");
+        session.setAttribute("userName", shop.getNaming());
+        session.setMaxInactiveInterval((int) SESSION_TIMEOUT);
+        log.debug("Created shop session for user: {}", shop.getShopId());
+    }
+
     public static void invalidateSession(HttpSession session) {
         Long userId = (Long) session.getAttribute("userId");
         session.invalidate();
@@ -45,4 +54,3 @@ public class SessionManager {
         return (Long) session.getAttribute("userId");
     }
 }
-

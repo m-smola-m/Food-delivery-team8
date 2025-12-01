@@ -13,6 +13,7 @@
         <div class="auth-box">
             <h1>Food Delivery</h1>
             <h2>Вход в кабинет магазина</h2>
+            <p class="role-hint">Используйте email/телефон для аутентификации, который вы указали при регистрации.</p>
 
             <c:if test="${not empty error}">
                 <div class="alert alert-error">${error}</div>

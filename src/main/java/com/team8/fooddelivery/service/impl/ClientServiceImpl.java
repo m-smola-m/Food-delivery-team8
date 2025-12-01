@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -83,7 +82,7 @@ public class ClientServiceImpl implements ClientService {
                 .passwordHash(hashedPassword)
                 .email(email)
                 .address(address)
-                .createdAt(Instant.now())
+                .createdAt(LocalDateTime.now())
                 .status(ClientStatus.ACTIVE)
                 .isActive(true)
                 .cart(cart)

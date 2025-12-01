@@ -1,6 +1,7 @@
 package com.team8.fooddelivery.model.client;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import com.team8.fooddelivery.model.Address;
@@ -23,12 +24,12 @@ public class Client {
 
     private Address address;
     private ClientStatus status;
-    private Instant createdAt = Instant.now();
+    @Builder.Default
+    private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Builder.Default
     private boolean isActive = true;
     private Cart cart;
 
     private List<String> orderHistory;
 }
-
-

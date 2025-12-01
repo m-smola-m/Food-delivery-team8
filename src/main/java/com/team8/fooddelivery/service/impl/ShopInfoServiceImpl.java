@@ -4,6 +4,7 @@ import com.team8.fooddelivery.model.shop.Shop;
 import com.team8.fooddelivery.model.shop.ShopStatus;
 import com.team8.fooddelivery.repository.ShopRepository;
 import com.team8.fooddelivery.service.ShopInfoService;
+import org.mindrot.jbcrypt.BCrypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +50,7 @@ public class ShopInfoServiceImpl implements ShopInfoService {
       infoAbout.setStatus(ShopStatus.PENDING);
       infoAbout.setEmailForAuth(emailForAuth);
       infoAbout.setPhoneForAuth(phoneForAuth);
-      infoAbout.setPassword(password);
+      infoAbout.setPassword(BCrypt.hashpw(password, BCrypt.gensalt()));
 
       Long shopId = shopRepository.save(infoAbout);
       infoAbout.setShopId(shopId);
@@ -138,7 +139,7 @@ public class ShopInfoServiceImpl implements ShopInfoService {
       }
 
       if (password.equals(shop.getPassword())) {
-        shop.setPassword(newPassword);
+        shop.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
         shopRepository.update(shop);
         logger.info("Пароль для магазина с ID {} успешно изменен", shopId);
       }
@@ -243,6 +244,34 @@ public class ShopInfoServiceImpl implements ShopInfoService {
     } catch (SQLException e) {
       logger.error("Ошибка при загрузке магазина {}", shopId, e);
       throw new RuntimeException("Не удалось загрузить магазин", e);
+    }
+  }
+
+  @Override
+  public Shop login(String login, String password) {
+    if (login == null || password == null) {
+      throw new IllegalArgumentException("Логин и пароль обязательны");
+    }
+
+    try {
+      Optional<Shop> shopOpt = shopRepository.findByEmailForAuth(login);
+      if (shopOpt.isEmpty()) {
+        shopOpt = shopRepository.findByPhoneForAuth(login);
+      }
+
+      if (shopOpt.isEmpty()) {
+        throw new IllegalArgumentException("Магазин не найден");
+      }
+
+      Shop shop = shopOpt.get();
+      if (!BCrypt.checkpw(password, shop.getPassword())) {
+        throw new IllegalArgumentException("Неверный пароль");
+      }
+
+      return shop;
+    } catch (SQLException e) {
+      logger.error("Ошибка при входе магазина", e);
+      throw new RuntimeException("Не удалось выполнить вход", e);
     }
   }
 }

@@ -16,12 +16,15 @@ public class AuthenticationFilter implements Filter {
     private static final Logger log = LoggerFactory.getLogger(AuthenticationFilter.class);
 
     private static final Set<String> PUBLIC_PATHS = Set.of(
+        "/",
+        "",
+        "/index",
+        "/index.jsp",
         "/login",
         "/register",
         "/resources",
         "/auth/login",
-        "/auth/register",
-        "/index.jsp"
+        "/auth/register"
     );
 
     @Override
@@ -52,4 +55,3 @@ public class AuthenticationFilter implements Filter {
         chain.doFilter(request, response);
     }
 }
-

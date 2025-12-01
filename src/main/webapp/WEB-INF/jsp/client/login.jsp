@@ -21,7 +21,7 @@
             <form method="POST" action="${pageContext.request.contextPath}/client/login">
                 <div class="form-group">
                     <label>Email или телефон:</label>
-                    <input type="text" name="email" placeholder="Или телефон 89XXXXXXXXX">
+                    <input type="text" name="login" placeholder="your@email.com или 89XXXXXXXXX" required>
                 </div>
 
                 <div class="form-group">
@@ -37,4 +37,3 @@
     </div>
 </body>
 </html>
-

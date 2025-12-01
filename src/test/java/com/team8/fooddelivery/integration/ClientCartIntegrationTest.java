@@ -17,7 +17,7 @@ import org.junit.jupiter.api.DisplayName;
 
 import java.sql.SQLException;
 import java.time.Duration;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -96,7 +96,7 @@ public class ClientCartIntegrationTest {
                 .address(address)
                 .status(ClientStatus.ACTIVE)
                 .isActive(true)
-                .createdAt(Instant.now())
+                .createdAt(LocalDateTime.now())
                 .orderHistory(List.of())
                 .build();
         Long clientId = clientRepository.save(client);
@@ -188,7 +188,7 @@ public class ClientCartIntegrationTest {
                 .address(address)
                 .status(ClientStatus.ACTIVE)
                 .isActive(true)
-                .createdAt(Instant.now())
+                .createdAt(LocalDateTime.now())
                 .orderHistory(List.of())
                 .build();
         Long clientId = clientRepository.save(client);

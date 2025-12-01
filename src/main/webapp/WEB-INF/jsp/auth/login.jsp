@@ -10,30 +10,31 @@
 </head>
 <body class="auth-page">
     <div class="auth-container">
-        <div class="auth-box">
+        <div class="auth-box role-selector">
             <h1>Food Delivery</h1>
-            <h2>Вход в систему</h2>
-
-            <c:if test="${not empty error}">
-                <div class="alert alert-error">${error}</div>
-            </c:if>
-
-            <form method="POST" action="${pageContext.request.contextPath}/auth/login">
-                <div class="form-group">
-                    <label for="login">Email или телефон:</label>
-                    <input type="text" id="login" name="login" required placeholder="your@email.com или 89XXXXXXXXX">
+            <h2>Выберите свою роль</h2>
+            <div class="role-grid">
+                <div class="role-card">
+                    <div class="role-icon">👤</div>
+                    <h3>Клиент</h3>
+                    <p>Оформляйте заказы, управляйте профилем и корзиной.</p>
+                    <a class="btn btn-primary btn-block" href="${pageContext.request.contextPath}/login?role=CLIENT">Войти как клиент</a>
                 </div>
-
-                <div class="form-group">
-                    <label for="password">Пароль:</label>
-                    <input type="password" id="password" name="password" required>
+                <div class="role-card">
+                    <div class="role-icon">🚚</div>
+                    <h3>Курьер</h3>
+                    <p>Управляйте сменой, принимайте заказы, связывайтесь с клиентами.</p>
+                    <a class="btn btn-primary btn-block" href="${pageContext.request.contextPath}/login?role=COURIER">Войти как курьер</a>
                 </div>
-
-                <button type="submit" class="btn btn-primary btn-block">Войти</button>
-            </form>
-
+                <div class="role-card">
+                    <div class="role-icon">🏬</div>
+                    <h3>Магазин</h3>
+                    <p>Следите за заказами, обновляйте ассортимент и статус магазина.</p>
+                    <a class="btn btn-primary btn-block" href="${pageContext.request.contextPath}/login?role=SHOP">Войти как магазин</a>
+                </div>
+            </div>
             <p class="auth-link">
-                Нет аккаунта? <a href="${pageContext.request.contextPath}/auth/register">Зарегистрироваться</a>
+                Нет аккаунта? <a href="${pageContext.request.contextPath}/register?role=CLIENT">Зарегистрироваться как клиент</a>
             </p>
         </div>
     </div>

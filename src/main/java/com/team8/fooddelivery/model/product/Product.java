@@ -14,6 +14,7 @@ public class Product {
   private Double weight;
   private Double price;
   private ProductCategory category;
+  @Builder.Default
   private Boolean available = true;
   private Duration cookingTimeMinutes;
 }

@@ -13,6 +13,7 @@
         <div class="auth-box">
             <h1>Food Delivery</h1>
             <h2>Вход курьера</h2>
+            <p class="role-hint">Телефон и пароль выдает менеджер. После входа вы сможете начать смену.</p>
 
             <c:if test="${not empty error}">
                 <div class="alert alert-error">${error}</div>

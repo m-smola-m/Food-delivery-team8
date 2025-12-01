@@ -23,4 +23,6 @@ public interface ShopInfoService {
 
   Optional<Shop> getShopById(Long shopId);
 
+  Shop login(String login, String password);
+
 }
