@@ -26,7 +26,7 @@
                 <div class="shop-item">
                     <h3>${shop.naming}</h3>
                     <p>${shop.description}</p>
-                    <a href="${pageContext.request.contextPath}/shop/details?id=${shop.id}" class="btn btn-secondary">
+                    <a href="${pageContext.request.contextPath}/shop/details?id=${shop.shopId}" class="btn btn-secondary">
                         Подробнее
                     </a>
                 </div>
@@ -35,4 +35,3 @@
     </main>
 </body>
 </html>
-

@@ -9,10 +9,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Set;
 
 @WebFilter({"/client/*", "/courier/*"})
 public class AuthorizationFilter implements Filter {
     private static final Logger log = LoggerFactory.getLogger(AuthorizationFilter.class);
+    private static final Set<String> ROLELESS_PATHS = Set.of(
+        "/client/login",
+        "/client/register",
+        "/courier/login",
+        "/shop/login",
+        "/shop/register"
+    );
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response,
@@ -23,6 +31,11 @@ public class AuthorizationFilter implements Filter {
 
         String userRole = SessionManager.getUserRole(httpRequest.getSession());
         String requestURI = httpRequest.getRequestURI();
+
+        if (ROLELESS_PATHS.stream().anyMatch(requestURI::endsWith)) {
+            chain.doFilter(request, response);
+            return;
+        }
 
         if (requestURI.contains("/client/") && !"CLIENT".equals(userRole)) {
             log.warn("Unauthorized role access: {} trying to access {}", userRole, requestURI);
@@ -36,7 +49,12 @@ public class AuthorizationFilter implements Filter {
             return;
         }
 
+        if (requestURI.contains("/shop/") && !"SHOP".equals(userRole)) {
+            log.warn("Unauthorized role access: {} trying to access {}", userRole, requestURI);
+            httpResponse.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+
         chain.doFilter(request, response);
     }
 }
-

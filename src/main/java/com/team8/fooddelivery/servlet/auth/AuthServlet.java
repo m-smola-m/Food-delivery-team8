@@ -23,7 +23,7 @@ import java.io.IOException;
 public class AuthServlet extends HttpServlet {
     private static final Logger log = LoggerFactory.getLogger(AuthServlet.class);
 
-    private final ClientServiceImpl clientService = new ClientServiceImpl(new CartServiceImpl());
+    private final ClientServiceImpl clientService = new ClientServiceImpl(new ClientRepository(), new CartServiceImpl());
     private final CourierServiceImpl courierService = new CourierServiceImpl();
     private final ShopInfoServiceImpl shopInfoService = new ShopInfoServiceImpl();
 

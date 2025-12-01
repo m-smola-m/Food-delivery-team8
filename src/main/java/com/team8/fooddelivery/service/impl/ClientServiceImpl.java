@@ -27,9 +27,9 @@ public class ClientServiceImpl implements ClientService {
     private final ClientRepository clientRepository;
     private final CartServiceImpl cartService;
 
-    public ClientServiceImpl(CartServiceImpl cartService) {
+    public ClientServiceImpl(ClientRepository clientRepository, CartServiceImpl cartService) {
         this.cartService = cartService;
-        this.clientRepository = new ClientRepository();
+        this.clientRepository = clientRepository;
     }
 
 

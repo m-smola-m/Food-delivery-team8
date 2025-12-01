@@ -14,12 +14,14 @@
             <h1>Food Delivery</h1>
             <h2>Вход курьера</h2>
             <p class="role-hint">Телефон и пароль выдает менеджер. После входа вы сможете начать смену.</p>
+            <p class="role-hint">Тестовый курьер: телефон +79991000001 / пароль pwd01</p>
 
             <c:if test="${not empty error}">
                 <div class="alert alert-error">${error}</div>
             </c:if>
 
-            <form method="POST" action="${pageContext.request.contextPath}/courier/login">
+            <form method="POST" action="${pageContext.request.contextPath}/login">
+                <input type="hidden" name="role" value="COURIER"/>
                 <div class="form-group">
                     <label>Телефон:</label>
                     <input type="tel" name="phone" placeholder="89XXXXXXXXX" required>

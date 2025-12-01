@@ -14,6 +14,7 @@
             <h1>Food Delivery</h1>
             <h2>Вход в кабинет магазина</h2>
             <p class="role-hint">Используйте email/телефон для аутентификации, который вы указали при регистрации.</p>
+            <p class="role-hint">Тестовый магазин: email auth@drovyana.ru / пароль Shop#01</p>
 
             <c:if test="${not empty error}">
                 <div class="alert alert-error">${error}</div>
@@ -22,7 +23,8 @@
                 <div class="alert alert-info">${notice}</div>
             </c:if>
 
-            <form method="POST" action="${pageContext.request.contextPath}/shop/login" class="stacked-form">
+            <form method="POST" action="${pageContext.request.contextPath}/login" class="stacked-form">
+                <input type="hidden" name="role" value="SHOP"/>
                 <div class="form-group">
                     <label>Email или телефон для аутентификации</label>
                     <input type="text" name="login" placeholder="example@gmail.com или 89XXXXXXXXX" required>
