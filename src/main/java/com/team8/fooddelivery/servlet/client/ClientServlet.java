@@ -7,6 +7,7 @@ import com.team8.fooddelivery.service.ClientService;
 import com.team8.fooddelivery.service.impl.ClientServiceImpl;
 import com.team8.fooddelivery.service.impl.CartServiceImpl;
 import com.team8.fooddelivery.util.SessionManager;
+import com.team8.fooddelivery.repository.ClientRepository;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -24,7 +25,7 @@ public class ClientServlet extends HttpServlet {
 
     private static final Logger log = LoggerFactory.getLogger(ClientServlet.class);
 
-    private final ClientService clientService = new ClientServiceImpl(new CartServiceImpl());
+    private final ClientService clientService = new ClientServiceImpl(new ClientRepository(), new CartServiceImpl());
 
 
     // ====================================================================

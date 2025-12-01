@@ -17,7 +17,7 @@ import java.util.Optional;
 public class CourierUserStory {
 
     public static void main(String[] args) {
-        DatabaseInitializerService.initializeDatabase();
+        DatabaseInitializerService.resetDatabaseWithTestData();
 
         CourierServiceImpl courierService = new CourierServiceImpl();
         CourierRepository courierRepository = new CourierRepository();

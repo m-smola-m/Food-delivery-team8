@@ -10,11 +10,20 @@
 </head>
 <body class="auth-page">
     <div class="auth-container">
-        <div class="auth-box">
+        <div class="auth-box auth-box--narrow">
             <h1>Food Delivery</h1>
-            <h2>Вход</h2>
+            <h2>Вход для клиента</h2>
 
-            <p class="role-hint">Тестовый клиент: anna.sergeeva@test.local / Client#123 (или телефон +79990000001)</p>
+            <div class="demo-credentials">
+                <strong>Тестовые аккаунты (без изменения SQL)</strong>
+                <div class="test-accounts">
+                    <ul>
+                        <li><span class="label">Email</span><span>anna.sergeeva@test.local / hash01</span></li>
+                        <li><span class="label">Email</span><span>ivan.petrov@test.local / hash02</span></li>
+                        <li><span class="label">Телефон</span><span>+79990000003 / hash03</span></li>
+                    </ul>
+                </div>
+            </div>
 
             <c:if test="${not empty error}">
                 <div class="alert alert-error">${error}</div>
@@ -23,13 +32,13 @@
             <form method="POST" action="${pageContext.request.contextPath}/login">
                 <input type="hidden" name="role" value="CLIENT"/>
                 <div class="form-group">
-                    <label>Email или телефон:</label>
+                    <label>Email или телефон</label>
                     <input type="text" name="login" placeholder="anna.sergeeva@test.local" required>
                 </div>
 
                 <div class="form-group">
-                    <label>Пароль:</label>
-                    <input type="password" name="password" placeholder="Client#123" required>
+                    <label>Пароль</label>
+                    <input type="password" name="password" placeholder="hash01" required>
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-block">Войти</button>

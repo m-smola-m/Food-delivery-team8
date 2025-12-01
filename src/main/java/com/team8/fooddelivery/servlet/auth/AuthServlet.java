@@ -4,6 +4,7 @@ import com.team8.fooddelivery.model.AuthResponse;
 import com.team8.fooddelivery.model.client.Client;
 import com.team8.fooddelivery.model.courier.Courier;
 import com.team8.fooddelivery.model.shop.Shop;
+import com.team8.fooddelivery.repository.ClientRepository;
 import com.team8.fooddelivery.service.impl.ClientServiceImpl;
 import com.team8.fooddelivery.service.impl.CourierServiceImpl;
 import com.team8.fooddelivery.service.impl.ShopInfoServiceImpl;

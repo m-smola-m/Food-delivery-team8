@@ -8,14 +8,15 @@ import com.team8.fooddelivery.service.impl.CartServiceImpl;
 import com.team8.fooddelivery.service.impl.ClientServiceImpl;
 import com.team8.fooddelivery.util.JWTUtil;
 import com.team8.fooddelivery.service.DatabaseInitializerService;
+import com.team8.fooddelivery.repository.ClientRepository;
 
 public class ClientUserStories {
 
     public static void main(String[] args) {
-        DatabaseInitializerService.initializeDatabase();
+        DatabaseInitializerService.resetDatabaseWithTestData();
 
         CartServiceImpl cartService = new CartServiceImpl();
-        ClientServiceImpl clientService = new ClientServiceImpl(cartService);
+        ClientServiceImpl clientService = new ClientServiceImpl(new ClientRepository(), cartService);
 
         // =====================
         // 1. Регистрация клиентов

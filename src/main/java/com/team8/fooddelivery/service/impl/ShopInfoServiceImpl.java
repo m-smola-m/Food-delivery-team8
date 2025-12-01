@@ -138,11 +138,17 @@ public class ShopInfoServiceImpl implements ShopInfoService {
         throw new SecurityException("Неверные аутентификационные данные");
       }
 
-      if (password.equals(shop.getPassword())) {
-        shop.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
-        shopRepository.update(shop);
-        logger.info("Пароль для магазина с ID {} успешно изменен", shopId);
+      if (!BCrypt.checkpw(password, shop.getPassword())) {
+        throw new SecurityException("Неверный пароль");
       }
+
+      if (BCrypt.checkpw(newPassword, shop.getPassword())) {
+        throw new IllegalArgumentException("Новый пароль должен отличаться от текущего");
+      }
+
+      shop.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
+      shopRepository.update(shop);
+      logger.info("Пароль для магазина с ID {} успешно изменен", shopId);
       return "Пароль успешно изменен";
     } catch (SQLException e) {
       logger.error("Ошибка при смене пароля магазина", e);
@@ -171,7 +177,7 @@ public class ShopInfoServiceImpl implements ShopInfoService {
         throw new SecurityException("Неверный телефон для аутентификации");
       }
 
-      if (!shop.getPassword().equals(password)) {
+      if (!BCrypt.checkpw(password, shop.getPassword())) {
         throw new SecurityException("Неверный пароль");
       }
 
@@ -208,7 +214,7 @@ public class ShopInfoServiceImpl implements ShopInfoService {
         throw new SecurityException("Неверный email для аутентификации");
       }
 
-      if (!shop.getPassword().equals(password)) {
+      if (!BCrypt.checkpw(password, shop.getPassword())) {
         throw new SecurityException("Неверный пароль");
       }
 

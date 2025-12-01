@@ -10,11 +10,20 @@
 </head>
 <body class="auth-page">
     <div class="auth-container">
-        <div class="auth-box">
+        <div class="auth-box auth-box--narrow">
             <h1>Food Delivery</h1>
             <h2>Вход в кабинет магазина</h2>
-            <p class="role-hint">Используйте email/телефон для аутентификации, который вы указали при регистрации.</p>
-            <p class="role-hint">Тестовый магазин: email auth@drovyana.ru / пароль Shop#01</p>
+
+            <div class="demo-credentials">
+                <strong>Тестовые магазины (данные из SQL)</strong>
+                <div class="test-accounts">
+                    <ul>
+                        <li><span class="label">Email</span><span>auth@drovyana.ru / pwd01</span></li>
+                        <li><span class="label">Email</span><span>auth@mayak-sushi.ru / pwd02</span></li>
+                        <li><span class="label">Телефон</span><span>+78001000003 / pwd03</span></li>
+                    </ul>
+                </div>
+            </div>
 
             <c:if test="${not empty error}">
                 <div class="alert alert-error">${error}</div>

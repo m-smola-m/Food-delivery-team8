@@ -11,10 +11,10 @@
     <session-config>
         <cookie-config>
             <http-only>true</http-only>
-            <secure>false</secure>
+            <secure>true</secure>
         </cookie-config>
+        <session-timeout>20</session-timeout>
         <tracking-mode>COOKIE</tracking-mode>
-        <timeout>30</timeout>
     </session-config>
 
     <!-- Фильтры -->
@@ -55,6 +55,8 @@
     <servlet-mapping>
         <servlet-name>AuthServlet</servlet-name>
         <url-pattern>/auth/*</url-pattern>
+        <url-pattern>/login</url-pattern>
+        <url-pattern>/register</url-pattern>
     </servlet-mapping>
 
     <!-- Client Servlet -->
@@ -124,4 +126,3 @@
     </welcome-file-list>
 
 </web-app>
-

@@ -24,7 +24,8 @@ public class AuthenticationFilter implements Filter {
         "/register",
         "/resources",
         "/auth/login",
-        "/auth/register"
+        "/auth/register",
+        "/auth/reset"
     );
 
     @Override

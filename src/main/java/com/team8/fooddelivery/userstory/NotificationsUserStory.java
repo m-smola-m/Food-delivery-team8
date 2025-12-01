@@ -9,7 +9,7 @@ import java.util.List;
 public class NotificationsUserStory {
 
     public static void main(String[] args) {
-        DatabaseInitializerService.initializeDatabase();
+        DatabaseInitializerService.resetDatabaseWithTestData();
         NotificationServiceImpl notificationService = new NotificationServiceImpl();
         Long clientId = 1L;
 

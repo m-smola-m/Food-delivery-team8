@@ -10,17 +10,20 @@ import com.team8.fooddelivery.service.impl.CartServiceImpl;
 import com.team8.fooddelivery.service.impl.ClientServiceImpl;
 import com.team8.fooddelivery.service.impl.OrderServiceImpl;
 import com.team8.fooddelivery.service.DatabaseInitializerService;
+import com.team8.fooddelivery.repository.ClientRepository;
+
+import java.time.Duration;
 
 public class CartUserStory {
     public static void main(String[] args) {
 
-        DatabaseInitializerService.initializeDatabase();
+        DatabaseInitializerService.resetDatabaseWithTestData();
 
         // =====================
         // 0. Инициализация сервисов
         // =====================
         CartServiceImpl cartService = new CartServiceImpl();
-        ClientServiceImpl clientService = new ClientServiceImpl(cartService);
+        ClientServiceImpl clientService = new ClientServiceImpl(new ClientRepository(), cartService);
         OrderServiceImpl orderService = new OrderServiceImpl(cartService);
 
         // =====================
