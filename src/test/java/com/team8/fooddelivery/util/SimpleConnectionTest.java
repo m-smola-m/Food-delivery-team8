@@ -19,6 +19,9 @@ public class SimpleConnectionTest {
         String dbPassword = System.getProperty("db.password", "postgres");
 
         DatabaseConnectionService.setConnectionParams(dbUrl, dbUser, dbPassword);
+        // Убедимся, что соединение можно получить и БД в чистом состоянии
+        DatabaseConnectionService.getConnection();
+        DatabaseInitializerService.fullCleanDatabase();
         try {
             DatabaseInitializerService.resetDatabaseWithTestData();
             System.out.println("✅ База данных успешно пересоздана и наполнена тестовыми данными");
@@ -43,5 +46,6 @@ public class SimpleConnectionTest {
             System.err.println("   -Ddb.url=... -Ddb.user=... -Ddb.password=...");
         }
         DatabaseInitializerService.isDatabaseInitialized();
+        DatabaseInitializerService.fullCleanDatabase();
     }
 }

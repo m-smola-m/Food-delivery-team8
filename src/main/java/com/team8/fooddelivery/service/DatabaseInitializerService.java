@@ -32,12 +32,18 @@ public class DatabaseInitializerService {
       "sql/004_create_order_tables/009_create_order_items.sql",
       "sql/004_create_order_tables/010_create_carts.sql",
       "sql/004_create_order_tables/011_create_cart_items.sql",
-      // Потом добавляем внешние ключи
+      // Потом добавляем внешние ключи и дополнительные колонки
       "sql/002_create_shop_tables/006_add_shop_foreign_keys.sql",
       "sql/004_create_order_tables/012_add_cart_foreign_keys.sql",
       "sql/004_create_order_tables/013_create_payments.sql",
+      "sql/004_create_order_tables/014_add_delivery_address_columns.sql",
+      "sql/004_create_order_tables/015_add_payment_columns.sql",
+      "sql/004_create_order_tables/016_add_estimated_delivery_time_column.sql",
+      // Нотификации и индексы
       "sql/004_create_order_tables/017_create_notifications.sql",
-      "sql/005_create_indexes/013_create_indexes.sql"
+      "sql/005_create_indexes/013_create_indexes.sql",
+      // Вспомогательные тестовые скрипты (если есть в classpath)
+      "sql/test/testsData.sql"
   );
 
   private static final List<String> TEST_DATA_FILES = Arrays.asList(
