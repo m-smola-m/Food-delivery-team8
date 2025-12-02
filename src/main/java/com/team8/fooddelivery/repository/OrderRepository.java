@@ -82,7 +82,7 @@ public class OrderRepository {
   }
 
   public List<Order> findByCustomerId(Long customerId) throws SQLException {
-    String sql = "SELECT o.* FROM orders o WHERE o.customer_id = ?";
+    String sql = "SELECT o.* FROM orders o WHERE o.customer_id = ? ORDER BY o.created_at DESC";
 
     try (Connection conn = DatabaseConnectionService.getConnection();
          PreparedStatement stmt = conn.prepareStatement(sql)) {
