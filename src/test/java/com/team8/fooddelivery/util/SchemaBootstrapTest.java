@@ -15,8 +15,8 @@ class SchemaBootstrapTest {
 
   // Настройки для локального запуска (IntelliJ -> localhost)
   private static final String REAL_URL = "jdbc:postgresql://localhost:5432/food_delivery";
-  private static final String REAL_USER = "fooddelivery_user";
-  private static final String REAL_PASS = "fooddelivery_pass";
+  private static final String REAL_USER = "postgres";
+  private static final String REAL_PASS = "postgres";
 
   @BeforeEach
   void setup() {

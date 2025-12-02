@@ -15,8 +15,8 @@ public class DatabaseConnectionService {
 
   private static final String DEFAULT_URL_CONTAINER = "jdbc:postgresql://db:5432/food_delivery";
   private static final String DEFAULT_URL_LOCAL = "jdbc:postgresql://localhost:5432/food_delivery";
-  private static final String DEFAULT_USER = "fooddelivery_user";
-  private static final String DEFAULT_PASSWORD = "fooddelivery_pass";
+  private static final String DEFAULT_USER = "postgres";
+  private static final String DEFAULT_PASSWORD = "postgres";
 
   private static String dbUrl = resolveDatabaseUrl();
   private static String dbUser = resolve("db.user", "DB_USER", DEFAULT_USER);

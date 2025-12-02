@@ -151,7 +151,6 @@ class ShopTest {
         Shop shop = new Shop();
         shop.setShopId(1L);
         shop.setNaming("Test Shop");
-
         assertNotNull(shop.toString());
     }
 }

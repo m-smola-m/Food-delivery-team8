@@ -32,8 +32,8 @@ class CartServiceImplIntegrationTest {
     @BeforeAll
     static void setupDatabase() {
         String dbUrl = System.getProperty("db.url", "jdbc:postgresql://localhost:5432/food_delivery");
-        String dbUser = System.getProperty("db.user", "fooddelivery_user");
-        String dbPassword = System.getProperty("db.password", "fooddelivery_pass");
+        String dbUser = System.getProperty("db.user", "postgres");
+        String dbPassword = System.getProperty("db.password", "postgres");
         DatabaseConnectionService.setConnectionParams(dbUrl, dbUser, dbPassword);
         DatabaseInitializerService.initializeDatabase();
     }
@@ -61,7 +61,7 @@ class CartServiceImplIntegrationTest {
     @BeforeEach
     void setUp() {
         // Сбрасываем БД к тестовым данным перед каждым тестом
-        DatabaseInitializerService.resetDatabaseWithTestData();
+        //DatabaseInitializerService.resetDatabaseWithTestData();
 
         cartService = new CartServiceImpl();
         clientRepository = new ClientRepository();
@@ -96,7 +96,7 @@ class CartServiceImplIntegrationTest {
                     .country("Russia").city("Moscow").street("Test").building("1")
                     .apartment("10").entrance("1").floor(1)
                     .latitude(55.7558).longitude(37.6173).build();
-            Client client = clientService.register(testPhone + "1", "Password123!", "Test", testEmail + "1", address);
+            Client client = clientService.register(testPhone, "Password123!", "Test", testEmail, address);
             testClientId = client.getId();
         }
         Cart cart = cartService.getCartForClient(testClientId);

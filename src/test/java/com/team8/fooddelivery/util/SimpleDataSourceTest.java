@@ -12,8 +12,8 @@ class SimpleDataSourceTest {
 
   // Используем настройки твоей локальной базы (Docker)
   private static final String DB_URL = "jdbc:postgresql://localhost:5432/food_delivery";
-  private static final String DB_USER = "fooddelivery_user";
-  private static final String DB_PASS = "fooddelivery_pass";
+  private static final String DB_USER = "postgres";
+  private static final String DB_PASS = "postgres";
 
   @Test
   @DisplayName("Успешное создание соединения и проверка счетчика")

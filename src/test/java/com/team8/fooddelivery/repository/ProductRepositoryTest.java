@@ -40,8 +40,8 @@ public class ProductRepositoryTest { // Public class
   @BeforeAll
   public static void setupTestShop() throws SQLException {
     String dbUrl = System.getProperty("db.url", "jdbc:postgresql://localhost:5432/food_delivery");
-    String dbUser = System.getProperty("db.user", "fooddelivery_user");
-    String dbPassword = System.getProperty("db.password", "fooddelivery_pass");
+    String dbUser = System.getProperty("db.user", "postgres");
+    String dbPassword = System.getProperty("db.password", "postgres");
     DatabaseConnectionService.setConnectionParams(dbUrl, dbUser, dbPassword);
     DatabaseInitializerService.initializeDatabase();
 

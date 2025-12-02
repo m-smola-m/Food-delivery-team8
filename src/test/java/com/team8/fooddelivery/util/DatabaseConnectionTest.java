@@ -17,8 +17,8 @@ public class DatabaseConnectionTest {
 
   // Единые учетные данные (совместимость со скриптами)
   private static final String DEFAULT_DB_URL = "jdbc:postgresql://localhost:5432/food_delivery";
-  private static final String DEFAULT_DB_USER = "fooddelivery_user";
-  private static final String DEFAULT_DB_PASSWORD = "fooddelivery_pass";
+  private static final String DEFAULT_DB_USER = "postgres";
+  private static final String DEFAULT_DB_PASSWORD = "postgres";
 
   @BeforeEach
   void setUp() {

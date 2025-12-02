@@ -34,7 +34,7 @@ class PaymentRepositoryTest {
     private static OrderRepository orderRepository;
     private static ClientRepository clientRepository;
     private static AddressRepository addressRepository;
-    
+
     private static Long testClientId;
     private static Long testAddressId;
     private static Long testPaymentId;
@@ -42,15 +42,15 @@ class PaymentRepositoryTest {
     @BeforeAll
     static void setupDatabase() throws SQLException {
         String dbUrl = System.getProperty("db.url", "jdbc:postgresql://localhost:5432/food_delivery");
-        String dbUser = System.getProperty("db.user", "fooddelivery_user");
-        String dbPassword = System.getProperty("db.password", "fooddelivery_pass");
+        String dbUser = System.getProperty("db.user", "postgres");
+        String dbPassword = System.getProperty("db.password", "postgres");
         DatabaseConnectionService.setConnectionParams(dbUrl, dbUser, dbPassword);
         DatabaseInitializerService.initializeDatabase();
 
         orderRepository = new OrderRepository();
         clientRepository = new ClientRepository();
         addressRepository = new AddressRepository();
-        
+
         // Create test client and address
         testClientId = createDummyClient();
         testAddressId = createDummyAddress();
@@ -116,7 +116,7 @@ class PaymentRepositoryTest {
                 .email("payment_test_" + System.currentTimeMillis() + "@test.com")
                 .status(ClientStatus.ACTIVE)
                 .isActive(true)
-                .createdAt(LocalDateTime.from(Instant.now()))
+                .createdAt(LocalDateTime.now())
                 .orderHistory(new ArrayList<>())
                 .build();
         return clientRepository.save(client);
@@ -184,10 +184,10 @@ class PaymentRepositoryTest {
     @Test
     @org.junit.jupiter.api.Order(1)
     @DisplayName("Save payment: Should save and return ID")
-    void testSave_ShouldReturnId() throws SQLException {
+    void testSaveShouldReturnId() throws SQLException {
         // Use existing order or create one
         Long orderId = getOrCreateTestOrder();
-        
+
         Payment payment = Payment.builder()
                 .orderId(orderId)
                 .amount(100.0)
@@ -201,13 +201,13 @@ class PaymentRepositoryTest {
 
         assertNotNull(id);
         assertTrue(id > 0);
-        
+
         // Verify payment was saved
         Optional<Payment> found = paymentRepository.findByOrderId(orderId);
         assertTrue(found.isPresent());
         assertEquals(id, found.get().getId());
     }
-    
+
     private static Long getOrCreateTestOrder() throws SQLException {
         // Always create a new order to avoid foreign key issues
         // Use unique client and address for each test
@@ -223,7 +223,7 @@ class PaymentRepositoryTest {
     @DisplayName("Save payment: Should handle all payment methods")
     void testSave_AllPaymentMethods() throws SQLException {
         Long orderId = getOrCreateTestOrder();
-        
+
         // Test CARD
         Payment cardPayment = Payment.builder()
                 .orderId(orderId)
@@ -235,7 +235,7 @@ class PaymentRepositoryTest {
         Long cardId = paymentRepository.save(cardPayment);
         assertNotNull(cardId);
         deletePayment(cardId);
-        
+
         // Test CASH
         Long orderId2 = getOrCreateTestOrder();
         Payment cashPayment = Payment.builder()
@@ -249,7 +249,7 @@ class PaymentRepositoryTest {
         assertNotNull(cashId);
         deletePayment(cashId);
         deleteOrder(orderId2);
-        
+
         // Test ONLINE
         Long orderId3 = getOrCreateTestOrder();
         Payment onlinePayment = Payment.builder()
@@ -263,7 +263,7 @@ class PaymentRepositoryTest {
         assertNotNull(onlineId);
         deletePayment(onlineId);
         deleteOrder(orderId3);
-        
+
         deleteOrder(orderId);
     }
 
@@ -272,7 +272,7 @@ class PaymentRepositoryTest {
     @DisplayName("Save payment: Should handle all payment statuses")
     void testSave_AllPaymentStatuses() throws SQLException {
         Long orderId = getOrCreateTestOrder();
-        
+
         // Test PENDING
         Payment pendingPayment = Payment.builder()
                 .orderId(orderId)
@@ -284,7 +284,7 @@ class PaymentRepositoryTest {
         Long pendingId = paymentRepository.save(pendingPayment);
         assertNotNull(pendingId);
         deletePayment(pendingId);
-        
+
         // Test SUCCESS
         Long orderId2 = getOrCreateTestOrder();
         Payment successPayment = Payment.builder()
@@ -298,7 +298,7 @@ class PaymentRepositoryTest {
         assertNotNull(successId);
         deletePayment(successId);
         deleteOrder(orderId2);
-        
+
         // Test FAILED
         Long orderId3 = getOrCreateTestOrder();
         Payment failedPayment = Payment.builder()
@@ -312,7 +312,7 @@ class PaymentRepositoryTest {
         assertNotNull(failedId);
         deletePayment(failedId);
         deleteOrder(orderId3);
-        
+
         deleteOrder(orderId);
     }
 
@@ -321,7 +321,7 @@ class PaymentRepositoryTest {
     @DisplayName("FindByOrderId: Should return payment when exists")
     void testFindByOrderId_Exists() throws SQLException {
         Long orderId = getOrCreateTestOrder();
-        
+
         Payment payment = Payment.builder()
                 .orderId(orderId)
                 .amount(150.0)
@@ -329,11 +329,11 @@ class PaymentRepositoryTest {
                 .status(PaymentStatus.SUCCESS)
                 .createdAt(Instant.now())
                 .build();
-        
+
         Long paymentId = paymentRepository.save(payment);
-        
+
         Optional<Payment> found = paymentRepository.findByOrderId(orderId);
-        
+
         assertTrue(found.isPresent());
         Payment foundPayment = found.get();
         assertEquals(paymentId, foundPayment.getId());
@@ -342,7 +342,7 @@ class PaymentRepositoryTest {
         assertEquals(PaymentMethodForOrder.CARD, foundPayment.getMethod());
         assertEquals(PaymentStatus.SUCCESS, foundPayment.getStatus());
         assertNotNull(foundPayment.getCreatedAt());
-        
+
         deletePayment(paymentId);
         deleteOrder(orderId);
     }
@@ -361,7 +361,7 @@ class PaymentRepositoryTest {
     void testSave_MapAllFields() throws SQLException {
         Long orderId = getOrCreateTestOrder();
         Instant createdAt = Instant.now();
-        
+
         Payment payment = Payment.builder()
                 .orderId(orderId)
                 .amount(250.75)
@@ -369,12 +369,12 @@ class PaymentRepositoryTest {
                 .status(PaymentStatus.SUCCESS)
                 .createdAt(createdAt)
                 .build();
-        
+
         Long paymentId = paymentRepository.save(payment);
-        
+
         Optional<Payment> found = paymentRepository.findByOrderId(orderId);
         assertTrue(found.isPresent());
-        
+
         Payment foundPayment = found.get();
         assertEquals(paymentId, foundPayment.getId());
         assertEquals(orderId, foundPayment.getOrderId());
@@ -382,7 +382,7 @@ class PaymentRepositoryTest {
         assertEquals(PaymentMethodForOrder.ONLINE, foundPayment.getMethod());
         assertEquals(PaymentStatus.SUCCESS, foundPayment.getStatus());
         assertNotNull(foundPayment.getCreatedAt());
-        
+
         deletePayment(paymentId);
         deleteOrder(orderId);
     }
@@ -394,7 +394,7 @@ class PaymentRepositoryTest {
         Long orderId1 = getOrCreateTestOrder();
         Long orderId2 = getOrCreateTestOrder();
         Long orderId3 = getOrCreateTestOrder();
-        
+
         // Small amount
         Payment small = Payment.builder()
                 .orderId(orderId1)
@@ -406,7 +406,7 @@ class PaymentRepositoryTest {
         Long id1 = paymentRepository.save(small);
         deletePayment(id1);
         deleteOrder(orderId1);
-        
+
         // Large amount
         Payment large = Payment.builder()
                 .orderId(orderId2)
@@ -418,7 +418,7 @@ class PaymentRepositoryTest {
         Long id2 = paymentRepository.save(large);
         deletePayment(id2);
         deleteOrder(orderId2);
-        
+
         // Zero amount (edge case)
         Payment zero = Payment.builder()
                 .orderId(orderId3)

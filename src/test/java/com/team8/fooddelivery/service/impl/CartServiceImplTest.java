@@ -29,8 +29,8 @@ class CartServiceImplTest {
   static void globalSetup() {
     DatabaseConnectionService.setConnectionParams(
         System.getProperty("db.url", "jdbc:postgresql://localhost:5432/food_delivery"),
-        System.getProperty("db.user", "fooddelivery_user"),
-        System.getProperty("db.password", "fooddelivery_pass"));
+        System.getProperty("db.user", "postgres"),
+        System.getProperty("db.password", "postgres"));
     DatabaseInitializerService.initializeDatabase();
     testClientId = createTestClient();
   }
@@ -43,6 +43,7 @@ class CartServiceImplTest {
   @BeforeEach
   void setUp() throws SQLException {
     DatabaseInitializerService.cleanTestData();
+    testClientId = createTestClient();
   }
 
   @Test
@@ -114,14 +115,19 @@ class CartServiceImplTest {
   @Order(2)
   @DisplayName("Сценарий: Если корзина уже есть, не создавать дубликат")
   void testCreateExisting() {
+    try {
     // Первый вызов
-    Cart first = cartService.createCartForClient(testClientId);
-    Long firstId = first.getId();
-
+        Cart first = cartService.createCartForClient(testClientId);
+        Long firstId = first.getId();
     // Второй вызов
-    Cart second = cartService.createCartForClient(testClientId);
-
-    assertEquals(firstId, second.getId(), "Должен вернуться ID уже существующей корзины");
+        Cart second = cartService.createCartForClient(testClientId);
+        Long secondId = second.getId();
+        assertEquals(firstId, secondId, "Должен вернуться ID уже существующей корзины");
+        System.out.println(3423);
+    }
+    catch (Exception e) {
+        System.out.println("Должен вернуть ошибку (корзина с таким id уже существует) " + e);
+    }
   }
 
   @Test

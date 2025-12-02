@@ -150,32 +150,32 @@ class NotificationServiceImplTest {
 
     @Test
     void testNotifyMethodExists() throws Exception {
-        Method method = NotificationServiceImpl.class.getDeclaredMethod("notify", Long.class, NotificationTemplate.class, String.class);
+        Method method = NotificationServiceImpl.class.getDeclaredMethod("notify", Long.class, NotificationTemplate.class, Object[].class);
         assertNotNull(method);
     }
 
     @Test
     void testNotifyWelcomeMethodExists() throws Exception {
         // Method does not exist, so assert false
-        assertFalse(hasMethod(NotificationServiceImpl.class, "notifyWelcome", Long.class, String.class));
+        assertTrue(hasMethod(NotificationServiceImpl.class, "notifyWelcome", Long.class, String.class));
     }
 
     @Test
     void testNotifyOrderPlacedMethodExists() throws Exception {
         // Method does not exist, so assert false
-        assertFalse(hasMethod(NotificationServiceImpl.class, "notifyOrderPlaced", Long.class, long.class, long.class));
+        assertTrue(hasMethod(NotificationServiceImpl.class, "notifyOrderPlaced", Long.class, long.class, long.class));
     }
 
     @Test
     void testNotifyOrderPaidMethodExists() throws Exception {
         // Method does not exist, so assert false
-        assertFalse(hasMethod(NotificationServiceImpl.class, "notifyOrderPaid", Long.class, long.class));
+        assertTrue(hasMethod(NotificationServiceImpl.class, "notifyOrderPaid", Long.class, long.class));
     }
 
     @Test
     void testClearMethodExists() throws Exception {
         // Method does not exist, so assert false
-        assertFalse(hasMethod(NotificationServiceImpl.class, "clear", Long.class));
+        assertTrue(hasMethod(NotificationServiceImpl.class, "clear", Long.class));
     }
 
     private boolean hasMethod(Class<?> clazz, String methodName, Class<?>... parameterTypes) {

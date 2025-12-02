@@ -26,7 +26,7 @@ class ShopInfoServiceImplIntegrationTest {
 
     @BeforeAll
     static void setupDatabase() {
-        DatabaseConnectionService.setConnectionParams("jdbc:postgresql://localhost:5432/food_delivery", "fooddelivery_user", "fooddelivery_pass");
+        DatabaseConnectionService.setConnectionParams("jdbc:postgresql://localhost:5432/food_delivery", "postgres", "postgres");
         DatabaseInitializerService.initializeDatabase();
     }
 
@@ -237,9 +237,10 @@ class ShopInfoServiceImplIntegrationTest {
         Long shopId = registered.getShopId();
         // changePassword checks if password.equals(shop.getPassword())
         // If password doesn't match, it doesn't throw but also doesn't change password
-        String result = shopInfoService.changePassword(shopId, email, phone, "NewPass123!", "WrongPassword");
-        assertNotNull(result);
         // Password should not be changed if old password is wrong
+        assertThrows(SecurityException.class, () -> {
+            shopInfoService.changePassword(shopId, email, phone, "NewPass123!", "WrongPassword");
+        });
     }
 
     @Test

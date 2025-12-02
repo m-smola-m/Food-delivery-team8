@@ -26,8 +26,8 @@ class ClientServiceImplErrorHandlingTest {
     void setUp() throws SQLException {
         DatabaseInitializerService.initializeDatabase();
         String dbUrl = System.getProperty("db.url", "jdbc:postgresql://localhost:5432/food_delivery");
-        String dbUser = System.getProperty("db.user", "fooddelivery_user");
-        String dbPassword = System.getProperty("db.password", "fooddelivery_pass");
+        String dbUser = System.getProperty("db.user", "postgres");
+        String dbPassword = System.getProperty("db.password", "postgres");
         DatabaseConnectionService.setConnectionParams(dbUrl, dbUser, dbPassword);
 
         cartService = new CartServiceImpl();
@@ -70,7 +70,8 @@ class ClientServiceImplErrorHandlingTest {
                 .apartment("10").entrance("1").floor(1)
                 .latitude(55.7558).longitude(37.6173).build();
         
-        String uniquePhone = "+7999" + (System.currentTimeMillis() % 10000000);
+        String uniquePhone = "+7999" + (System.currentTimeMillis() % 10000000 + 999999);
+        System.out.println(uniquePhone);
         String uniqueEmail = "phone_test_" + System.currentTimeMillis() + "@test.com";
         
         Client client = clientService.register(uniquePhone, "Password123!", "Phone Test Client", uniqueEmail, address);

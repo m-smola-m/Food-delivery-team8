@@ -28,7 +28,7 @@ class OrderRepositoryTest {
 
     @BeforeAll
     static void setup() throws SQLException {
-        DatabaseConnectionService.setConnectionParams("jdbc:postgresql://localhost:5432/food_delivery", "fooddelivery_user", "fooddelivery_pass");
+        DatabaseConnectionService.setConnectionParams("jdbc:postgresql://localhost:5432/food_delivery", "postgres", "postgres");
         DatabaseInitializerService.initializeDatabase();
 
         // Создаем тестового клиента (проверяем существование)

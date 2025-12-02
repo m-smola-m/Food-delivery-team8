@@ -40,8 +40,8 @@ class OrderInteractionIntegrationTest {
   @BeforeAll
   static void setupDatabaseConnection() {
     String dbUrl = System.getProperty("db.url", "jdbc:postgresql://localhost:5432/food_delivery");
-    String dbUser = System.getProperty("db.user", "fooddelivery_user");
-    String dbPassword = System.getProperty("db.password", "fooddelivery_pass");
+    String dbUser = System.getProperty("db.user", "postgres");
+    String dbPassword = System.getProperty("db.password", "postgres");
 
     DatabaseConnectionService.setConnectionParams(dbUrl, dbUser, dbPassword);
 
@@ -67,18 +67,18 @@ class OrderInteractionIntegrationTest {
   }
 
   @Test
-  @Disabled("pending schema sync")
+  //@Disabled("первый тест")
   @DisplayName("Клиент оформляет заказ в магазине с полным адресом и товарами")
   void customerCreatesOrderWithAddressAndItems() throws SQLException {
-    Long clientId = saveActiveClient("client-addr-" + UUID.randomUUID());
-    Long shopId = saveApprovedShop("shop-addr-" + UUID.randomUUID());
+    Long clientId = saveActiveClient("client-addr-" + 100L);
+    Long shopId = saveApprovedShop("shop-addr-" + 745L);
 
     Address deliveryAddress = sampleAddress("Питер", "Невский", "10", "77");
     List<CartItem> items = List.of(
         CartItem.builder().productId(101L).productName("Пицца Маргарита").quantity(1).price(750.0).build(),
         CartItem.builder().productId(102L).productName("Лимонад").quantity(2).price(120.0).build()
     );
-
+    System.out.println(items);
     Order order = new Order();
     order.setStatus(OrderStatus.PENDING);
     order.setCustomerId(clientId);
@@ -115,7 +115,7 @@ class OrderInteractionIntegrationTest {
   }
 
   @Test
-  @Disabled("pending schema sync")
+  //@Disabled("pending schema sync")
   @DisplayName("Курьер берет заказ и довозит его до клиента")
   void courierTakesAndCompletesOrder() throws SQLException {
     Long courierId = saveCourierWithStatus(CourierStatus.ON_SHIFT, "bike");
@@ -171,7 +171,7 @@ class OrderInteractionIntegrationTest {
   }
 
   @Test
-  @Disabled("pending schema sync")
+  //@Disabled("pending schema sync")
   @DisplayName("Магазин видит заказы и может обновить цену и статус готовности")
   void shopUpdatesOrderPriceAndStatus() throws SQLException {
     Long clientId = saveActiveClient("client-shop-" + UUID.randomUUID());
@@ -214,7 +214,7 @@ class OrderInteractionIntegrationTest {
   }
 
   @Test
-  @Disabled("pending schema sync")
+  //@Disabled("pending schema sync")
   @DisplayName("Поиск заказов по различным критериям")
   void findOrdersByVariousCriteria() throws SQLException {
     Long clientId = saveActiveClient("client-search-" + UUID.randomUUID());
@@ -252,7 +252,7 @@ class OrderInteractionIntegrationTest {
   }
 
   @Test
-  @Disabled("pending schema sync")
+  //@Disabled("pending schema sync")
   @DisplayName("Обновление адреса доставки в существующем заказе")
   void updateDeliveryAddressInExistingOrder() throws SQLException {
     Long clientId = saveActiveClient("client-addr-update-" + UUID.randomUUID());

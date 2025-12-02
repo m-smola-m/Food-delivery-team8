@@ -36,7 +36,14 @@ public class CartUserStory {
 
         Client existingClient = clientService.getByPhone("89991112233");
         Client client = existingClient != null ? existingClient : clientService.register(
-                "89991112233",
+                "89991112235",
+                "Ivan123!",
+                "Иван Иванов",
+                "ivan@example.com",
+                address
+        );
+        Client client2 = existingClient != null ? existingClient : clientService.register(
+                "89991112235",
                 "Ivan123!",
                 "Иван Иванов",
                 "ivan@example.com",

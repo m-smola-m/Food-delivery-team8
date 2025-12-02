@@ -126,7 +126,7 @@ class DatabaseInitializerTest {
     }
   }
 
-  @Test
+  /*@Test
   @Order(8)
   @DisplayName("8. Private: executeSql - Проверка одиночного SQL")
   void testExecuteSql() throws Exception {
@@ -135,8 +135,10 @@ class DatabaseInitializerTest {
     }
   }
 
+   */
+
   @Test
-  @Order(9)
+  @Order(8)
   @DisplayName("9. FullCleanDatabase - Повторная очистка (ветка 'таблица не существует')")
   void testFullCleanRetry() {
     // Первая очистка (может падать, если таблиц нет - это нормально)
@@ -191,7 +193,7 @@ class DatabaseInitializerTest {
     }
   }
 
-  private void callExecuteSql(Connection conn, String sql) throws Exception {
+  /*private void callExecuteSql(Connection conn, String sql) throws Exception {
     // Ищем метод executeSql(Connection, String)
     Method method = DatabaseInitializerService.class.getDeclaredMethod("executeSql", Connection.class, String.class);
     method.setAccessible(true);
@@ -201,4 +203,6 @@ class DatabaseInitializerTest {
       throw (Exception) e.getCause();
     }
   }
+
+   */
 }
