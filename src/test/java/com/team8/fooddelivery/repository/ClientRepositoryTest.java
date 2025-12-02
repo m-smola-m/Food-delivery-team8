@@ -29,8 +29,8 @@ public class ClientRepositoryTest {
     static void setUp() throws SQLException {
         // Настройка подключения
         String dbUrl = System.getProperty("db.url", "jdbc:postgresql://localhost:5432/food_delivery");
-        String dbUser = System.getProperty("db.user", "postgres");
-        String dbPassword = System.getProperty("db.password", "postgres");
+        String dbUser = System.getProperty("db.user", "fooddelivery_user");
+        String dbPassword = System.getProperty("db.password", "fooddelivery_pass");
         DatabaseConnectionService.setConnectionParams(dbUrl, dbUser, dbPassword);
 
         // Проверка подключения
@@ -170,4 +170,3 @@ public class ClientRepositoryTest {
         assertTrue(clientOpt.isPresent(), "Клиент должен остаться в базе для последующих проверок");
     }
 }
-

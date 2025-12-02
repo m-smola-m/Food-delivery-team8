@@ -32,20 +32,24 @@ public class ShopProductIntegrationTest {
   @BeforeAll
   static void setupDatabaseConnectionService() {
     String dbUrl = System.getProperty("db.url", "jdbc:postgresql://localhost:5432/food_delivery");
-    String dbUser = System.getProperty("db.user", "postgres");
-    String dbPassword = System.getProperty("db.password", "postgres");
+    String dbUser = System.getProperty("db.user", "fooddelivery_user");
+    String dbPassword = System.getProperty("db.password", "fooddelivery_pass");
+
     DatabaseConnectionService.setConnectionParams(dbUrl, dbUser, dbPassword);
 
     if (!DatabaseConnectionService.testConnection()) {
       throw new RuntimeException("Не удалось подключиться к базе данных");
     }
 
-    DatabaseInitializerService.fullCleanDatabase();
-    DatabaseConnectionService.initializeDatabase();
+    // Инициализируем схему один раз, если ее нет
+    DatabaseInitializerService.initializeDatabase();
   }
 
   @BeforeEach
   void setUp() {
+    // Сбрасываем БД к тестовым данным перед каждым тестом
+    DatabaseInitializerService.resetDatabaseWithTestData();
+
     addressRepository = new AddressRepository();
     workingHoursRepository = new WorkingHoursRepository();
     shopRepository = new ShopRepository();

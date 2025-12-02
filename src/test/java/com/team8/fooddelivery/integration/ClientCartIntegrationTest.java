@@ -36,8 +36,8 @@ public class ClientCartIntegrationTest {
     @BeforeAll
     static void setupDatabaseConnectionService() {
         String dbUrl = System.getProperty("db.url", "jdbc:postgresql://localhost:5432/food_delivery");
-        String dbUser = System.getProperty("db.user", "postgres");
-        String dbPassword = System.getProperty("db.password", "postgres");
+        String dbUser = System.getProperty("db.user", "fooddelivery_user");
+        String dbPassword = System.getProperty("db.password", "fooddelivery_pass");
         DatabaseConnectionService.setConnectionParams(dbUrl, dbUser, dbPassword);
 
         if (!DatabaseConnectionService.testConnection()) {
@@ -50,18 +50,15 @@ public class ClientCartIntegrationTest {
                             "4. Параметры подключения корректны"
             );
         }
-        DatabaseInitializerService.fullCleanDatabase();
-        try {
-            DatabaseConnectionService.initializeDatabase();
-            System.out.println("✅ База данных успешно инициализирована");
-        } catch (Exception e) {
-            System.err.println("❌ Ошибка инициализации БД: " + e.getMessage());
-            throw new RuntimeException("Не удалось инициализировать тестовую БД", e);
-        }
+        // Инициализируем схему один раз, если ее нет
+        DatabaseInitializerService.initializeDatabase();
     }
 
     @BeforeEach
     void setUp() {
+        // Сбрасываем БД к тестовым данным перед каждым тестом
+        DatabaseInitializerService.resetDatabaseWithTestData();
+
         addressRepository = new AddressRepository();
         clientRepository = new ClientRepository();
         cartRepository = new CartRepository();

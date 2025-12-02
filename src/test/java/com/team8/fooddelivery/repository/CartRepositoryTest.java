@@ -34,9 +34,10 @@ public class CartRepositoryTest {
     @BeforeAll
     static void setUp() throws SQLException {
         String dbUrl = System.getProperty("db.url", "jdbc:postgresql://localhost:5432/food_delivery");
-        String dbUser = System.getProperty("db.user", "postgres");
-        String dbPassword = System.getProperty("db.password", "postgres");
+        String dbUser = System.getProperty("db.user", "fooddelivery_user");
+        String dbPassword = System.getProperty("db.password", "fooddelivery_pass");
         DatabaseConnectionService.setConnectionParams(dbUrl, dbUser, dbPassword);
+        DatabaseConnectionService.initializeDatabase();
 
         if (!DatabaseConnectionService.testConnection()) {
             throw new RuntimeException("Не удалось подключиться к базе данных");
@@ -64,9 +65,15 @@ public class CartRepositoryTest {
         // Создаем тестовый магазин и продукт
         Shop testShop = new Shop();
         testShop.setNaming("Тестовый Магазин " + suffix);
+        testShop.setDescription("Test Description");
+        testShop.setPublicEmail("public_" + suffix + "@shop.com");
         testShop.setEmailForAuth("testshop" + suffix + "@example.com");
         testShop.setPhoneForAuth("+7888" + (suffix % 1_000_0000));
+        testShop.setPublicPhone("+7444" + (suffix % 1_000_0000));
         testShop.setStatus(ShopStatus.APPROVED);
+        testShop.setOwnerName("Owner " + suffix);
+        testShop.setOwnerContactPhone("+7555" + (suffix % 1_000_0000));
+        testShop.setType(com.team8.fooddelivery.model.shop.ShopType.RESTAURANT);
         testShop.setPassword("password");
         testShopId = shopRepository.save(testShop);
 
@@ -182,4 +189,3 @@ public class CartRepositoryTest {
         }
     }
 }
-
