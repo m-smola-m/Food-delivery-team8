@@ -14,28 +14,14 @@
             <h1>Food Delivery</h1>
             <h2>Вход в кабинет магазина</h2>
 
-            <div class="demo-credentials">
-                <strong>Тестовые магазины (данные из SQL)</strong>
-                <div class="test-accounts">
-                    <ul>
-                        <li><span class="label">Email</span><span>auth@drovyana.ru / pwd01</span></li>
-                        <li><span class="label">Email</span><span>auth@mayak-sushi.ru / pwd02</span></li>
-                        <li><span class="label">Телефон</span><span>+78001000003 / pwd03</span></li>
-                    </ul>
-                </div>
-            </div>
-
             <c:if test="${not empty error}">
                 <div class="alert alert-error">${error}</div>
             </c:if>
-            <c:if test="${not empty notice}">
-                <div class="alert alert-info">${notice}</div>
-            </c:if>
 
-            <form method="POST" action="${pageContext.request.contextPath}/login" class="stacked-form">
+            <form method="POST" action="${pageContext.request.contextPath}/login">
                 <input type="hidden" name="role" value="SHOP"/>
                 <div class="form-group">
-                    <label>Email или телефон для аутентификации</label>
+                    <label>Логин (Email или Телефон)</label>
                     <input type="text" name="login" placeholder="example@gmail.com или 89XXXXXXXXX" required>
                 </div>
 
@@ -46,6 +32,30 @@
 
                 <button type="submit" class="btn btn-primary btn-block">Войти</button>
             </form>
+
+            <div class="demo-credentials">
+                <strong>Тестовые магазины (данные из БД)</strong>
+                <p class="demo-hint">Скрипт: ${shopTestDataSource}</p>
+                <c:choose>
+                    <c:when test="${not empty demoShops}">
+                        <ul>
+                            <c:forEach var="shop" items="${demoShops}">
+                                <li>
+                                    <span class="label">Email</span>
+                                    <span>${shop.emailForAuth} / ${shop.password}</span>
+                                </li>
+                                <li>
+                                    <span class="label">Телефон</span>
+                                    <span>${shop.phoneForAuth} / ${shop.password}</span>
+                                </li>
+                            </c:forEach>
+                        </ul>
+                    </c:when>
+                    <c:otherwise>
+                        <p>Нет данных. Заполните ${shopTestDataSource}.</p>
+                    </c:otherwise>
+                </c:choose>
+            </div>
 
             <div class="auth-hint">
                 <p>Только активированные магазины получают доступ к панели. После модерации мы отправим ссылку на email/телефон из анкеты.</p>

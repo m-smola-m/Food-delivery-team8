@@ -18,6 +18,7 @@ public class MainApplication {
 
         try {
             DatabaseInitializer.initializeDatabase();
+            DatabaseInitializer.loadTestData();
             System.out.println("🎉 Инициализация базы данных завершена успешно!");
 
             int port = Integer.parseInt(System.getenv().getOrDefault("PORT", "8080"));

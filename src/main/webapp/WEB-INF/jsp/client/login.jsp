@@ -14,17 +14,6 @@
             <h1>Food Delivery</h1>
             <h2>Вход для клиента</h2>
 
-            <div class="demo-credentials">
-                <strong>Тестовые аккаунты (без изменения SQL)</strong>
-                <div class="test-accounts">
-                    <ul>
-                        <li><span class="label">Email</span><span>anna.sergeeva@test.local / hash01</span></li>
-                        <li><span class="label">Email</span><span>ivan.petrov@test.local / hash02</span></li>
-                        <li><span class="label">Телефон</span><span>+79990000003 / hash03</span></li>
-                    </ul>
-                </div>
-            </div>
-
             <c:if test="${not empty error}">
                 <div class="alert alert-error">${error}</div>
             </c:if>
@@ -32,17 +21,41 @@
             <form method="POST" action="${pageContext.request.contextPath}/login">
                 <input type="hidden" name="role" value="CLIENT"/>
                 <div class="form-group">
-                    <label>Email или телефон</label>
-                    <input type="text" name="login" placeholder="anna.sergeeva@test.local" required>
+                    <label>Логин (Email или Телефон)</label>
+                    <input type="text" name="login" placeholder="example@gmail.com или 89XXXXXXXXX" required>
                 </div>
 
                 <div class="form-group">
                     <label>Пароль</label>
-                    <input type="password" name="password" placeholder="hash01" required>
+                    <input type="password" name="password" required>
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-block">Войти</button>
             </form>
+
+            <div class="demo-credentials">
+                <strong>Тестовые аккаунты (данные из БД)</strong>
+                <p class="demo-hint">Скрипт: ${clientTestDataSource}</p>
+                <c:choose>
+                    <c:when test="${not empty demoClients}">
+                        <ul>
+                            <c:forEach var="client" items="${demoClients}">
+                                <li>
+                                    <span class="label">Email</span>
+                                    <span>${client.email} / ${client.passwordHash}</span>
+                                </li>
+                                <li>
+                                    <span class="label">Телефон</span>
+                                    <span>${client.phone} / ${client.passwordHash}</span>
+                                </li>
+                            </c:forEach>
+                        </ul>
+                    </c:when>
+                    <c:otherwise>
+                        <p>Нет данных. Заполните ${clientTestDataSource}.</p>
+                    </c:otherwise>
+                </c:choose>
+            </div>
 
             <p>Нет аккаунта? <a href="${pageContext.request.contextPath}/client/register">Зарегистрироваться</a></p>
         </div>

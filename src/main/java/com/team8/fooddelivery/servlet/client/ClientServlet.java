@@ -6,8 +6,9 @@ import com.team8.fooddelivery.model.client.Client;
 import com.team8.fooddelivery.service.ClientService;
 import com.team8.fooddelivery.service.impl.ClientServiceImpl;
 import com.team8.fooddelivery.service.impl.CartServiceImpl;
-import com.team8.fooddelivery.util.SessionManager;
+import com.team8.fooddelivery.util.LoginPageDataProvider;
 import com.team8.fooddelivery.repository.ClientRepository;
+import com.team8.fooddelivery.util.SessionManager;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -43,9 +44,25 @@ public class ClientServlet extends HttpServlet {
 
         switch (path) {
             case "/profile" -> showProfile(request, response);
+            case "/login" -> showLogin(request, response);
+            case "/register" -> showRegister(request, response);
             case "/home" -> showHome(request, response);
-            default -> response.sendError(404);
         }
+    }
+
+
+    // ====================================================================
+    // LOGIN & REGISTER PAGES
+    // ====================================================================
+    private void showLogin(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+        LoginPageDataProvider.attachClientDemoData(request, clientService);
+        request.getRequestDispatcher("/WEB-INF/jsp/client/login.jsp").forward(request, response);
+    }
+
+    private void showRegister(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+        request.getRequestDispatcher("/WEB-INF/jsp/client/register.jsp").forward(request, response);
     }
 
 

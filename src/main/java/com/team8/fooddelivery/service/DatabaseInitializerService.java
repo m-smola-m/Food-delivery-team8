@@ -76,18 +76,29 @@ public class DatabaseInitializerService {
     loadTestData();
   }
 
+  /**
+   * Загружает тестовые данные в базу данных
+   */
   public static void loadTestData() {
     logger.info("Загрузка тестовых данных из sql/test_data...");
-    runSqlFiles(TEST_DATA_FILES);
-    ensureOrderColumns();
+    try {
+      runSqlFiles(TEST_DATA_FILES);
+      ensureOrderColumns();
+    } catch (Exception e) {
+      logger.warn("⚠️ Не удалось загрузить некоторые тестовые данные. Приложение все равно запустится, но без тестовых данных", e);
+      // Не выбрасываем исключение, позволяем приложению работать без тестовых данных
+    }
   }
 
   /**
    * Выполняет SQL команды с улучшенной обработкой ошибок
    */
   private static void executeSqlStatements(Connection conn, String sql) throws SQLException {
+    // Удаляем комментарии перед выполнением
+    String cleanedSql = removeComments(sql);
+
     // Разделяем SQL на отдельные команды, игнорируя точки с запятой внутри кавычек
-    String[] statements = sql.split(";(?=(?:[^']*'[^']*')*[^']*$)");
+    String[] statements = cleanedSql.split(";(?=(?:[^']*'[^']*')*[^']*$)");
 
     for (String statement : statements) {
       String trimmed = statement.trim();
@@ -99,10 +110,42 @@ public class DatabaseInitializerService {
             logger.debug("Выполнено: {}", getStatementPreview(trimmed));
           }
         } catch (SQLException e) {
-          handleSqlException(trimmed, e);
+          // Логируем ошибку, но продолжаем выполнение остальных команд
+          String errorMsg = e.getMessage().toLowerCase();
+          if (errorMsg.contains("already exists") || errorMsg.contains("существует") ||
+              errorMsg.contains("duplicate key") || errorMsg.contains("уникальн")) {
+            logger.debug("⚠️ Объект уже существует, пропускаем: {}", getStatementPreview(trimmed));
+          } else {
+            logger.warn("⚠️ Ошибка выполнения SQL команды (пропускаем): {} | Ошибка: {}",
+                       getStatementPreview(trimmed), e.getMessage());
+          }
         }
       }
     }
+  }
+
+  /**
+   * Удаляет комментарии из SQL текста
+   */
+  private static String removeComments(String sql) {
+    StringBuilder result = new StringBuilder();
+    String[] lines = sql.split("\n");
+
+    for (String line : lines) {
+      // Удаляем однострочные комментарии
+      int commentIndex = line.indexOf("--");
+      if (commentIndex >= 0) {
+        line = line.substring(0, commentIndex);
+      }
+
+      // Пропускаем пустые строки
+      String trimmed = line.trim();
+      if (!trimmed.isEmpty()) {
+        result.append(trimmed).append(" ");
+      }
+    }
+
+    return result.toString();
   }
 
   private static boolean isExecutableStatement(String statement) {
@@ -156,19 +199,14 @@ public class DatabaseInitializerService {
   }
 
   private static void runSqlFiles(List<String> files) {
-    try (Connection conn = DatabaseConnectionService.getConnection()) {
-      conn.setAutoCommit(false);
-      try {
-        for (String file : files) {
-          executeSqlFile(conn, file);
-        }
-        conn.commit();
+    for (String file : files) {
+      try (Connection conn = DatabaseConnectionService.getConnection()) {
+        conn.setAutoCommit(true);
+        executeSqlFile(conn, file);
       } catch (SQLException e) {
-        conn.rollback();
-        throw new RuntimeException("Не удалось выполнить SQL файлы", e);
+        logger.warn("⚠️ Ошибка при выполнении файла {}, продолжаем со следующего: {}", file, e.getMessage());
+        // Продолжаем выполнение остальных файлов
       }
-    } catch (SQLException e) {
-      throw new RuntimeException("Ошибка при работе с БД", e);
     }
   }
 

@@ -82,6 +82,7 @@ public class ShopServlet extends HttpServlet {
 
             if (shop.isPresent()) {
                 request.setAttribute("shop", shop.get());
+                request.setAttribute("categories", com.team8.fooddelivery.model.product.ProductCategory.values());
                 request.getRequestDispatcher("/WEB-INF/jsp/shop/details.jsp").forward(request, response);
             } else {
                 response.sendError(404);
@@ -185,4 +186,3 @@ public class ShopServlet extends HttpServlet {
         }
     }
 }
-

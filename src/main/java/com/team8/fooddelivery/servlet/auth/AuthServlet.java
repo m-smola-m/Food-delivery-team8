@@ -9,6 +9,7 @@ import com.team8.fooddelivery.service.impl.ClientServiceImpl;
 import com.team8.fooddelivery.service.impl.CourierServiceImpl;
 import com.team8.fooddelivery.service.impl.ShopInfoServiceImpl;
 import com.team8.fooddelivery.service.impl.CartServiceImpl;
+import com.team8.fooddelivery.util.LoginPageDataProvider;
 import com.team8.fooddelivery.util.SessionManager;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -44,10 +45,9 @@ public class AuthServlet extends HttpServlet {
         }
 
         switch (role) {
-            case "CLIENT" -> req.getRequestDispatcher("/WEB-INF/jsp/client/login.jsp").forward(req, resp);
+            case "CLIENT" -> forwardClientLoginPage(req, resp);
+            case "SHOP" -> forwardShopLoginPage(req, resp);
             case "COURIER" -> req.getRequestDispatcher("/WEB-INF/jsp/courier/login.jsp").forward(req, resp);
-            case "SHOP" -> req.getRequestDispatcher("/WEB-INF/jsp/shop/login.jsp").forward(req, resp);
-            default -> req.getRequestDispatcher("/WEB-INF/jsp/auth/login.jsp").forward(req, resp);
         }
     }
 
@@ -108,13 +108,16 @@ public class AuthServlet extends HttpServlet {
         } catch (Exception e) {
             log.warn("Client login failed", e);
             req.setAttribute("error", e.getMessage());
-            req.getRequestDispatcher("/WEB-INF/jsp/client/login.jsp").forward(req, resp);
+            forwardClientLoginPage(req, resp);
         }
     }
 
     private void handleCourierLogin(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
             Courier courier = courierService.login(req.getParameter("phone"), req.getParameter("password"));
+            if (courier == null) {
+                throw new IllegalArgumentException("Неверный телефон или пароль");
+            }
             SessionManager.createSession(req.getSession(), courier);
             resp.sendRedirect(req.getContextPath() + "/courier/dashboard");
         } catch (Exception e) {
@@ -132,7 +135,17 @@ public class AuthServlet extends HttpServlet {
         } catch (Exception e) {
             log.warn("Shop login failed", e);
             req.setAttribute("error", e.getMessage());
-            req.getRequestDispatcher("/WEB-INF/jsp/shop/login.jsp").forward(req, resp);
+            forwardShopLoginPage(req, resp);
         }
+    }
+
+    private void forwardClientLoginPage(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        LoginPageDataProvider.attachClientDemoData(req, clientService);
+        req.getRequestDispatcher("/WEB-INF/jsp/client/login.jsp").forward(req, resp);
+    }
+
+    private void forwardShopLoginPage(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        LoginPageDataProvider.attachShopDemoData(req, shopInfoService);
+        req.getRequestDispatcher("/WEB-INF/jsp/shop/login.jsp").forward(req, resp);
     }
 }

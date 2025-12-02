@@ -11,7 +11,7 @@
     <session-config>
         <cookie-config>
             <http-only>true</http-only>
-            <secure>true</secure>
+            <!-- <secure>true</secure> -->
         </cookie-config>
         <session-timeout>20</session-timeout>
         <tracking-mode>COOKIE</tracking-mode>
@@ -31,10 +31,6 @@
         <filter-name>AuthenticationFilter</filter-name>
         <filter-class>com.team8.fooddelivery.filter.AuthenticationFilter</filter-class>
     </filter>
-    <filter-mapping>
-        <filter-name>AuthenticationFilter</filter-name>
-        <url-pattern>/*</url-pattern>
-    </filter-mapping>
 
     <filter>
         <filter-name>AuthorizationFilter</filter-name>
@@ -123,6 +119,7 @@
     <!-- Welcome Files -->
     <welcome-file-list>
         <welcome-file>index.jsp</welcome-file>
+        <welcome-file>login.jsp</welcome-file>
     </welcome-file-list>
 
 </web-app>
