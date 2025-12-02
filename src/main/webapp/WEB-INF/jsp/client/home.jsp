@@ -405,27 +405,43 @@
         fetch('${pageContext.request.contextPath}/client/orders-api')
             .then(r => r.json())
             .then(orders => {
+                console.log('Orders received:', orders);
                 const container = document.getElementById('ordersContainer');
-                if (!orders.length) {
+                if (!orders || !orders.length) {
                     container.innerHTML = '<div class="empty-state">Заказов пока нет</div>';
                     return;
                 }
                 container.innerHTML = orders.map(order => {
-                    const itemsHtml = order.items.map(item => `${item.name} × ${item.quantity} — ${item.price} ₽`).join('<br>');
-                    return `
-                        <div class="order-card">
-                            <div style="display:flex; justify-content:space-between;">
-                                <strong>Заказ #${order.id}</strong>
-                                <span>${order.createdAt || ''}</span>
-                            </div>
-                            <p>Статус: <strong>${order.status}</strong></p>
-                            <p>Сумма: <strong>${order.total} ₽</strong></p>
-                            <div class="order-items">${itemsHtml}</div>
-                            <button class="btn btn-primary btn-small" onclick="repeatOrder(${order.id})">Повторить</button>
-                        </div>`;
+                    const orderId = order.id || 'N/A';
+                    const status = order.status || 'Неизвестно';
+                    const total = order.total || 0;
+                    const createdAt = order.createdAt || '';
+                    const items = order.items || [];
+                    const itemsHtml = items.map(item => {
+                        const name = escapeHtml(item.name || 'Неизвестный товар');
+                        const qty = item.quantity || 0;
+                        const price = item.price || 0;
+                        return name + ' × ' + qty + ' — ' + price + ' ₽';
+                    }).join('<br>');
+
+                    const disabledAttr = (orderId === 'N/A') ? 'disabled' : '';
+
+                    return '<div class="order-card">' +
+                        '<div style="display:flex; justify-content:space-between;">' +
+                        '<strong>Заказ #' + orderId + '</strong>' +
+                        '<span>' + escapeHtml(createdAt) + '</span>' +
+                        '</div>' +
+                        '<p>Статус: <strong>' + escapeHtml(status) + '</strong></p>' +
+                        '<p>Сумма: <strong>' + total + ' ₽</strong></p>' +
+                        '<div class="order-items">' + (itemsHtml || 'Нет товаров') + '</div>' +
+                        '<button class="btn btn-primary btn-small" onclick="repeatOrder(' + orderId + ')" ' + disabledAttr + '>Повторить</button>' +
+                        '</div>';
                 }).join('');
             })
-            .catch(() => document.getElementById('ordersContainer').innerHTML = '<div class="empty-state">Ошибка загрузки заказов</div>');
+            .catch((err) => {
+                console.error('Failed to load orders:', err);
+                document.getElementById('ordersContainer').innerHTML = '<div class="empty-state">Ошибка загрузки заказов</div>';
+            });
     }
 
     function loadNotifications() {
@@ -456,6 +472,12 @@
     }
 
     function repeatOrder(orderId) {
+        console.log('repeatOrder called with orderId:', orderId);
+        if (!orderId || orderId === 'undefined') {
+            alert('Ошибка: не удалось определить ID заказа');
+            console.error('orderId is undefined or invalid:', orderId);
+            return;
+        }
         fetch('${pageContext.request.contextPath}/client/orders/repeat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -474,7 +496,10 @@
                     cartTabBtn.click();
                 }
             })
-            .catch(() => alert('Не удалось повторить заказ'));
+            .catch((err) => {
+                console.error('Failed to repeat order:', err);
+                alert('Не удалось повторить заказ');
+            });
     }
 
     window.addEventListener('load', () => {
