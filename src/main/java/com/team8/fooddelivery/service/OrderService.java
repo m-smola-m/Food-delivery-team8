@@ -23,13 +23,11 @@ public interface OrderService {
      */
     List<Order> getCourierDeliveryHistoryByDate(Long courierId, LocalDate date);
 
-    /**
-     * Получить заказ по ID
-     */
     Optional<Order> getOrderById(Long orderId);
 
-    /**
-     * Обновить заказ
-     */
     void updateOrder(Order order);
+
+    List<Order> getOrdersByClient(Long clientId);
+
+    Order repeatOrder(Long clientId, Long orderId);
 }

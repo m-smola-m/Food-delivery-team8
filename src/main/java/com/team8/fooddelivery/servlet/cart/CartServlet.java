@@ -1,8 +1,15 @@
 package com.team8.fooddelivery.servlet.cart;
 
 import com.team8.fooddelivery.model.product.CartItem;
+import com.team8.fooddelivery.model.order.Order;
+import com.team8.fooddelivery.model.client.PaymentMethodForOrder;
+import com.team8.fooddelivery.model.Address;
+import com.team8.fooddelivery.model.client.Client;
+import com.team8.fooddelivery.repository.ClientRepository;
 import com.team8.fooddelivery.service.CartService;
+import com.team8.fooddelivery.service.OrderService;
 import com.team8.fooddelivery.service.impl.CartServiceImpl;
+import com.team8.fooddelivery.service.impl.OrderServiceImpl;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -19,7 +26,9 @@ import java.util.Map;
 @WebServlet("/cart/*")
 public class CartServlet extends HttpServlet {
     private static final Logger log = LoggerFactory.getLogger(CartServlet.class);
-    private final CartService cartService = new CartServiceImpl();
+    private final CartServiceImpl cartService = new CartServiceImpl();
+    private final OrderService orderService = new OrderServiceImpl(cartService);
+    private final ClientRepository clientRepository = new ClientRepository();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -47,6 +56,8 @@ public class CartServlet extends HttpServlet {
                 handleRemoveFromCart(request, response);
             } else if ("/update".equals(pathInfo)) {
                 handleUpdateQuantity(request, response);
+            } else if ("/checkout".equals(pathInfo)) {
+                handleCheckout(request, response);
             } else {
                 response.sendError(404);
             }
@@ -121,6 +132,49 @@ public class CartServlet extends HttpServlet {
         int quantity = Integer.parseInt(request.getParameter("quantity"));
         cartService.updateQuantity(clientId, cartItemId, quantity);
         sendSuccess(response);
+    }
+
+    private void handleCheckout(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        Long clientId = getClientId(request, response);
+        if (clientId == null) {
+            return;
+        }
+
+        String paymentParam = request.getParameter("paymentMethod");
+        PaymentMethodForOrder paymentMethod;
+        try {
+            paymentMethod = paymentParam == null ? PaymentMethodForOrder.CASH : PaymentMethodForOrder.valueOf(paymentParam);
+        } catch (IllegalArgumentException ex) {
+            paymentMethod = PaymentMethodForOrder.CASH;
+        }
+
+        Address address = loadClientAddress(clientId);
+        try {
+            Order order = orderService.placeOrder(clientId, address, paymentMethod);
+            sendJson(response, orderToJson(order));
+        } catch (RuntimeException e) {
+            log.error("Checkout failed for client {}", clientId, e);
+            sendError(response, e.getMessage());
+        }
+    }
+
+    private Address loadClientAddress(Long clientId) {
+        try {
+            return clientRepository.findById(clientId)
+                    .map(Client::getAddress)
+                    .orElse(null);
+        } catch (Exception e) {
+            log.warn("Cannot load address for client {}", clientId, e);
+            return null;
+        }
+    }
+
+    private String orderToJson(Order order) {
+        return "{" +
+                "\"orderId\":" + order.getId() + "," +
+                "\"status\":\"" + (order.getStatus() != null ? order.getStatus().name() : "") + "\"," +
+                "\"total\":" + (order.getTotalPrice() != null ? order.getTotalPrice() : 0) +
+                "}";
     }
 
     private Long getClientId(HttpServletRequest request, HttpServletResponse response) throws IOException {

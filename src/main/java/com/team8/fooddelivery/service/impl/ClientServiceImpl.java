@@ -13,6 +13,7 @@ import com.team8.fooddelivery.util.JWTUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.team8.fooddelivery.service.impl.NotificationServiceImpl;
 
 import java.sql.SQLException;
 import java.time.LocalDateTime;
@@ -22,7 +23,7 @@ import java.util.*;
 public class ClientServiceImpl implements ClientService {
 
     private static final Logger logger = LoggerFactory.getLogger(ClientServiceImpl.class);
-    NotificationServiceImpl notificationService = new NotificationServiceImpl();
+    private final NotificationServiceImpl notificationService = NotificationServiceImpl.getInstance();
 
     private final ClientRepository clientRepository;
     private final CartServiceImpl cartService;

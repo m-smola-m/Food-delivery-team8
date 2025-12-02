@@ -10,7 +10,7 @@ public class NotificationsUserStory {
 
     public static void main(String[] args) {
         DatabaseInitializerService.resetDatabaseWithTestData();
-        NotificationServiceImpl notificationService = new NotificationServiceImpl();
+        NotificationServiceImpl notificationService = NotificationServiceImpl.getInstance();
         Long clientId = 1L;
 
         // ==== 1. Отправка уведомлений готовыми шаблонами ====

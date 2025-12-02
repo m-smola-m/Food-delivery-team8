@@ -39,7 +39,7 @@ public class OrderServiceImpl implements OrderService {
         this.cartService = cartService;
         this.orderRepository = new OrderRepository();
         this.paymentRepository = new PaymentRepository();
-        this.notificationService = new NotificationServiceImpl();
+        this.notificationService = NotificationServiceImpl.getInstance();
         this.clientRepository = new ClientRepository();
     }
 
@@ -159,6 +159,31 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    @Override
+    public List<Order> getOrdersByClient(Long clientId) {
+        try {
+            return orderRepository.findByCustomerId(clientId);
+        } catch (SQLException e) {
+            logger.error("Ошибка при получении заказов клиента {}", clientId, e);
+            return List.of();
+        }
+    }
+
+    @Override
+    public Order repeatOrder(Long clientId, Long orderId) {
+        try {
+            Order order = orderRepository.findById(orderId)
+                    .filter(o -> o.getCustomerId() != null && o.getCustomerId().equals(clientId))
+                    .orElseThrow(() -> new IllegalArgumentException("Заказ не найден"));
+            cartService.addItemsFromOrder(clientId, order.getItems());
+            notificationService.notifyAccount(clientId, "Повтор заказа #" + orderId);
+            return order;
+        } catch (SQLException e) {
+            logger.error("Не удалось повторить заказ", e);
+            throw new RuntimeException("Не удалось повторить заказ", e);
+        }
+    }
+
     private void validateCartItems(List<CartItem> items) {
         boolean invalid = items.stream()
                 .anyMatch(i -> i.getQuantity() <= 0 || i.getPrice() <= 0 || i.getProductName() == null || i.getProductName().isBlank());
@@ -187,4 +212,3 @@ public class OrderServiceImpl implements OrderService {
                 .build();
     }
 }
-

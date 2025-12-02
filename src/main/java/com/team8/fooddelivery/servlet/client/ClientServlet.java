@@ -1,33 +1,51 @@
 package com.team8.fooddelivery.servlet.client;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.team8.fooddelivery.dto.OrderHistoryResponse;
 import com.team8.fooddelivery.model.Address;
 import com.team8.fooddelivery.model.AuthResponse;
 import com.team8.fooddelivery.model.client.Client;
-import com.team8.fooddelivery.service.ClientService;
-import com.team8.fooddelivery.service.impl.ClientServiceImpl;
-import com.team8.fooddelivery.service.impl.CartServiceImpl;
-import com.team8.fooddelivery.util.LoginPageDataProvider;
+import com.team8.fooddelivery.model.notification.Notification;
+import com.team8.fooddelivery.model.order.Order;
 import com.team8.fooddelivery.repository.ClientRepository;
+import com.team8.fooddelivery.service.ClientService;
+import com.team8.fooddelivery.service.NotificationService;
+import com.team8.fooddelivery.service.OrderService;
+import com.team8.fooddelivery.service.impl.CartServiceImpl;
+import com.team8.fooddelivery.service.impl.ClientServiceImpl;
+import com.team8.fooddelivery.service.impl.OrderServiceImpl;
+import com.team8.fooddelivery.util.LoginPageDataProvider;
 import com.team8.fooddelivery.util.SessionManager;
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 
 @WebServlet("/client/*")
 public class ClientServlet extends HttpServlet {
 
     private static final Logger log = LoggerFactory.getLogger(ClientServlet.class);
 
-    private final ClientService clientService = new ClientServiceImpl(new ClientRepository(), new CartServiceImpl());
+    private final CartServiceImpl cartService = new CartServiceImpl();
+    private final ClientService clientService = new ClientServiceImpl(new ClientRepository(), cartService);
+    private final OrderService orderService = new OrderServiceImpl(cartService);
+    private final NotificationService notificationService = NotificationService.getInstance();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
+    @Override
+    public void init() throws ServletException {
+        super.init();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    }
 
     // ====================================================================
     // GET
@@ -47,6 +65,9 @@ public class ClientServlet extends HttpServlet {
             case "/login" -> showLogin(request, response);
             case "/register" -> showRegister(request, response);
             case "/home" -> showHome(request, response);
+            case "/orders-api" -> sendOrderHistory(request, response);
+            case "/notifications-api" -> sendNotifications(request, response);
+            default -> response.sendError(404);
         }
     }
 
@@ -85,6 +106,8 @@ public class ClientServlet extends HttpServlet {
                 case "/login" -> login(request, response);
                 case "/update-profile" -> updateProfile(request, response);
                 case "/deactivate" -> deactivate(request, response);
+                case "/notifications/read" -> markNotificationsRead(request, response);
+                case "/orders/repeat" -> repeatOrder(request, response);
                 default -> response.sendError(404);
             }
 
@@ -272,5 +295,89 @@ public class ClientServlet extends HttpServlet {
         }
 
         request.getRequestDispatcher("/WEB-INF/jsp/client/home.jsp").forward(request, response);
+    }
+
+
+    // ====================================================================
+    // ORDER & NOTIFICATION HISTORY
+    // ====================================================================
+    private void sendOrderHistory(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        Long userId = SessionManager.getUserId(request.getSession());
+        if (userId == null) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+        List<Order> orders = orderService.getOrdersByClient(userId);
+        List<OrderHistoryResponse> responses = orders.stream()
+                .map(order -> OrderHistoryResponse.builder()
+                        .id(order.getId())
+                        .status(order.getStatus() != null ? order.getStatus().name() : "")
+                        .total(order.getTotalPrice())
+                        .createdAt(order.getCreatedAt() != null ? order.getCreatedAt().toString() : "")
+                        .items(order.getItems().stream()
+                                .map(item -> OrderHistoryResponse.Item.builder()
+                                        .name(item.getProductName())
+                                        .quantity(item.getQuantity())
+                                        .price(item.getPrice())
+                                        .build())
+                                .toList())
+                        .build())
+                .toList();
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        objectMapper.writeValue(response.getWriter(), responses);
+    }
+
+    private void sendNotifications(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        Long userId = SessionManager.getUserId(request.getSession());
+        if (userId == null) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+        List<Notification> notifications = notificationService.getNotifications(userId);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        objectMapper.writeValue(response.getWriter(), notifications);
+    }
+
+    private void markNotificationsRead(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        Long userId = SessionManager.getUserId(request.getSession());
+        if (userId == null) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+        notificationService.markAllAsRead(userId);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("{\"status\":\"ok\"}");
+    }
+
+    private void repeatOrder(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        Long userId = SessionManager.getUserId(request.getSession());
+        if (userId == null) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+        try {
+            Long orderId = Long.parseLong(request.getParameter("orderId"));
+            orderService.repeatOrder(userId, orderId);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"status\":\"ok\"}");
+        } catch (Exception e) {
+            log.error("Не удалось повторить заказ", e);
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write("{\"error\":\"" + escape(e.getMessage()) + "\"}");
+        }
+    }
+
+
+    private String escape(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r");
     }
 }

@@ -21,7 +21,7 @@ public class MainApplication {
             DatabaseInitializer.loadTestData();
             System.out.println("🎉 Инициализация базы данных завершена успешно!");
 
-            int port = Integer.parseInt(System.getenv().getOrDefault("PORT", "8081"));
+            int port = Integer.parseInt(System.getenv().getOrDefault("PORT", "8080"));
             Path webAppDir = WebAppExtractor.extractWebAppToTemp();
 
             Tomcat tomcat = new Tomcat();

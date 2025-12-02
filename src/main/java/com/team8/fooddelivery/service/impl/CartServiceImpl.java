@@ -146,13 +146,37 @@ public class CartServiceImpl implements CartService {
     @Override
     public Cart clear(Long clientId) {
         try {
-            Cart cart = getOrCreate(clientId);
-            cartRepository.clearCart(cart.getId());
-            cart.getItems().clear();
-            return cart;
+            Optional<Cart> cartOpt = cartRepository.findByClientId(clientId);
+            if (cartOpt.isPresent()) {
+                Cart cart = cartOpt.get();
+                cartRepository.clearCart(cart.getId());
+                cart.getItems().clear();
+                return cart;
+            }
+            return getOrCreate(clientId);
         } catch (SQLException e) {
             logger.error("Ошибка при очистке корзины", e);
             throw new RuntimeException("Не удалось очистить корзину", e);
+        }
+    }
+
+    public void addItemsFromOrder(Long clientId, List<CartItem> items) {
+        try {
+            Cart cart = getOrCreate(clientId);
+            cartRepository.clearCart(cart.getId());
+            for (CartItem item : items) {
+                CartItem newItem = CartItem.builder()
+                        .cartId(cart.getId())
+                        .productId(item.getProductId())
+                        .productName(item.getProductName())
+                        .quantity(item.getQuantity())
+                        .price(item.getPrice())
+                        .build();
+                cartRepository.saveCartItem(newItem);
+            }
+        } catch (SQLException e) {
+            logger.error("Не удалось добавить товары заказа в корзину", e);
+            throw new RuntimeException("Не удалось повторить заказ", e);
         }
     }
 

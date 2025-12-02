@@ -25,8 +25,12 @@
         .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; }
         .cart-summary { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 20px; }
         .summary-row { display: flex; justify-content: space-between; margin: 10px 0; font-size: 16px; }
-        .summary-total { font-size: 20px; font-weight: bold; color: #28a745; border-top: 2px solid #ddd; padding-top: 10px; margin-top: 10px; }
+        .summary-total { font-size: 20px; font-weight: bold; color: #23a340; border-top: 2px solid #ddd; padding-top: 10px; margin-top: 10px; }
         .empty-state { padding: 40px; text-align: center; color: #777; border: 1px dashed #ccc; border-radius: 8px; }
+        .orders-list, .notifications-list { margin-top: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .order-card, .notification-card { border: 1px solid #ddd; border-radius: 8px; padding: 15px; background: #fff; }
+        .order-items { margin-top: 10px; font-size: 14px; color: #555; }
+        .notification-card.unread { border-color: #007bff; box-shadow: 0 2px 8px rgba(0,123,255,0.15); }
     </style>
 </head>
 <body>
@@ -44,9 +48,11 @@
     <h1>Личный кабинет</h1>
 
     <div class="tabs">
-        <button class="tab-button active" onclick="switchTab(event, 'restaurants')">🏪 Рестораны</button>
-        <button class="tab-button" onclick="switchTab(event, 'cart')">🛒 Корзина</button>
-        <button class="tab-button" onclick="switchTab(event, 'profile')">👤 Профиль</button>
+        <button class="tab-button active" data-tab="restaurants" onclick="switchTab(event, 'restaurants')">🏪 Рестораны</button>
+        <button class="tab-button" data-tab="cart" onclick="switchTab(event, 'cart')">🛒 Корзина</button>
+        <button class="tab-button" data-tab="profile" onclick="switchTab(event, 'profile')">👤 Профиль</button>
+        <button class="tab-button" data-tab="orders" onclick="switchTab(event, 'orders')">🧾 История заказов</button>
+        <button class="tab-button" data-tab="notifications" onclick="switchTab(event, 'notifications')">🔔 Уведомления</button>
     </div>
 
     <div id="restaurants" class="tab-content active">
@@ -83,7 +89,12 @@
             <div class="summary-row"><span>Количество товаров:</span><span id="cartCount">0</span></div>
             <div class="summary-row"><span>Сумма:</span><span id="cartTotal">0 ₽</span></div>
             <div class="summary-total"><div class="summary-row"><span>Итого:</span><span id="cartGrandTotal">0 ₽</span></div></div>
-            <button class="btn btn-success" style="width:100%; margin-top:20px;">Оформить заказ</button>
+            <label for="paymentMethod">Способ оплаты:</label>
+            <select id="paymentMethod" style="width:100%; margin:10px 0; padding:8px;">
+                <option value="CASH">Оплата при получении</option>
+                <option value="CARD">Карта онлайн</option>
+            </select>
+            <button class="btn btn-success" style="width:100%; margin-top:10px;" onclick="checkout()">Оформить заказ</button>
         </div>
     </div>
 
@@ -137,6 +148,23 @@
             <button onclick="if(confirm('Вы уверены?')) location.href='${pageContext.request.contextPath}/client/deactivate'" class="btn btn-danger">Деактивировать аккаунт</button>
         </div>
     </div>
+
+    <div id="orders" class="tab-content">
+        <h2>История заказов</h2>
+        <div id="ordersContainer" class="orders-list">
+            <div class="empty-state">Загрузка заказов...</div>
+        </div>
+    </div>
+
+    <div id="notifications" class="tab-content">
+        <h2>Уведомления</h2>
+        <div style="text-align:right; margin-bottom:10px;">
+            <button class="btn btn-secondary" onclick="markNotificationsRead()">Отметить прочитанными</button>
+        </div>
+        <div id="notificationsContainer" class="notifications-list">
+            <div class="empty-state">Загрузка уведомлений...</div>
+        </div>
+    </div>
 </main>
 
 <script>
@@ -149,6 +177,8 @@
         evt.target.classList.add('active');
         if (tabName === 'restaurants') loadShops();
         if (tabName === 'cart') loadCart();
+        if (tabName === 'orders') loadOrders();
+        if (tabName === 'notifications') loadNotifications();
     }
 
     function showShopList() {
@@ -352,7 +382,106 @@
         return map[cat] || cat;
     }
 
-    window.addEventListener('load', loadShops);
+    function checkout() {
+        const method = document.getElementById('paymentMethod').value;
+        fetch('${pageContext.request.contextPath}/cart/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'paymentMethod=' + encodeURIComponent(method)
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Ошибка: ' + data.error);
+                    return;
+                }
+                alert('Заказ #' + data.orderId + ' оформлен. Статус: ' + data.status);
+                loadCart();
+            })
+            .catch(() => alert('Не удалось оформить заказ'));
+    }
+
+    function loadOrders() {
+        fetch('${pageContext.request.contextPath}/client/orders-api')
+            .then(r => r.json())
+            .then(orders => {
+                const container = document.getElementById('ordersContainer');
+                if (!orders.length) {
+                    container.innerHTML = '<div class="empty-state">Заказов пока нет</div>';
+                    return;
+                }
+                container.innerHTML = orders.map(order => {
+                    const itemsHtml = order.items.map(item => `${item.name} × ${item.quantity} — ${item.price} ₽`).join('<br>');
+                    return `
+                        <div class="order-card">
+                            <div style="display:flex; justify-content:space-between;">
+                                <strong>Заказ #${order.id}</strong>
+                                <span>${order.createdAt || ''}</span>
+                            </div>
+                            <p>Статус: <strong>${order.status}</strong></p>
+                            <p>Сумма: <strong>${order.total} ₽</strong></p>
+                            <div class="order-items">${itemsHtml}</div>
+                            <button class="btn btn-primary btn-small" onclick="repeatOrder(${order.id})">Повторить</button>
+                        </div>`;
+                }).join('');
+            })
+            .catch(() => document.getElementById('ordersContainer').innerHTML = '<div class="empty-state">Ошибка загрузки заказов</div>');
+    }
+
+    function loadNotifications() {
+        fetch('${pageContext.request.contextPath}/client/notifications-api')
+            .then(r => r.json())
+            .then(list => {
+                const container = document.getElementById('notificationsContainer');
+                if (!list.length) {
+                    container.innerHTML = '<div class="empty-state">Уведомлений нет</div>';
+                    return;
+                }
+                container.innerHTML = list.map(n => `
+                    <div class="notification-card ${n.isRead ? '' : 'unread'}">
+                        <div style="display:flex; justify-content:space-between;">
+                            <strong>${n.type}</strong>
+                            <span>${n.createdAt}</span>
+                        </div>
+                        <p>${n.message}</p>
+                    </div>`).join('');
+            })
+            .catch(() => document.getElementById('notificationsContainer').innerHTML = '<div class="empty-state">Ошибка загрузки уведомлений</div>');
+    }
+
+    function markNotificationsRead() {
+        fetch('${pageContext.request.contextPath}/client/notifications/read', {
+            method: 'POST'
+        }).then(() => loadNotifications());
+    }
+
+    function repeatOrder(orderId) {
+        fetch('${pageContext.request.contextPath}/client/orders/repeat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'orderId=' + orderId
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Ошибка: ' + data.error);
+                    return;
+                }
+                alert('Товары заказа #' + orderId + ' добавлены в корзину');
+                loadCart();
+                const cartTabBtn = document.querySelector('.tab-button[data-tab="cart"]');
+                if (cartTabBtn) {
+                    cartTabBtn.click();
+                }
+            })
+            .catch(() => alert('Не удалось повторить заказ'));
+    }
+
+    window.addEventListener('load', () => {
+        loadShops();
+        loadOrders();
+        loadNotifications();
+    });
     </script>
 </body>
 </html>

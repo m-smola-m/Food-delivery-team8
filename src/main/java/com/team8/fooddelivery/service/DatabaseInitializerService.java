@@ -36,6 +36,7 @@ public class DatabaseInitializerService {
       "sql/002_create_shop_tables/006_add_shop_foreign_keys.sql",
       "sql/004_create_order_tables/012_add_cart_foreign_keys.sql",
       "sql/004_create_order_tables/013_create_payments.sql",
+      "sql/004_create_order_tables/017_create_notifications.sql",
       "sql/005_create_indexes/013_create_indexes.sql"
   );
 
@@ -220,7 +221,7 @@ public class DatabaseInitializerService {
 
   public static boolean isDatabaseInitialized() {
     // Проверяем наличие ключевых таблиц
-    String[] testTables = {"addresses", "clients", "shops", "orders", "products"};
+    String[] testTables = {"addresses", "clients", "shops", "orders", "products", "notifications"};
 
     try (Connection conn = DatabaseConnectionService.getConnection();
          Statement stmt = conn.createStatement()) {
@@ -258,6 +259,7 @@ public class DatabaseInitializerService {
 
         // Удаляем таблицы в правильном порядке (от дочерних к родительским)
         String[] tables = {
+            "notifications",
             "cart_items", "carts", "order_items", "payments", "orders",
             "products", "couriers", "shops", "clients",
             "working_hours", "addresses"
@@ -324,6 +326,7 @@ public class DatabaseInitializerService {
 
       // Очищаем таблицы в правильном порядке (из-за foreign keys)
       String[] tablesToClean = {
+          "notifications",
           "cart_items", "carts", "order_items", "payments", "orders",
           "products", "couriers", "shops", "clients", "addresses"
       };
