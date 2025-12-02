@@ -16,6 +16,7 @@ public class SessionManager {
         session.setAttribute("userRole", "CLIENT");
         session.setAttribute("userName", client.getName());
         session.setAttribute("userEmail", client.getEmail());
+        session.setAttribute("clientStatus", client.getStatus().name()); // <-- Добавлено
         session.setMaxInactiveInterval((int) SESSION_TIMEOUT);
         log.debug("Created client session for user: {}", client.getId());
     }

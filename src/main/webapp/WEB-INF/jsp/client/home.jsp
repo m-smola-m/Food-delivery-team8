@@ -37,9 +37,23 @@
             50% { transform: scale(1.2); opacity: 0.8; }
             100% { transform: scale(0); opacity: 0; }
         }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 30px; border-radius: 8px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+        .inactive-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.8); z-index: 999; display: flex; justify-content: center; align-items: center; text-align: center; }
     </style>
 </head>
 <body>
+<c:if test="${sessionScope.clientStatus == 'INACTIVE'}">
+    <div class="inactive-overlay">
+        <div>
+            <h2>Аккаунт деактивирован</h2>
+            <p>Вы не можете совершать покупки. Обратитесь в поддержку для восстановления.</p>
+            <a href="${pageContext.request.contextPath}/logout" class="btn btn-primary">Выйти</a>
+        </div>
+    </div>
+</c:if>
+
 <nav class="navbar">
     <div class="container">
         <h1><a href="${pageContext.request.contextPath}/">Food Delivery</a></h1>
@@ -95,12 +109,8 @@
             <div class="summary-row"><span>Количество товаров:</span><span id="cartCount">0</span></div>
             <div class="summary-row"><span>Сумма:</span><span id="cartTotal">0 ₽</span></div>
             <div class="summary-total"><div class="summary-row"><span>Итого:</span><span id="cartGrandTotal">0 ₽</span></div></div>
-            <label for="paymentMethod">Способ оплаты:</label>
-            <select id="paymentMethod" style="width:100%; margin:10px 0; padding:8px;">
-                <option value="CASH">Оплата при получении</option>
-                <option value="CARD">Карта онлайн</option>
-            </select>
-            <button class="btn btn-success" style="width:100%; margin-top:10px;" onclick="checkout()">Оформить заказ</button>
+            <button class="btn btn-danger" style="width:100%; margin-top:10px;" onclick="clearCart()">Очистить корзину</button>
+            <button class="btn btn-success" style="width:100%; margin-top:10px;" onclick="showCheckoutModal()">Оформить заказ</button>
         </div>
     </div>
 
@@ -151,7 +161,9 @@
         </form>
         <div style="margin-top:30px;">
             <h3>Опасная зона</h3>
-            <button onclick="if(confirm('Вы уверены?')) location.href='${pageContext.request.contextPath}/client/deactivate'" class="btn btn-danger">Деактивировать аккаунт</button>
+            <form id="deactivateForm" method="POST" action="${pageContext.request.contextPath}/client/deactivate" style="display: inline;">
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Вы уверены, что хотите деактивировать аккаунт?');">Деактивировать аккаунт</button>
+            </form>
         </div>
     </div>
 
@@ -173,8 +185,39 @@
     </div>
 </main>
 
+<div id="checkoutModal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+        <h2>Подтверждение заказа</h2>
+        <p>Пожалуйста, проверьте детали вашего заказа и адрес доставки.</p>
+        <div id="modalOrderSummary"></div>
+        <form id="checkoutForm">
+            <h3>Адрес доставки</h3>
+            <div class="info-grid">
+                <div class="form-group"><label>Страна:</label><input type="text" name="country" required></div>
+                <div class="form-group"><label>Город:</label><input type="text" name="city" required></div>
+                <div class="form-group"><label>Улица:</label><input type="text" name="street" required></div>
+                <div class="form-group"><label>Здание:</label><input type="text" name="building" required></div>
+                <div class="form-group"><label>Квартира:</label><input type="text" name="apartment"></div>
+                <div class="form-group"><label>Подъезд:</label><input type="text" name="entrance"></div>
+                <div class="form-group"><label>Этаж:</label><input type="text" name="floor"></div>
+                <div class="form-group" style="grid-column: 1 / -1;"><label>Комментарий:</label><textarea name="addressNote"></textarea></div>
+            </div>
+            <h3>Оплата</h3>
+            <select name="paymentMethod" style="width:100%; margin:10px 0; padding:8px;">
+                <option value="CASH">Оплата при получении</option>
+                <option value="CARD">Карта онлайн</option>
+            </select>
+        </form>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="hideCheckoutModal()">Отмена</button>
+            <button class="btn btn-success" onclick="confirmCheckout()">Подтвердить и заказать</button>
+        </div>
+    </div>
+</div>
+
 <script>
     let currentShopId = null;
+    const isInactive = "${sessionScope.clientStatus}" === "INACTIVE";
 
     function switchTab(evt, tabName) {
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -185,6 +228,7 @@
         if (tabName === 'cart') loadCart();
         if (tabName === 'orders') loadOrders();
         if (tabName === 'notifications') loadNotifications();
+        if (tabName === 'profile') loadProfileData();
     }
 
     function showShopList() {
@@ -224,7 +268,7 @@
             '<p style="color:#666;font-size:12px;">Вес: ' + (product.weight || 0) + ' г</p>' +
             '<div class="product-price">' + (product.price || 0) + ' ₽</div>' +
             '<div class="product-actions">' +
-            '  <button class="btn btn-success btn-small">+ Добавить</button>' +
+            '  <button class="btn btn-success btn-small" ' + (isInactive ? 'disabled' : '') + '>+ Добавить</button>' +
             '</div>';
         card.querySelector('button').addEventListener('click', () => addToCart(product.productId, product.name || ''));
         return card;
@@ -239,10 +283,10 @@
             '  <p>' + item.price + ' ₽ × ' + item.quantity + ' = ' + (item.price * item.quantity) + ' ₽</p>' +
             '</div>' +
             '<div class="cart-item-quantity">' +
-            '  <button class="btn btn-small">−</button>' +
+            '  <button class="btn btn-small" ' + (isInactive ? 'disabled' : '') + '>−</button>' +
             '  <span>' + item.quantity + '</span>' +
-            '  <button class="btn btn-small">+</button>' +
-            '  <button class="btn btn-danger btn-small">✕</button>' +
+            '  <button class="btn btn-small" ' + (isInactive ? 'disabled' : '') + '>+</button>' +
+            '  <button class="btn btn-danger btn-small" ' + (isInactive ? 'disabled' : '') + '>×</button>' +
             '</div>';
         const buttons = wrapper.querySelectorAll('button');
         buttons[0].addEventListener('click', () => updateQuantity(item.cartItemId, item.quantity - 1));
@@ -335,6 +379,13 @@
             .catch(() => alert('Не удалось добавить товар в корзину'));
     }
 
+    function clearCart() {
+        if (confirm('Вы уверены, что хотите очистить корзину?')) {
+            fetch('${pageContext.request.contextPath}/cart/clear', { method: 'POST' })
+                .then(loadCart);
+        }
+    }
+
     function loadCart() {
         fetch('${pageContext.request.contextPath}/cart/items-api')
             .then(r => r.json())
@@ -388,23 +439,55 @@
         return map[cat] || cat;
     }
 
-    function checkout() {
-        const method = document.getElementById('paymentMethod').value;
+    function showCheckoutModal() {
+        fetch('${pageContext.request.contextPath}/client/profile-api') // Предполагается новый API для данных клиента
+            .then(r => r.json())
+            .then(client => {
+                const form = document.getElementById('checkoutForm');
+                const address = client.address || {};
+                form.country.value = address.country || '';
+                form.city.value = address.city || '';
+                form.street.value = address.street || '';
+                form.building.value = address.building || '';
+                form.apartment.value = address.apartment || '';
+                form.entrance.value = address.entrance || '';
+                form.floor.value = address.floor || '';
+                form.addressNote.value = address.addressNote || '';
+            });
+
+        const summary = document.getElementById('modalOrderSummary');
+        summary.innerHTML = document.getElementById('cartContainer').innerHTML;
+        summary.querySelectorAll('button').forEach(b => b.remove()); // Убираем кнопки управления из саммари
+
+        document.getElementById('checkoutModal').style.display = 'flex';
+    }
+
+    function hideCheckoutModal() {
+        document.getElementById('checkoutModal').style.display = 'none';
+    }
+
+    function confirmCheckout() {
+        const form = document.getElementById('checkoutForm');
+        const formData = new FormData(form);
+        const body = new URLSearchParams(formData).toString();
+
         fetch('${pageContext.request.contextPath}/cart/checkout', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: 'paymentMethod=' + encodeURIComponent(method)
+            body: body
         })
-            .then(r => r.json())
-            .then(data => {
-                if (data.error) {
-                    alert('Ошибка: ' + data.error);
-                    return;
-                }
-                alert('Заказ #' + data.orderId + ' оформлен. Статус: ' + data.status);
-                loadCart();
-            })
-            .catch(() => alert('Не удалось оформить заказ'));
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) {
+                alert('Ошибка: ' + data.error);
+                return;
+            }
+            alert('Заказ #' + data.orderId + ' оформлен. Статус: ' + data.status);
+            hideCheckoutModal();
+            loadCart();
+            loadOrders();
+        })
+        .catch(() => alert('Не удалось оформить заказ'));
     }
 
     function loadOrders() {
@@ -430,7 +513,7 @@
                         return name + ' × ' + qty + ' — ' + price + ' ₽';
                     }).join('<br>');
 
-                    const disabledAttr = (orderId === 'N/A') ? 'disabled' : '';
+                    const disabledAttr = (orderId === 'N/A' || isInactive) ? 'disabled' : '';
 
                     return '<div class="order-card">' +
                         '<div style="display:flex; justify-content:space-between;">' +
@@ -515,6 +598,23 @@
             .catch(() => alert('Ошибка сети при попытке отметить уведомления как прочитанные'));
     }
 
+    function loadProfileData() {
+        fetch('${pageContext.request.contextPath}/client/profile-api')
+            .then(r => r.json())
+            .then(client => {
+                const form = document.querySelector('#profile .profile-form');
+                form.name.value = client.name || '';
+                form.email.value = client.email || '';
+                form.phone.value = client.phone || '';
+                const address = client.address || {};
+                form.country.value = address.country || '';
+                form.city.value = address.city || '';
+                form.street.value = address.street || '';
+                form.building.value = address.building || '';
+                form.apartment.value = address.apartment || '';
+            });
+    }
+
     function repeatOrder(orderId) {
         console.log('repeatOrder called with orderId:', orderId);
         if (!orderId || orderId === 'undefined') {
@@ -550,6 +650,11 @@
         loadShops();
         loadOrders();
         loadNotifications();
+        if (isInactive) {
+            document.querySelectorAll('button, input, select, textarea').forEach(el => {
+                if (!el.closest('.inactive-overlay')) el.disabled = true;
+            });
+        }
     });
     </script>
 </body>

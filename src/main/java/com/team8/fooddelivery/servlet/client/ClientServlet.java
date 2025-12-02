@@ -7,6 +7,7 @@ import com.team8.fooddelivery.dto.OrderHistoryResponse;
 import com.team8.fooddelivery.model.Address;
 import com.team8.fooddelivery.model.AuthResponse;
 import com.team8.fooddelivery.model.client.Client;
+import com.team8.fooddelivery.model.client.ClientStatus;
 import com.team8.fooddelivery.model.notification.Notification;
 import com.team8.fooddelivery.model.order.Order;
 import com.team8.fooddelivery.repository.ClientRepository;
@@ -67,8 +68,21 @@ public class ClientServlet extends HttpServlet {
             case "/home" -> showHome(request, response);
             case "/orders-api" -> sendOrderHistory(request, response);
             case "/notifications-api" -> sendNotifications(request, response);
+            case "/profile-api" -> sendProfileData(request, response); // <-- Новый эндпоинт
             default -> response.sendError(404);
         }
+    }
+
+    private void sendProfileData(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        Long userId = SessionManager.getUserId(request.getSession());
+        if (userId == null) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+        Client client = clientService.getById(userId);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        objectMapper.writeValue(response.getWriter(), client);
     }
 
 
@@ -193,6 +207,12 @@ public class ClientServlet extends HttpServlet {
             AuthResponse auth = clientService.login(login, password);
             Client client = clientService.getById(auth.getClientId());
 
+            if (client.getStatus() == ClientStatus.INACTIVE) {
+                request.setAttribute("error", "Ваш аккаунт деактивирован. Обратитесь в поддержку.");
+                request.getRequestDispatcher("/WEB-INF/jsp/client/login.jsp").forward(request, response);
+                return;
+            }
+
             SessionManager.createSession(request.getSession(), client);
 
             // сохраняем JWT
@@ -274,10 +294,13 @@ public class ClientServlet extends HttpServlet {
 
         if (userId != null) {
             clientService.deactivate(userId);
+            // Обновляем статус в сессии
+            request.getSession().setAttribute("clientStatus", ClientStatus.INACTIVE.name());
         }
 
-        SessionManager.invalidateSession(request.getSession());
-        response.sendRedirect(request.getContextPath() + "/client/login?deactivated=true");
+        // Не инвалидируем сессию, чтобы пользователь видел сообщение
+        // SessionManager.invalidateSession(request.getSession());
+        response.sendRedirect(request.getContextPath() + "/client/home?deactivated=true");
     }
 
 

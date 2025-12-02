@@ -160,6 +160,10 @@ public class CartServiceImpl implements CartService {
         }
     }
 
+    public void clearCart(Long clientId) {
+        clear(clientId);
+    }
+
     public void addItemsFromOrder(Long clientId, List<CartItem> items) {
         try {
             Cart cart = getOrCreate(clientId);

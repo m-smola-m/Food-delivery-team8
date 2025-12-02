@@ -58,6 +58,8 @@ public class CartServlet extends HttpServlet {
                 handleUpdateQuantity(request, response);
             } else if ("/checkout".equals(pathInfo)) {
                 handleCheckout(request, response);
+            } else if ("/clear".equals(pathInfo)) { // <-- Новый эндпоинт
+                handleClearCart(request, response);
             } else {
                 response.sendError(404);
             }
@@ -65,6 +67,15 @@ public class CartServlet extends HttpServlet {
             log.error("Error", e);
             sendError(response, e.getMessage());
         }
+    }
+
+    private void handleClearCart(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        Long clientId = getClientId(request, response);
+        if (clientId == null) {
+            return;
+        }
+        cartService.clearCart(clientId);
+        sendSuccess(response);
     }
 
     private void handleItemsApi(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -148,7 +159,12 @@ public class CartServlet extends HttpServlet {
             paymentMethod = PaymentMethodForOrder.CASH;
         }
 
-        Address address = loadClientAddress(clientId);
+        // Адрес теперь тоже может приходить из формы
+        Address address = extractAddress(request);
+        if (isAddressEmpty(address)) {
+            address = loadClientAddress(clientId);
+        }
+
         try {
             Order order = orderService.placeOrder(clientId, address, paymentMethod);
             sendJson(response, orderToJson(order));
@@ -156,6 +172,27 @@ public class CartServlet extends HttpServlet {
             log.error("Checkout failed for client {}", clientId, e);
             sendError(response, e.getMessage());
         }
+    }
+
+    private Address extractAddress(HttpServletRequest request) {
+        return Address.builder()
+                .country(request.getParameter("country"))
+                .city(request.getParameter("city"))
+                .street(request.getParameter("street"))
+                .building(request.getParameter("building"))
+                .apartment(request.getParameter("apartment"))
+                .entrance(request.getParameter("entrance"))
+                .floor(request.getParameter("floor") != null ? Integer.parseInt(request.getParameter("floor")) : null)
+                .addressNote(request.getParameter("addressNote"))
+                .build();
+    }
+
+    private boolean isAddressEmpty(Address address) {
+        return address == null ||
+                (address.getCountry() == null || address.getCountry().isEmpty()) &&
+                (address.getCity() == null || address.getCity().isEmpty()) &&
+                (address.getStreet() == null || address.getStreet().isEmpty()) &&
+                (address.getBuilding() == null || address.getBuilding().isEmpty());
     }
 
     private Address loadClientAddress(Long clientId) {
