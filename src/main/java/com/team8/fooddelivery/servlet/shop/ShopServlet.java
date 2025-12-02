@@ -1,6 +1,8 @@
 package com.team8.fooddelivery.servlet.shop;
 
 import com.team8.fooddelivery.model.shop.Shop;
+import com.team8.fooddelivery.model.shop.ShopStatus;
+import com.team8.fooddelivery.model.shop.ShopType;
 import com.team8.fooddelivery.service.ShopInfoService;
 import com.team8.fooddelivery.service.impl.ShopInfoServiceImpl;
 import com.team8.fooddelivery.util.SessionManager;
@@ -33,6 +35,8 @@ public class ShopServlet extends HttpServlet {
             handleShopDetails(request, response);
         } else if ("/dashboard".equals(pathInfo)) {
             handleDashboard(request, response);
+        } else if ("/list-api".equals(pathInfo)) {
+            handleShopListApi(request, response);
         } else {
             response.sendError(404);
         }
@@ -65,11 +69,14 @@ public class ShopServlet extends HttpServlet {
 
         try {
             List<Shop> shops = shopService.getAllShops();
+            log.info("Found {} shops", shops.size()); // Добавим логирование
             request.setAttribute("shops", shops);
+            request.setAttribute("shopTypes", ShopType.values()); // Pass all shop types to the JSP
             request.getRequestDispatcher("/WEB-INF/jsp/shop/list.jsp").forward(request, response);
         } catch (Exception e) {
             log.error("Error loading shop list", e);
-            response.sendError(500);
+            request.setAttribute("error", "Ошибка загрузки списка ресторанов: " + e.getMessage());
+            request.getRequestDispatcher("/WEB-INF/jsp/shop/list.jsp").forward(request, response);
         }
     }
 
@@ -91,6 +98,64 @@ public class ShopServlet extends HttpServlet {
             log.error("Error loading shop details", e);
             response.sendError(500);
         }
+    }
+
+    private void handleShopListApi(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        try {
+            String typeParam = request.getParameter("type");
+            List<Shop> shops;
+            if (typeParam != null && !typeParam.isEmpty()) {
+                ShopType type = ShopType.valueOf(typeParam);
+                shops = shopService.getShopsByType(type);
+            } else {
+                shops = shopService.getAllShops();
+            }
+            shops = shops.stream()
+                    .filter(shop -> shop.getStatus() == ShopStatus.APPROVED)
+                    .toList();
+
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().write(shopsToJson(shops));
+        } catch (Exception e) {
+            log.error("Error loading shop list for API", e);
+            response.sendError(500);
+        }
+    }
+
+    private String shopsToJson(List<Shop> shops) {
+        StringBuilder json = new StringBuilder("[");
+        for (int i = 0; i < shops.size(); i++) {
+            Shop shop = shops.get(i);
+            json.append("{");
+            json.append("\"shopId\":").append(shop.getShopId()).append(",");
+            json.append("\"naming\":\"").append(escapeJson(shop.getNaming())).append("\",");
+            json.append("\"description\":\"").append(escapeJson(shop.getDescription())).append("\",");
+            json.append("\"publicEmail\":\"").append(escapeJson(shop.getPublicEmail())).append("\",");
+            json.append("\"publicPhone\":\"").append(escapeJson(shop.getPublicPhone())).append("\",");
+            json.append("\"type\":\"").append(shop.getType() != null ? shop.getType().name() : "").append("\", ");
+            json.append("\"status\":\"").append(shop.getStatus() != null ? shop.getStatus().name() : "").append("\"");
+            json.append("}");
+            if (i < shops.size() - 1) {
+                json.append(",");
+            }
+        }
+        json.append("]");
+        return json.toString();
+    }
+
+    private String escapeJson(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.replace("\\", "\\\\")
+                    .replace("\"", "\\\"")
+                    .replace("\b", "\\b")
+                    .replace("\f", "\\f")
+                    .replace("\n", "\\n")
+                    .replace("\r", "\\r")
+                    .replace("\t", "\\t");
     }
 
     private void handleDashboard(HttpServletRequest request, HttpServletResponse response)

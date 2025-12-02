@@ -23,32 +23,17 @@ public interface CartService {
 
     Long calculateTotal(Long clientId);
 
-    /**
-     * Возвращает общую стоимость корзины для пользователя.
-     * Добавлено, чтобы удовлетворить вызовы в CartServlet.
-     */
-    default BigDecimal getCartTotal(Long userId) {
-        throw new UnsupportedOperationException("getCartTotal not implemented yet");
-    }
+    BigDecimal getCartTotal(Long clientId);
 
-    /**
-     * Добавляет товар в корзину пользователя.
-     */
-    default void addToCart(Long userId, Long productId, int quantity) {
-        throw new UnsupportedOperationException("addToCart not implemented yet");
-    }
+    void addToCart(Long clientId, Long productId, int quantity);
 
-    /**
-     * Удаляет элемент корзины по id (или другой логике проекта).
-     */
-    default void removeFromCart(Long cartItemId) {
-        throw new UnsupportedOperationException("removeFromCart not implemented yet");
-    }
+    void removeFromCart(Long clientId, Long cartItemId);
 
-    /**
-     * Обновляет количество для элемента корзины.
-     */
-    default void updateQuantity(Long cartItemId, int quantity) {
-        throw new UnsupportedOperationException("updateQuantity not implemented yet");
-    }
+    void updateQuantity(Long clientId, Long cartItemId, int quantity);
+
+    Cart getCartByClientId(Long clientId);
+
+    List<CartItem> getCartItems(Long cartId);
+
+    List<CartItem> getCartItemsForClient(Long clientId);
 }

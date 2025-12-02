@@ -8,452 +8,351 @@
     <title>Личный кабинет - Food Delivery</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/style.css">
     <style>
-        .tabs {
-            display: flex;
-            gap: 10px;
-            border-bottom: 2px solid #ddd;
-            margin-bottom: 20px;
-        }
-        .tab-button {
-            padding: 10px 20px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s;
-        }
-        .tab-button.active {
-            border-bottom-color: #007bff;
-            color: #007bff;
-            font-weight: bold;
-        }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        .shops-grid, .products-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        .shop-card, .product-card {
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 15px;
-            cursor: pointer;
-            transition: box-shadow 0.3s;
-        }
-        .shop-card:hover, .product-card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        .product-card {
-            display: flex;
-            flex-direction: column;
-        }
-        .product-price {
-            font-size: 18px;
-            font-weight: bold;
-            color: #28a745;
-            margin: 10px 0;
-        }
-        .product-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: auto;
-        }
-        .btn-small {
-            padding: 5px 10px;
-            font-size: 14px;
-        }
-        .cart-items {
-            margin-top: 20px;
-        }
-        .cart-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            margin-bottom: 10px;
-        }
-        .cart-item-info {
-            flex: 1;
-        }
-        .cart-item-quantity {
-            display: flex;
-            gap: 5px;
-            align-items: center;
-        }
-        .cart-summary {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-        .summary-row {
-            display: flex;
-            justify-content: space-between;
-            margin: 10px 0;
-            font-size: 16px;
-        }
-        .summary-total {
-            font-size: 20px;
-            font-weight: bold;
-            color: #28a745;
-            border-top: 2px solid #ddd;
-            padding-top: 10px;
-            margin-top: 10px;
-        }
-        .profile-form {
-            max-width: 500px;
-            margin-top: 20px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        .form-group input, .form-group textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        .form-group textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
+        .tabs { display: flex; gap: 10px; border-bottom: 2px solid #ddd; margin-bottom: 20px; }
+        .tab-button { padding: 10px 20px; background: none; border: none; cursor: pointer; font-size: 16px; border-bottom: 3px solid transparent; }
+        .tab-button.active { border-bottom-color: #007bff; color: #007bff; font-weight: bold; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .shops-grid, .products-grid, .categories-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-top: 20px; }
+        .shop-card, .product-card, .category-card { border: 1px solid #ddd; border-radius: 8px; padding: 15px; transition: box-shadow 0.2s; background: #fff; }
+        .shop-card:hover, .product-card:hover, .category-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+        .product-price { font-size: 18px; font-weight: bold; color: #28a745; margin: 10px 0; }
+        .product-actions { display: flex; gap: 10px; margin-top: auto; }
+        .btn-small { padding: 6px 10px; font-size: 13px; }
+        .back-link { margin-top: 10px; display: inline-flex; align-items: center; color: #007bff; cursor: pointer; }
+        .back-link span { margin-left: 6px; }
+        .cart-items { margin-top: 20px; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; }
+        .cart-summary { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 20px; }
+        .summary-row { display: flex; justify-content: space-between; margin: 10px 0; font-size: 16px; }
+        .summary-total { font-size: 20px; font-weight: bold; color: #28a745; border-top: 2px solid #ddd; padding-top: 10px; margin-top: 10px; }
+        .empty-state { padding: 40px; text-align: center; color: #777; border: 1px dashed #ccc; border-radius: 8px; }
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="container">
-            <h1><a href="${pageContext.request.contextPath}/">Food Delivery</a></h1>
-            <div class="nav-user">
-                <span>Добро пожаловать, ${sessionScope.userName}!</span>
-                <a href="${pageContext.request.contextPath}/logout" class="btn btn-secondary">Выход</a>
-            </div>
+<nav class="navbar">
+    <div class="container">
+        <h1><a href="${pageContext.request.contextPath}/">Food Delivery</a></h1>
+        <div class="nav-user">
+            <span>Добро пожаловать, ${sessionScope.userName}!</span>
+            <a href="${pageContext.request.contextPath}/logout" class="btn btn-secondary">Выход</a>
         </div>
-    </nav>
+    </div>
+</nav>
 
-    <main class="container">
-        <h1>Личный кабинет</h1>
+<main class="container">
+    <h1>Личный кабинет</h1>
 
-        <div class="tabs">
-            <button class="tab-button active" onclick="switchTab('restaurants')">🏪 Рестораны</button>
-            <button class="tab-button" onclick="switchTab('cart')">🛒 Корзина</button>
-            <button class="tab-button" onclick="switchTab('profile')">👤 Профиль</button>
-        </div>
+    <div class="tabs">
+        <button class="tab-button active" onclick="switchTab(event, 'restaurants')">🏪 Рестораны</button>
+        <button class="tab-button" onclick="switchTab(event, 'cart')">🛒 Корзина</button>
+        <button class="tab-button" onclick="switchTab(event, 'profile')">👤 Профиль</button>
+    </div>
 
-        <!-- Вкладка Рестораны -->
-        <div id="restaurants" class="tab-content active">
+    <div id="restaurants" class="tab-content active">
+        <div id="shopListSection">
             <h2>Доступные рестораны</h2>
-
-            <div class="category-filter" style="margin-bottom: 20px;">
-                <label>Выберите категорию:</label>
-                <select id="categoryFilter" onchange="filterByCategory()" style="padding: 10px; margin-left: 10px;">
-                    <option value="">Все категории</option>
-                    <option value="BAKERY">Хлебобулочные</option>
-                    <option value="MAIN_DISH">Основные блюда</option>
-                    <option value="DESSERT">Десерты</option>
-                    <option value="DRINK">Напитки</option>
-                    <option value="OTHER">Другое</option>
-                </select>
-            </div>
-
             <div class="shops-grid" id="shopsContainer">
-                <p>Загрузка ресторанов...</p>
+                <div class="empty-state">Загрузка ресторанов...</div>
             </div>
         </div>
 
-        <!-- Вкладка Корзина -->
-        <div id="cart" class="tab-content">
-            <h2>Ваша корзина</h2>
-            <div class="cart-items" id="cartContainer">
-                <p>Корзина пуста</p>
+        <div id="shopDetailsSection" style="display:none;">
+            <div class="back-link" onclick="showShopList()">⬅ <span>К списку ресторанов</span></div>
+            <h2 id="selectedShopName"></h2>
+            <p id="selectedShopInfo"></p>
+            <div>
+                <h3>Категории</h3>
+                <div class="categories-grid" id="categoriesContainer"></div>
             </div>
-            <div class="cart-summary" id="cartSummary" style="display:none;">
-                <div class="summary-row">
-                    <span>Количество товаров:</span>
-                    <span id="cartCount">0</span>
+            <div>
+                <h3>Продукты</h3>
+                <div class="products-grid" id="productsContainer">
+                    <div class="empty-state">Выберите категорию, чтобы увидеть продукты.</div>
                 </div>
-                <div class="summary-row">
-                    <span>Сумма:</span>
-                    <span id="cartTotal">0 ₽</span>
-                </div>
-                <div class="summary-total">
-                    <div class="summary-row">
-                        <span>Итого:</span>
-                        <span id="cartGrandTotal">0 ₽</span>
-                    </div>
-                </div>
-                <button class="btn btn-success" style="width: 100%; margin-top: 20px;">Оформить заказ</button>
             </div>
         </div>
+    </div>
 
-        <!-- Вкладка Профиль -->
-        <div id="profile" class="tab-content">
-            <h2>Мой профиль</h2>
-            <form method="POST" action="${pageContext.request.contextPath}/client/update-profile" class="profile-form">
-                <div class="form-group">
-                    <label for="name">Имя:</label>
-                    <input type="text" id="name" name="name" value="${sessionScope.userName}" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="email">Email:</label>
-                    <input type="email" id="email" name="email" value="${sessionScope.userEmail}" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="phone">Телефон:</label>
-                    <input type="tel" id="phone" name="phone" placeholder="89XXXXXXXXX" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="country">Страна:</label>
-                    <input type="text" id="country" name="country" placeholder="Россия">
-                </div>
-
-                <div class="form-group">
-                    <label for="city">Город:</label>
-                    <input type="text" id="city" name="city" placeholder="Москва">
-                </div>
-
-                <div class="form-group">
-                    <label for="street">Улица:</label>
-                    <input type="text" id="street" name="street" placeholder="Главная улица">
-                </div>
-
-                <div class="form-group">
-                    <label for="building">Здание:</label>
-                    <input type="text" id="building" name="building" placeholder="1">
-                </div>
-
-                <div class="form-group">
-                    <label for="apartment">Квартира:</label>
-                    <input type="text" id="apartment" name="apartment" placeholder="101">
-                </div>
-
-                <button type="submit" class="btn btn-primary">Сохранить</button>
-            </form>
-
-            <div style="margin-top: 30px;">
-                <h3>Опасная зона</h3>
-                <button onclick="if(confirm('Вы уверены?')) location.href='${pageContext.request.contextPath}/client/deactivate'" class="btn btn-danger">
-                    Деактивировать аккаунт
-                </button>
-            </div>
+    <div id="cart" class="tab-content">
+        <h2>Ваша корзина</h2>
+        <div class="cart-items" id="cartContainer">
+            <div class="empty-state">Корзина пуста</div>
         </div>
-    </main>
+        <div class="cart-summary" id="cartSummary" style="display:none;">
+            <div class="summary-row"><span>Количество товаров:</span><span id="cartCount">0</span></div>
+            <div class="summary-row"><span>Сумма:</span><span id="cartTotal">0 ₽</span></div>
+            <div class="summary-total"><div class="summary-row"><span>Итого:</span><span id="cartGrandTotal">0 ₽</span></div></div>
+            <button class="btn btn-success" style="width:100%; margin-top:20px;">Оформить заказ</button>
+        </div>
+    </div>
 
-    <script>
-        function switchTab(tabName) {
-            // Скрыть все вкладки
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
+    <div id="profile" class="tab-content">
+        <h2>Мой профиль</h2>
+        <form method="POST" action="${pageContext.request.contextPath}/client/update-profile" class="profile-form">
+            <div class="form-group">
+                <label for="name">Имя:</label>
+                <input type="text" id="name" name="name" value="${sessionScope.userName}" required>
+            </div>
 
-            // Деактивировать все кнопки
-            document.querySelectorAll('.tab-button').forEach(btn => {
-                btn.classList.remove('active');
-            });
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" value="${sessionScope.userEmail}" required>
+            </div>
 
-            // Показать выбранную вкладку
-            document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
+            <div class="form-group">
+                <label for="phone">Телефон:</label>
+                <input type="tel" id="phone" name="phone" placeholder="89XXXXXXXXX" required>
+            </div>
 
-            // Загрузить данные если нужно
-            if (tabName === 'restaurants') {
-                loadShops();
-            } else if (tabName === 'cart') {
-                loadCart();
-            }
-        }
+            <div class="form-group">
+                <label for="country">Страна:</label>
+                <input type="text" id="country" name="country" placeholder="Россия">
+            </div>
 
-        function loadShops() {
-            fetch('${pageContext.request.contextPath}/shop/list-api')
-                .then(response => response.json())
-                .then(shops => {
-                    let html = '';
-                    if (shops.length === 0) {
-                        html = '<p>Нет доступных ресторанов</p>';
-                    } else {
-                        shops.forEach(shop => {
-                            html += `
-                                <div class="shop-card" onclick="viewShopProducts(${shop.shopId})">
-                                    <h3>${shop.naming}</h3>
-                                    <p>${shop.description}</p>
-                                    <p style="color: #666; font-size: 14px;">📧 ${shop.publicEmail}</p>
-                                </div>
-                            `;
-                        });
-                    }
-                    document.getElementById('shopsContainer').innerHTML = html;
-                })
-                .catch(error => {
-                    console.error('Ошибка загрузки ресторанов:', error);
-                    document.getElementById('shopsContainer').innerHTML = '<p>Ошибка загрузки ресторанов</p>';
-                });
-        }
+            <div class="form-group">
+                <label for="city">Город:</label>
+                <input type="text" id="city" name="city" placeholder="Москва">
+            </div>
 
-        function viewShopProducts(shopId) {
-            fetch(`${pageContext.request.contextPath}/products/by-shop?shopId=` + shopId)
-                .then(response => response.json())
-                .then(products => {
-                    let html = '<h3>Продукты</h3><div class="products-grid">';
-                    if (products.length === 0) {
-                        html += '<p>Нет продуктов</p>';
-                    } else {
-                        products.forEach(product => {
-                            html += `
-                                <div class="product-card">
-                                    <h4>${product.name}</h4>
-                                    <p>${product.description}</p>
-                                    <p style="color: #666; font-size: 12px;">Вес: ${product.weight}g</p>
-                                    <div class="product-price">${product.price} ₽</div>
-                                    <div class="product-actions">
-                                        <button onclick="addToCart(${product.productId}, '${product.name}', ${product.price})"
-                                                class="btn btn-success btn-small">+ Добавить</button>
-                                    </div>
-                                </div>
-                            `;
-                        });
-                    }
-                    html += '</div>';
-                    document.getElementById('shopsContainer').innerHTML = html;
-                })
-                .catch(error => {
-                    console.error('Ошибка загрузки продуктов:', error);
-                });
-        }
+            <div class="form-group">
+                <label for="street">Улица:</label>
+                <input type="text" id="street" name="street" placeholder="Главная улица">
+            </div>
 
-        function addToCart(productId, productName, price) {
-            fetch('${pageContext.request.contextPath}/cart/add', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `productId=` + productId + `&quantity=1`
+            <div class="form-group">
+                <label for="building">Здание:</label>
+                <input type="text" id="building" name="building" placeholder="1">
+            </div>
+
+            <div class="form-group">
+                <label for="apartment">Квартира:</label>
+                <input type="text" id="apartment" name="apartment" placeholder="101">
+            </div>
+
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+        </form>
+        <div style="margin-top:30px;">
+            <h3>Опасная зона</h3>
+            <button onclick="if(confirm('Вы уверены?')) location.href='${pageContext.request.contextPath}/client/deactivate'" class="btn btn-danger">Деактивировать аккаунт</button>
+        </div>
+    </div>
+</main>
+
+<script>
+    let currentShopId = null;
+
+    function switchTab(evt, tabName) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(tabName).classList.add('active');
+        evt.target.classList.add('active');
+        if (tabName === 'restaurants') loadShops();
+        if (tabName === 'cart') loadCart();
+    }
+
+    function showShopList() {
+        document.getElementById('shopDetailsSection').style.display = 'none';
+        document.getElementById('shopListSection').style.display = 'block';
+        currentShopId = null;
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function renderShopCard(shop) {
+        const card = document.createElement('div');
+        card.className = 'shop-card';
+        card.addEventListener('click', () => openShop(shop.shopId, shop.naming || ''));
+        card.innerHTML = '' +
+            '<h3>' + escapeHtml(shop.naming || '') + '</h3>' +
+            '<p>' + escapeHtml(shop.description || '') + '</p>' +
+            '<p style="color:#666;font-size:13px;">📧 ' + escapeHtml(shop.publicEmail || '—') + ' | ☎ ' + escapeHtml(shop.publicPhone || '—') + '</p>' +
+            '<p style="font-size:12px;color:#999;">Тип: ' + escapeHtml(shop.type || '—') + '</p>';
+        return card;
+    }
+
+    function renderProductCard(product) {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.innerHTML = '' +
+            '<h4>' + escapeHtml(product.name || '') + '</h4>' +
+            '<p>' + escapeHtml(product.description || '') + '</p>' +
+            '<p style="color:#666;font-size:12px;">Вес: ' + (product.weight || 0) + ' г</p>' +
+            '<div class="product-price">' + (product.price || 0) + ' ₽</div>' +
+            '<div class="product-actions">' +
+            '  <button class="btn btn-success btn-small">+ Добавить</button>' +
+            '</div>';
+        card.querySelector('button').addEventListener('click', () => addToCart(product.productId, product.name || ''));
+        return card;
+    }
+
+    function renderCartItem(item) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'cart-item';
+        wrapper.innerHTML = '' +
+            '<div>' +
+            '  <strong>' + escapeHtml(item.name || '') + '</strong>' +
+            '  <p>' + item.price + ' ₽ × ' + item.quantity + ' = ' + (item.price * item.quantity) + ' ₽</p>' +
+            '</div>' +
+            '<div class="cart-item-quantity">' +
+            '  <button class="btn btn-small">−</button>' +
+            '  <span>' + item.quantity + '</span>' +
+            '  <button class="btn btn-small">+</button>' +
+            '  <button class="btn btn-danger btn-small">✕</button>' +
+            '</div>';
+        const buttons = wrapper.querySelectorAll('button');
+        buttons[0].addEventListener('click', () => updateQuantity(item.cartItemId, item.quantity - 1));
+        buttons[1].addEventListener('click', () => updateQuantity(item.cartItemId, item.quantity + 1));
+        buttons[2].addEventListener('click', () => removeFromCart(item.cartItemId));
+        return wrapper;
+    }
+
+    function loadShops() {
+        fetch('${pageContext.request.contextPath}/shop/list-api')
+            .then(r => r.json())
+            .then(shops => {
+                const container = document.getElementById('shopsContainer');
+                container.innerHTML = '';
+                if (!shops.length) {
+                    container.innerHTML = '<div class="empty-state">Нет доступных ресторанов</div>';
+                    return;
+                }
+                shops.forEach(shop => container.appendChild(renderShopCard(shop)));
             })
-            .then(response => response.json())
-            .then(data => {
+            .catch(() => {
+                document.getElementById('shopsContainer').innerHTML = '<div class="empty-state">Ошибка загрузки ресторанов</div>';
+            });
+    }
+
+    function openShop(shopId, shopName) {
+        currentShopId = shopId;
+        document.getElementById('shopListSection').style.display = 'none';
+        document.getElementById('shopDetailsSection').style.display = 'block';
+        document.getElementById('selectedShopName').innerText = shopName;
+        document.getElementById('selectedShopInfo').innerText = 'Выберите категорию, чтобы увидеть продукты.';
+        loadCategories(shopId);
+        document.getElementById('productsContainer').innerHTML = '<div class="empty-state">Загрузка категорий...</div>';
+    }
+
+    function loadCategories(shopId) {
+        fetch('${pageContext.request.contextPath}/products/categories?shopId=' + shopId)
+            .then(r => r.json())
+            .then(categories => {
+                const container = document.getElementById('categoriesContainer');
+                container.innerHTML = '';
+                if (!categories.length) {
+                    container.innerHTML = '<div class="empty-state">Категории не найдены</div>';
+                    document.getElementById('productsContainer').innerHTML = '<div class="empty-state">Нет продуктов</div>';
+                    return;
+                }
+                categories.forEach(cat => {
+                    const card = document.createElement('div');
+                    card.className = 'category-card';
+                    card.innerHTML = '<strong>' + translateCategory(cat) + '</strong>';
+                    card.addEventListener('click', () => loadProducts(shopId, cat));
+                    container.appendChild(card);
+                });
+                loadProducts(shopId, categories[0]);
+            })
+            .catch(() => {
+                document.getElementById('categoriesContainer').innerHTML = '<div class="empty-state">Ошибка загрузки категорий</div>';
+            });
+    }
+
+    function loadProducts(shopId, category) {
+        document.getElementById('productsContainer').innerHTML = '<div class="empty-state">Загрузка продуктов...</div>';
+        fetch('${pageContext.request.contextPath}/products/by-shop?shopId=' + shopId + '&category=' + encodeURIComponent(category))
+            .then(r => r.json())
+            .then(products => {
+                const container = document.getElementById('productsContainer');
+                container.innerHTML = '';
+                if (!products.length) {
+                    container.innerHTML = '<div class="empty-state">Нет продуктов в этой категории</div>';
+                    return;
+                }
+                products.forEach(product => container.appendChild(renderProductCard(product)));
+            })
+            .catch(() => {
+                document.getElementById('productsContainer').innerHTML = '<div class="empty-state">Ошибка загрузки продуктов</div>';
+            });
+    }
+
+    function addToCart(productId, productName) {
+        fetch('${pageContext.request.contextPath}/cart/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'productId=' + productId + '&quantity=1'
+        })
+            .then(r => r.json())
+            .then(() => {
                 alert('✅ ' + productName + ' добавлен в корзину');
                 loadCart();
             })
-            .catch(error => console.error('Ошибка:', error));
-        }
+            .catch(() => alert('Не удалось добавить товар в корзину'));
+    }
 
-        function loadCart() {
-            fetch('${pageContext.request.contextPath}/cart/items-api')
-                .then(response => response.json())
-                .then(items => {
-                    let html = '';
-                    let total = 0;
-                    let count = 0;
-
-                    if (items.length === 0) {
-                        html = '<p>Корзина пуста</p>';
-                        document.getElementById('cartSummary').style.display = 'none';
-                    } else {
-                        items.forEach(item => {
-                            let itemTotal = item.price * item.quantity;
-                            total += itemTotal;
-                            count += item.quantity;
-                            html += `
-                                <div class="cart-item">
-                                    <div class="cart-item-info">
-                                        <h4>${item.name}</h4>
-                                        <p>${item.price} ₽ × ${item.quantity} = ${itemTotal} ₽</p>
-                                    </div>
-                                    <div class="cart-item-quantity">
-                                        <button onclick="updateQuantity(${item.cartItemId}, ${item.quantity - 1})" class="btn btn-small">−</button>
-                                        <span>${item.quantity}</span>
-                                        <button onclick="updateQuantity(${item.cartItemId}, ${item.quantity + 1})" class="btn btn-small">+</button>
-                                        <button onclick="removeFromCart(${item.cartItemId})" class="btn btn-danger btn-small">✕ Удалить</button>
-                                    </div>
-                                </div>
-                            `;
-                        });
-                        document.getElementById('cartSummary').style.display = 'block';
-                        document.getElementById('cartCount').textContent = count;
-                        document.getElementById('cartTotal').textContent = total + ' ₽';
-                        document.getElementById('cartGrandTotal').textContent = total + ' ₽';
-                    }
-                    document.getElementById('cartContainer').innerHTML = html;
-                })
-                .catch(error => {
-                    console.error('Ошибка загрузки корзины:', error);
-                    document.getElementById('cartContainer').innerHTML = '<p>Ошибка загрузки корзины</p>';
+    function loadCart() {
+        fetch('${pageContext.request.contextPath}/cart/items-api')
+            .then(r => r.json())
+            .then(data => {
+                const items = data.items || [];
+                const container = document.getElementById('cartContainer');
+                container.innerHTML = '';
+                if (!items.length) {
+                    container.innerHTML = '<div class="empty-state">Корзина пуста</div>';
+                    document.getElementById('cartSummary').style.display = 'none';
+                    return;
+                }
+                let total = data.total || 0;
+                let count = 0;
+                items.forEach(item => {
+                    count += item.quantity;
+                    container.appendChild(renderCartItem(item));
                 });
-        }
-
-        function updateQuantity(cartItemId, newQuantity) {
-            if (newQuantity < 1) {
-                removeFromCart(cartItemId);
-                return;
-            }
-
-            fetch('${pageContext.request.contextPath}/cart/update', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `cartItemId=` + cartItemId + `&quantity=` + newQuantity
+                document.getElementById('cartSummary').style.display = 'block';
+                document.getElementById('cartCount').innerText = count;
+                document.getElementById('cartTotal').innerText = total + ' ₽';
+                document.getElementById('cartGrandTotal').innerText = total + ' ₽';
             })
-            .then(() => loadCart())
-            .catch(error => console.error('Ошибка:', error));
-        }
+            .catch(() => {
+                document.getElementById('cartContainer').innerHTML = '<div class="empty-state">Ошибка загрузки корзины</div>';
+            });
+    }
 
-        function removeFromCart(cartItemId) {
-            fetch('${pageContext.request.contextPath}/cart/remove?cartItemId=' + cartItemId, {
-                method: 'POST'
-            })
-            .then(() => {
-                alert('✅ Товар удален из корзины');
-                loadCart();
-            })
-            .catch(error => console.error('Ошибка:', error));
+    function updateQuantity(cartItemId, newQuantity) {
+        if (newQuantity < 1) {
+            removeFromCart(cartItemId);
+            return;
         }
+        fetch('${pageContext.request.contextPath}/cart/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'cartItemId=' + cartItemId + '&quantity=' + newQuantity
+        }).then(loadCart);
+    }
 
-        function filterByCategory() {
-            const category = document.getElementById('categoryFilter').value;
-            if (category) {
-                fetch(`${pageContext.request.contextPath}/products/by-category?category=` + category)
-                    .then(response => response.json())
-                    .then(products => {
-                        let html = '<div class="products-grid">';
-                        products.forEach(product => {
-                            html += `
-                                <div class="product-card">
-                                    <h4>${product.name}</h4>
-                                    <p>${product.description}</p>
-                                    <div class="product-price">${product.price} ₽</div>
-                                    <button onclick="addToCart(${product.productId}, '${product.name}', ${product.price})"
-                                            class="btn btn-success">+ Добавить</button>
-                                </div>
-                            `;
-                        });
-                        html += '</div>';
-                        document.getElementById('shopsContainer').innerHTML = html;
-                    })
-                    .catch(error => console.error('Ошибка:', error));
-            } else {
-                loadShops();
-            }
-        }
+    function removeFromCart(cartItemId) {
+        fetch('${pageContext.request.contextPath}/cart/remove', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'cartItemId=' + cartItemId
+        }).then(loadCart);
+    }
 
-        // Загрузить рестораны при загрузке страницы
-        window.addEventListener('load', loadShops);
+    function translateCategory(cat) {
+        const map = { BAKERY: 'Хлебобулочные', MAIN_DISH: 'Основные блюда', DESSERT: 'Десерты', DRINK: 'Напитки', OTHER: 'Другое' };
+        return map[cat] || cat;
+    }
+
+    window.addEventListener('load', loadShops);
     </script>
 </body>
 </html>

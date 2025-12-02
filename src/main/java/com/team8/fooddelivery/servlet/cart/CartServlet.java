@@ -1,6 +1,5 @@
 package com.team8.fooddelivery.servlet.cart;
 
-import com.team8.fooddelivery.model.product.Cart;
 import com.team8.fooddelivery.model.product.CartItem;
 import com.team8.fooddelivery.service.CartService;
 import com.team8.fooddelivery.service.impl.CartServiceImpl;
@@ -13,8 +12,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
 @WebServlet("/cart/*")
 public class CartServlet extends HttpServlet {
@@ -27,8 +27,8 @@ public class CartServlet extends HttpServlet {
 
         String pathInfo = request.getPathInfo();
 
-        if ("/view".equals(pathInfo)) {
-            handleViewCart(request, response);
+        if ("/items-api".equals(pathInfo)) {
+            handleItemsApi(request, response);
         } else {
             response.sendError(404);
         }
@@ -47,160 +47,115 @@ public class CartServlet extends HttpServlet {
                 handleRemoveFromCart(request, response);
             } else if ("/update".equals(pathInfo)) {
                 handleUpdateQuantity(request, response);
-            } else if ("/add-comment".equals(pathInfo)) {
-                handleAddComment(request, response);
             } else {
                 response.sendError(404);
             }
         } catch (Exception e) {
             log.error("Error", e);
-            response.sendError(500);
+            sendError(response, e.getMessage());
         }
     }
 
-    /**
-     * Показать содержимое корзины
-     */
-    private void handleViewCart(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        Long clientId = (Long) request.getSession().getAttribute("userId");
+    private void handleItemsApi(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        Long clientId = getClientId(request, response);
         if (clientId == null) {
-            response.sendRedirect(request.getContextPath() + "/client/login");
             return;
         }
 
-        try {
-            // TODO: Реализовать получение корзины клиента
-            // Cart cart = cartService.getCartByClientId(clientId);
-            // List<CartItem> items = cartService.getCartItems(cart.getCartId());
+        List<CartItem> items = cartService.getCartItemsForClient(clientId);
+        double total = items.stream().mapToDouble(item -> item.getPrice() * item.getQuantity()).sum();
 
-            request.setAttribute("cart", null);
-            request.setAttribute("cartItems", List.of());
-            request.setAttribute("total", 0.0);
-
-            request.getRequestDispatcher("/WEB-INF/jsp/cart/view.jsp").forward(request, response);
-        } catch (Exception e) {
-            log.error("Error loading cart", e);
-            response.sendError(500);
-        }
-    }
-
-    /**
-     * Добавить товар в корзину
-     */
-    private void handleAddToCart(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        Long clientId = (Long) request.getSession().getAttribute("userId");
-        if (clientId == null) {
-            response.sendRedirect(request.getContextPath() + "/client/login");
-            return;
-        }
-
-        try {
-            Long productId = Long.parseLong(request.getParameter("productId"));
-            int quantity = Integer.parseInt(request.getParameter("quantity") != null ?
-                    request.getParameter("quantity") : "1");
-
-            // TODO: Реализовать добавление товара в корзину
-            // Cart cart = cartService.getCartByClientId(clientId);
-            // cartService.addItem(cart.getCartId(), productId, quantity);
-
-            log.info("Product {} added to cart for client {}", productId, clientId);
-            response.sendRedirect(request.getContextPath() + "/cart/view?added=true");
-        } catch (Exception e) {
-            log.error("Error adding to cart", e);
-            request.setAttribute("error", "Ошибка при добавлении товара");
-            request.getRequestDispatcher("/WEB-INF/jsp/cart/view.jsp").forward(request, response);
-        }
-    }
-
-    /**
-     * Удалить товар из корзины
-     */
-    private void handleRemoveFromCart(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        Long clientId = (Long) request.getSession().getAttribute("userId");
-        if (clientId == null) {
-            response.sendRedirect(request.getContextPath() + "/client/login");
-            return;
-        }
-
-        try {
-            Long cartItemId = Long.parseLong(request.getParameter("cartItemId"));
-
-            // TODO: Реализовать удаление товара
-            // cartService.removeItem(cartItemId);
-
-            log.info("Item {} removed from cart", cartItemId);
-            response.sendRedirect(request.getContextPath() + "/cart/view?removed=true");
-        } catch (Exception e) {
-            log.error("Error removing from cart", e);
-            response.sendRedirect(request.getContextPath() + "/cart/view?error=true");
-        }
-    }
-
-    /**
-     * Обновить количество товара
-     */
-    private void handleUpdateQuantity(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        Long clientId = (Long) request.getSession().getAttribute("userId");
-        if (clientId == null) {
-            response.sendRedirect(request.getContextPath() + "/client/login");
-            return;
-        }
-
-        try {
-            Long cartItemId = Long.parseLong(request.getParameter("cartItemId"));
-            int quantity = Integer.parseInt(request.getParameter("quantity"));
-
-            if (quantity <= 0) {
-                handleRemoveFromCart(request, response);
-                return;
+        StringBuilder json = new StringBuilder("{");
+        json.append("\"items\":[");
+        for (int i = 0; i < items.size(); i++) {
+            CartItem item = items.get(i);
+            json.append("{")
+                .append("\"cartItemId\":").append(item.getId()).append(",")
+                .append("\"productId\":").append(item.getProductId()).append(",")
+                .append("\"name\":\"").append(escape(item.getProductName())).append("\",")
+                .append("\"price\":").append(item.getPrice()).append(",")
+                .append("\"quantity\":").append(item.getQuantity()).append("}");
+            if (i < items.size() - 1) {
+                json.append(",");
             }
-
-            // TODO: Реализовать обновление количества
-            // cartService.updateItem(cartItemId, quantity);
-
-            log.info("Item {} quantity updated to {}", cartItemId, quantity);
-            response.sendRedirect(request.getContextPath() + "/cart/view?updated=true");
-        } catch (Exception e) {
-            log.error("Error updating quantity", e);
-            response.sendRedirect(request.getContextPath() + "/cart/view?error=true");
         }
+        json.append("],");
+        json.append("\"total\":").append(total);
+        json.append("}");
+
+        sendJson(response, json.toString());
     }
 
-    /**
-     * Добавить комментарий к товару в корзине
-     */
-    private void handleAddComment(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-
-        Long clientId = (Long) request.getSession().getAttribute("userId");
+    private void handleAddToCart(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        Long clientId = getClientId(request, response);
         if (clientId == null) {
-            response.sendRedirect(request.getContextPath() + "/client/login");
             return;
         }
 
-        try {
-            Long cartItemId = Long.parseLong(request.getParameter("cartItemId"));
-            String comment = request.getParameter("comment");
+        Long productId = Long.parseLong(request.getParameter("productId"));
+        int quantity = Integer.parseInt(request.getParameter("quantity") != null ?
+                request.getParameter("quantity") : "1");
 
-            // TODO: Реализовать добавление комментария
-            // CartItem item = cartService.getCartItem(cartItemId);
-            // item.setComment(comment);
-            // cartService.updateItem(cartItemId, item);
+        cartService.addToCart(clientId, productId, quantity);
+        sendSuccess(response);
+    }
 
-            log.info("Comment added to item {}", cartItemId);
-            response.sendRedirect(request.getContextPath() + "/cart/view?comment=added");
-        } catch (Exception e) {
-            log.error("Error adding comment", e);
-            response.sendRedirect(request.getContextPath() + "/cart/view?error=true");
+    private void handleRemoveFromCart(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        Long clientId = getClientId(request, response);
+        if (clientId == null) {
+            return;
         }
+
+        Long cartItemId = Long.parseLong(request.getParameter("cartItemId"));
+        cartService.removeFromCart(clientId, cartItemId);
+        sendSuccess(response);
+    }
+
+    private void handleUpdateQuantity(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        Long clientId = getClientId(request, response);
+        if (clientId == null) {
+            return;
+        }
+
+        Long cartItemId = Long.parseLong(request.getParameter("cartItemId"));
+        int quantity = Integer.parseInt(request.getParameter("quantity"));
+        cartService.updateQuantity(clientId, cartItemId, quantity);
+        sendSuccess(response);
+    }
+
+    private Long getClientId(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        Long clientId = (Long) request.getSession().getAttribute("userId");
+        if (clientId == null) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            sendError(response, "Пользователь не авторизован");
+        }
+        return clientId;
+    }
+
+    private void sendJson(HttpServletResponse response, String payload) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(payload);
+    }
+
+    private void sendSuccess(HttpServletResponse response) throws IOException {
+        sendJson(response, "{\"status\":\"ok\"}");
+    }
+
+    private void sendError(HttpServletResponse response, String message) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        response.getWriter().write("{\"error\":\"" + escape(message) + "\"}");
+    }
+
+    private String escape(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r");
     }
 }
-

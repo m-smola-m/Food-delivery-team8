@@ -2,6 +2,7 @@ package com.team8.fooddelivery.service.impl;
 
 import com.team8.fooddelivery.model.shop.Shop;
 import com.team8.fooddelivery.model.shop.ShopStatus;
+import com.team8.fooddelivery.model.shop.ShopType;
 import com.team8.fooddelivery.repository.ShopRepository;
 import com.team8.fooddelivery.service.ShopInfoService;
 import org.mindrot.jbcrypt.BCrypt;
@@ -254,6 +255,15 @@ public class ShopInfoServiceImpl implements ShopInfoService {
   }
 
   @Override
+  public List<Shop> getShopsByType(ShopType type) {
+    try {
+      return shopRepository.findByType(type);
+    } catch (SQLException e) {
+      logger.error("Ошибка при загрузке списка магазинов по типу {}", type, e);
+      throw new RuntimeException("Не удалось загрузить магазины по типу", e);
+    }
+  }
+
   public Shop login(String login, String password) {
     if (login == null || password == null) {
       throw new IllegalArgumentException("Логин и пароль обязательны");

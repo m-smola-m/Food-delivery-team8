@@ -3,6 +3,7 @@ package com.team8.fooddelivery.repository;
 import com.team8.fooddelivery.model.shop.Shop;
 import com.team8.fooddelivery.model.shop.ShopStatus;
 import com.team8.fooddelivery.model.shop.ShopType;
+import com.team8.fooddelivery.model.shop.WorkingHours;
 import com.team8.fooddelivery.service.DatabaseConnectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -125,10 +126,26 @@ public class ShopRepository {
     }
   }
 
+  public List<Shop> findByType(ShopType type) throws SQLException {
+    String sql = "SELECT * FROM shops WHERE type = ?";
+
+    try (Connection conn = DatabaseConnectionService.getConnection();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+      stmt.setString(1, type.name());
+      ResultSet rs = stmt.executeQuery();
+
+      List<Shop> shops = new ArrayList<>();
+      while (rs.next()) {
+        shops.add(mapResultSetToShop(rs, conn));
+      }
+      return shops;
+    }
+  }
+
   public void update(Shop shop) throws SQLException {
     String sql = "UPDATE shops SET naming=?, description=?, public_email=?, email_for_auth=?, phone_for_auth=?, " +
-        "public_phone=?, status=?, address_id=?, working_hours_id=?, owner_name=?, owner_contact_phone=?, " +
-        "rating=?, type=?, password=? WHERE shop_id=?";
+        "public_phone=?, status=?, address_id=?, working_hours_id=?, owner_name=?, owner_contact_phone=?, rating=?, type=?, password=? WHERE shop_id=?";
 
     try (Connection conn = DatabaseConnectionService.getConnection();
          PreparedStatement stmt = conn.prepareStatement(sql)) {

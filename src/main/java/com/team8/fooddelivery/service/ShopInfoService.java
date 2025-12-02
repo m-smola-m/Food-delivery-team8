@@ -1,7 +1,7 @@
 package com.team8.fooddelivery.service;
 
 import com.team8.fooddelivery.model.shop.Shop;
-
+import com.team8.fooddelivery.model.shop.ShopType;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,7 +22,7 @@ public interface ShopInfoService {
   List<Shop> getAllShops();
 
   Optional<Shop> getShopById(Long shopId);
+  List<Shop> getShopsByType(ShopType type);
 
-  Shop login(String login, String password);
 
 }

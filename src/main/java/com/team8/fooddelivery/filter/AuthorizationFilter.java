@@ -20,7 +20,10 @@ public class AuthorizationFilter implements Filter {
         "/client/register",
         "/courier/login",
         "/shop/login",
-        "/shop/register"
+        "/shop/register",
+        "/shop/list",
+        "/shop/details",
+        "/shop/list-api"
     );
 
     @Override

@@ -34,6 +34,10 @@ public class ProductServlet extends HttpServlet {
             handleAddForm(request, response);
         } else if ("/edit-form".equals(pathInfo)) {
             handleEditForm(request, response);
+        } else if ("/by-shop".equals(pathInfo)) {
+            handleProductsByShop(request, response);
+        } else if ("/categories".equals(pathInfo)) {
+            handleShopCategories(request, response);
         } else {
             response.sendError(404);
         }
@@ -116,11 +120,9 @@ public class ProductServlet extends HttpServlet {
         
         try {
             Long productId = Long.parseLong(request.getParameter("id"));
-            // TODO: Получить товар по ID
-            // Product product = productService.getProductById(productId);
-            
+            // TODO: Получить товар по ID (не критично для текущей задачи)
             request.setAttribute("categories", ProductCategory.values());
-            request.setAttribute("product", null); // TODO: product
+            request.setAttribute("product", null);
             request.setAttribute("isEdit", true);
             request.getRequestDispatcher("/WEB-INF/jsp/shop/product-form.jsp").forward(request, response);
         } catch (Exception e) {
@@ -263,5 +265,83 @@ public class ProductServlet extends HttpServlet {
             log.error("Error toggling availability", e);
             response.sendRedirect(request.getContextPath() + "/products/list?error=toggle_failed");
         }
+    }
+
+    private void handleProductsByShop(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        try {
+            Long shopId = Long.parseLong(request.getParameter("shopId"));
+            String categoryParam = request.getParameter("category");
+
+            List<Product> products;
+            if (categoryParam != null && !categoryParam.isEmpty()) {
+                ProductCategory category = ProductCategory.valueOf(categoryParam);
+                products = productService.getProductsByCategory(shopId, category);
+            } else {
+                products = productService.getShopProducts(shopId);
+            }
+            sendJson(response, productsToJson(products));
+        } catch (Exception e) {
+            log.error("Error loading products by shop", e);
+            response.sendError(500);
+        }
+    }
+
+    private void handleShopCategories(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        try {
+            Long shopId = Long.parseLong(request.getParameter("shopId"));
+            List<ProductCategory> categories = productService.getShopCategories(shopId);
+            sendJson(response, categoriesToJson(categories));
+        } catch (Exception e) {
+            log.error("Error loading categories", e);
+            response.sendError(500);
+        }
+    }
+
+    private void sendJson(HttpServletResponse response, String payload) throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(payload);
+    }
+
+    private String productsToJson(List<Product> products) {
+        StringBuilder json = new StringBuilder("[");
+        for (int i = 0; i < products.size(); i++) {
+            Product product = products.get(i);
+            json.append("{")
+                .append("\"productId\":").append(product.getProductId()).append(",")
+                .append("\"name\":\"").append(escape(product.getName())).append("\",")
+                .append("\"description\":\"").append(escape(product.getDescription())).append("\",")
+                .append("\"price\":").append(product.getPrice()).append(",")
+                .append("\"weight\":").append(product.getWeight() != null ? product.getWeight() : 0).append(",")
+                .append("\"category\":\"").append(product.getCategory() != null ? product.getCategory().name() : "").append("\"")
+                .append("}");
+            if (i < products.size() - 1) {
+                json.append(",");
+            }
+        }
+        json.append("]");
+        return json.toString();
+    }
+
+    private String categoriesToJson(List<ProductCategory> categories) {
+        StringBuilder json = new StringBuilder("[");
+        for (int i = 0; i < categories.size(); i++) {
+            json.append("\"").append(categories.get(i).name()).append("\"");
+            if (i < categories.size() - 1) {
+                json.append(",");
+            }
+        }
+        json.append("]");
+        return json.toString();
+    }
+
+    private String escape(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r");
     }
 }

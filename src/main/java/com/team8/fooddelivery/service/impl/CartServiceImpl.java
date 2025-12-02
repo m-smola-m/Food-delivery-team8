@@ -2,12 +2,15 @@ package com.team8.fooddelivery.service.impl;
 
 import com.team8.fooddelivery.model.product.Cart;
 import com.team8.fooddelivery.model.product.CartItem;
+import com.team8.fooddelivery.model.product.Product;
 import com.team8.fooddelivery.repository.CartRepository;
 import com.team8.fooddelivery.repository.ClientRepository;
+import com.team8.fooddelivery.repository.ProductRepository;
 import com.team8.fooddelivery.service.CartService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -16,6 +19,7 @@ public class CartServiceImpl implements CartService {
     private static final Logger logger = LoggerFactory.getLogger(CartServiceImpl.class);
     private final CartRepository cartRepository = new CartRepository();
     private final ClientRepository clientRepository = new ClientRepository();
+    private final ProductRepository productRepository = new ProductRepository();
 
     // Используется ClientService при регистрации
     public Cart createCartForClient(Long clientId) {
@@ -156,7 +160,90 @@ public class CartServiceImpl implements CartService {
     public Long calculateTotal(Long clientId) {
         Cart cart = getCartForClient(clientId);
         if (cart == null) return 0L;
-        return cart.getTotalPrice(); // totalPrice = Long
+        return cart.getTotalPrice();
+    }
+
+    @Override
+    public BigDecimal getCartTotal(Long clientId) {
+        return BigDecimal.valueOf(calculateTotal(clientId));
+    }
+
+    @Override
+    public void addToCart(Long clientId, Long productId, int quantity) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Количество должно быть больше нуля");
+        }
+        try {
+            Product product = productRepository.findById(productId)
+                    .orElseThrow(() -> new IllegalArgumentException("Продукт не найден"));
+
+            CartItem item = CartItem.builder()
+                    .productId(productId)
+                    .productName(product.getName())
+                    .quantity(quantity)
+                    .price(product.getPrice())
+                    .build();
+
+            addItem(clientId, item);
+        } catch (SQLException e) {
+            logger.error("Ошибка при добавлении продукта {} в корзину клиента {}", productId, clientId, e);
+            throw new RuntimeException("Не удалось добавить товар в корзину", e);
+        }
+    }
+
+    @Override
+    public void removeFromCart(Long clientId, Long cartItemId) {
+        try {
+            Cart cart = getOrCreate(clientId);
+            Optional<CartItem> itemOpt = cartRepository.findCartItemById(cartItemId);
+            if (itemOpt.isEmpty() || !itemOpt.get().getCartId().equals(cart.getId())) {
+                throw new IllegalArgumentException("Товар не найден в корзине клиента");
+            }
+            cartRepository.deleteCartItem(cartItemId);
+            cart.getItems().removeIf(i -> i.getId().equals(cartItemId));
+        } catch (SQLException e) {
+            logger.error("Ошибка при удалении товара {} из корзины клиента {}", cartItemId, clientId, e);
+            throw new RuntimeException("Не удалось удалить товар из корзины", e);
+        }
+    }
+
+    @Override
+    public void updateQuantity(Long clientId, Long cartItemId, int quantity) {
+        if (quantity <= 0) {
+            removeFromCart(clientId, cartItemId);
+            return;
+        }
+        try {
+            Cart cart = getOrCreate(clientId);
+            Optional<CartItem> itemOpt = cartRepository.findCartItemById(cartItemId);
+            if (itemOpt.isEmpty() || !itemOpt.get().getCartId().equals(cart.getId())) {
+                throw new IllegalArgumentException("Товар не найден в корзине клиента");
+            }
+            CartItem item = itemOpt.get();
+            item.setQuantity(quantity);
+            cartRepository.updateCartItem(item);
+            cart.getItems().stream()
+                    .filter(i -> i.getId().equals(cartItemId))
+                    .findFirst()
+                    .ifPresent(i -> i.setQuantity(quantity));
+        } catch (SQLException e) {
+            logger.error("Ошибка при обновлении количества для элемента {} клиента {}", cartItemId, clientId, e);
+            throw new RuntimeException("Не удалось обновить количество товара", e);
+        }
+    }
+
+    @Override
+    public List<CartItem> getCartItemsForClient(Long clientId) {
+        Cart cart = getCartForClient(clientId);
+        if (cart == null) {
+            return Collections.emptyList();
+        }
+        try {
+            return cartRepository.findItemsByCartId(cart.getId());
+        } catch (SQLException e) {
+            logger.error("Ошибка при получении элементов корзины клиента {}", clientId, e);
+            return Collections.emptyList();
+        }
     }
 
     // ---------------------------------
@@ -196,5 +283,19 @@ public class CartServiceImpl implements CartService {
             throw new RuntimeException("Не удалось проверить клиента", e);
         }
     }
-}
 
+    @Override
+    public Cart getCartByClientId(Long clientId) {
+        return getCartForClient(clientId);
+    }
+
+    @Override
+    public List<CartItem> getCartItems(Long cartId) {
+        try {
+            return cartRepository.findItemsByCartId(cartId);
+        } catch (SQLException e) {
+            logger.error("Error getting cart items for cart {}", cartId, e);
+            return Collections.emptyList();
+        }
+    }
+}
