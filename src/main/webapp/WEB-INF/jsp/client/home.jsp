@@ -28,9 +28,15 @@
         .summary-total { font-size: 20px; font-weight: bold; color: #23a340; border-top: 2px solid #ddd; padding-top: 10px; margin-top: 10px; }
         .empty-state { padding: 40px; text-align: center; color: #777; border: 1px dashed #ccc; border-radius: 8px; }
         .orders-list, .notifications-list { margin-top: 20px; display: flex; flex-direction: column; gap: 12px; }
-        .order-card, .notification-card { border: 1px solid #ddd; border-radius: 8px; padding: 15px; background: #fff; }
-        .order-items { margin-top: 10px; font-size: 14px; color: #555; }
-        .notification-card.unread { border-color: #007bff; box-shadow: 0 2px 8px rgba(0,123,255,0.15); }
+        .order-card, .notification-card { border: 1px solid #ddd; border-radius: 8px; padding: 15px; background: #fff; transition: all 0.3s ease; position: relative; }
+        .notification-card.unread { border-left: 4px solid #007bff; background: #f8f9ff; box-shadow: 0 2px 8px rgba(0,123,255,0.1); }
+        .notification-card.unread strong { color: #007bff; }
+        .notification-card.unread::before { content: ''; position: absolute; top: 15px; right: 15px; width: 10px; height: 10px; background: #dc3545; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 1px #dc3545; }
+        @keyframes markAsRead {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+            100% { transform: scale(0); opacity: 0; }
+        }
     </style>
 </head>
 <body>
@@ -448,27 +454,65 @@
         fetch('${pageContext.request.contextPath}/client/notifications-api')
             .then(r => r.json())
             .then(list => {
+                console.log('Notifications received:', list);
                 const container = document.getElementById('notificationsContainer');
-                if (!list.length) {
+                if (!list || !list.length) {
                     container.innerHTML = '<div class="empty-state">Уведомлений нет</div>';
                     return;
                 }
-                container.innerHTML = list.map(n => `
-                    <div class="notification-card ${n.isRead ? '' : 'unread'}">
-                        <div style="display:flex; justify-content:space-between;">
-                            <strong>${n.type}</strong>
-                            <span>${n.createdAt}</span>
-                        </div>
-                        <p>${n.message}</p>
-                    </div>`).join('');
+
+                container.innerHTML = list.map(n => {
+                    const type = n.type || 'Уведомление';
+                    const message = n.message || '';
+                    const createdAt = n.createdAt || n.timestamp || '';
+                    const readFlag = n.isRead;
+                    const isRead = (typeof readFlag === 'boolean' ? readFlag : n.read) ? '' : 'unread';
+                    console.log('Notification:', type, 'isRead:', n.isRead, 'class:', isRead);
+
+                    return '<div class="notification-card ' + isRead + '" data-is-read="' + n.isRead + '">' +
+                        '<div style="display:flex; justify-content:space-between;">' +
+                        '<strong>' + escapeHtml(type) + '</strong>' +
+                        '<span>' + escapeHtml(createdAt) + '</span>' +
+                        '</div>' +
+                        '<p>' + escapeHtml(message) + '</p>' +
+                        '</div>';
+                }).join('');
             })
-            .catch(() => document.getElementById('notificationsContainer').innerHTML = '<div class="empty-state">Ошибка загрузки уведомлений</div>');
+            .catch((err) => {
+                console.error('Failed to load notifications:', err);
+                document.getElementById('notificationsContainer').innerHTML = '<div class="empty-state">Ошибка загрузки уведомлений</div>';
+            });
     }
 
     function markNotificationsRead() {
-        fetch('${pageContext.request.contextPath}/client/notifications/read', {
+        fetch('${pageContext.request.contextPath}/client/notifications/readAll', {
             method: 'POST'
-        }).then(() => loadNotifications());
+        })
+            .then(r => {
+                if (!r.ok) {
+                    alert('Не удалось отметить уведомления как прочитанные');
+                    return;
+                }
+
+                const btn = document.querySelector('button[onclick="markNotificationsRead()"]');
+                if (btn) {
+                    const originalText = btn.textContent;
+                    btn.textContent = '✓ Отмечено!';
+                    btn.disabled = true;
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                        btn.disabled = false;
+                    }, 2000);
+                }
+
+                document.querySelectorAll('.notification-card.unread').forEach(card => {
+                    card.classList.remove('unread');
+                    card.style.animation = 'markAsRead 0.5s ease-out';
+                });
+
+                setTimeout(loadNotifications, 500);
+            })
+            .catch(() => alert('Ошибка сети при попытке отметить уведомления как прочитанные'));
     }
 
     function repeatOrder(orderId) {

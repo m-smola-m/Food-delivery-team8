@@ -51,7 +51,8 @@ public class DatabaseInitializerService {
       "sql/test_data/007_insert_order_items.sql",
       "sql/test_data/008_insert_carts.sql",
       "sql/test_data/009_insert_cart_items.sql",
-      "sql/test_data/010_insert_payments.sql"
+      "sql/test_data/010_insert_payments.sql",
+      "sql/test_data/011_insert_notifications.sql"
   );
 
   /**

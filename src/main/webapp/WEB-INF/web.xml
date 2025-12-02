@@ -105,6 +105,16 @@
         <url-pattern>/products/*</url-pattern>
     </servlet-mapping>
 
+    <!-- Logout Servlet -->
+    <servlet>
+        <servlet-name>LogoutServlet</servlet-name>
+        <servlet-class>com.team8.fooddelivery.servlet.LogoutServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>LogoutServlet</servlet-name>
+        <url-pattern>/logout</url-pattern>
+    </servlet-mapping>
+
     <!-- Error Pages -->
     <error-page>
         <error-code>404</error-code>

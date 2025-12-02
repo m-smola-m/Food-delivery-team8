@@ -91,8 +91,9 @@ public class ClientServlet extends HttpServlet {
     // POST
     // ====================================================================
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws IOException, ServletException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        log.info("doPost called with action: {}", request.getParameter("action"));
+        String action = request.getParameter("action");
 
         String path = request.getPathInfo();
         if (path == null) {
@@ -106,7 +107,7 @@ public class ClientServlet extends HttpServlet {
                 case "/login" -> login(request, response);
                 case "/update-profile" -> updateProfile(request, response);
                 case "/deactivate" -> deactivate(request, response);
-                case "/notifications/read" -> markNotificationsRead(request, response);
+                case "/notifications/readAll" -> markNotificationsRead(request, response);
                 case "/orders/repeat" -> repeatOrder(request, response);
                 default -> response.sendError(404);
             }
@@ -346,10 +347,18 @@ public class ClientServlet extends HttpServlet {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
-        notificationService.markAllAsRead(userId);
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        response.getWriter().write("{\"status\":\"ok\"}");
+        try {
+            notificationService.markAllAsRead(userId);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().write("{\"status\":\"ok\"}");
+        } catch (Exception e) {
+            log.error("Failed to mark notifications as read for client {}", userId, e);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().write("{\"status\":\"error\", \"message\":\"" + escape(e.getMessage()) + "\"}");
+        }
     }
 
     private void repeatOrder(HttpServletRequest request, HttpServletResponse response) throws IOException {

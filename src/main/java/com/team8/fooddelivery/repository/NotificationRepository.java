@@ -49,7 +49,7 @@ public class NotificationRepository {
     }
 
     public void markAllAsRead(Long clientId) throws SQLException {
-        String sql = "UPDATE notifications SET is_read = TRUE WHERE client_id = ?";
+        String sql = "UPDATE notifications SET is_read = TRUE WHERE client_id = ? AND is_read = FALSE";
         try (Connection conn = DatabaseConnectionService.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, clientId);

@@ -15,6 +15,7 @@ public class NotificationServiceImpl {
 
     private static final Logger logger = LoggerFactory.getLogger(NotificationServiceImpl.class);
     private static final NotificationServiceImpl INSTANCE = new NotificationServiceImpl();
+
     private final NotificationRepository notificationRepository = new NotificationRepository();
 
     private NotificationServiceImpl() {
