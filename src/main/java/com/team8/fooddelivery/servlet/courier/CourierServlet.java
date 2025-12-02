@@ -1,5 +1,6 @@
 package com.team8.fooddelivery.servlet.courier;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.team8.fooddelivery.model.courier.Courier;
 import com.team8.fooddelivery.model.order.Order;
 import com.team8.fooddelivery.service.CourierManagementService;
@@ -21,7 +22,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
 
 @WebServlet("/courier/*")
 public class CourierServlet extends HttpServlet {
@@ -53,6 +56,8 @@ public class CourierServlet extends HttpServlet {
             case "/dashboard" -> handleDashboard(request, response);
             case "/orders" -> handleOrders(request, response);
             case "/history" -> handleHistory(request, response);
+            case "/earnings" -> handleEarnings(request, response);
+            case "/today-history" -> handleTodayHistory(request, response);
             case "/register" -> request.getRequestDispatcher("/WEB-INF/jsp/courier/register.jsp").forward(request, response);
             case "/login" -> request.getRequestDispatcher("/WEB-INF/jsp/courier/login.jsp").forward(request, response);
             default -> response.sendError(404);
@@ -79,6 +84,8 @@ public class CourierServlet extends HttpServlet {
                 case "/accept" -> handleAcceptOrder(request, response);
                 case "/pickup" -> handlePickup(request, response);
                 case "/complete" -> handleComplete(request, response);
+                case "/status" -> handleStatus(request, response);
+                case "/withdraw" -> handleWithdraw(request, response);
                 default -> response.sendError(404);
             }
         } catch (Exception e) {
@@ -257,14 +264,16 @@ public class CourierServlet extends HttpServlet {
 
         Long courierId = SessionManager.getUserId(request.getSession());
         if (courierId == null) {
-            response.sendRedirect(request.getContextPath() + "/courier/login");
+            response.sendError(401);
             return;
         }
 
         List<Order> orders = orderService.getAvailableOrdersForCourier();
 
-        request.setAttribute("availableOrders", orders);
-        request.getRequestDispatcher("/WEB-INF/jsp/courier/orders.jsp").forward(request, response);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.writeValue(response.getWriter(), orders);
     }
 
 
@@ -290,6 +299,105 @@ public class CourierServlet extends HttpServlet {
 
         request.setAttribute("deliveryHistory", history);
         request.setAttribute("selectedDate", date);
-        request.getRequestDispatcher("/WEB-INF/jsp/courier/history.jsp").forward(request, response);
+        request.getRequestDispatcher("/courier_history.jsp").forward(request, response);
+    }
+
+
+    // ======================================================================
+    // EARNINGS
+    // ======================================================================
+
+    private void handleEarnings(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        Long courierId = SessionManager.getUserId(request.getSession());
+        if (courierId == null) {
+            response.sendError(401);
+            return;
+        }
+
+        List<Order> history = cws.getOrderHistory(courierId);
+        double earnings = history.stream()
+                .filter(o -> o.getUpdatedAt() != null && o.getUpdatedAt().atZone(ZoneId.systemDefault()).toLocalDate().equals(LocalDate.now()))
+                .mapToDouble(o -> 100.0) // Mock earnings per order
+                .sum();
+
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.writeValue(response.getWriter(), Map.of("earnings", earnings));
+    }
+
+
+    // ======================================================================
+    // TODAY'S DELIVERY HISTORY
+    // ======================================================================
+
+    private void handleTodayHistory(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        Long courierId = SessionManager.getUserId(request.getSession());
+        if (courierId == null) {
+            response.sendError(401);
+            return;
+        }
+
+        List<Order> history = cws.getOrderHistory(courierId);
+        List<Order> todayHistory = history.stream()
+                .filter(o -> o.getUpdatedAt() != null && o.getUpdatedAt().atZone(ZoneId.systemDefault()).toLocalDate().equals(LocalDate.now()))
+                .toList();
+
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.writeValue(response.getWriter(), todayHistory);
+    }
+
+
+    // ======================================================================
+    // STATUS UPDATE
+    // ======================================================================
+
+    private void handleStatus(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+
+        Long courierId = SessionManager.getUserId(request.getSession());
+        if (courierId == null) {
+            response.sendError(401);
+            return;
+        }
+
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String, Object> body = mapper.readValue(request.getInputStream(), Map.class);
+        String newStatus = (String) body.get("newStatus");
+        Long currentOrderId = body.get("currentOrderId") != null ? ((Number) body.get("currentOrderId")).longValue() : null;
+
+        if ("online".equals(newStatus)) {
+            cws.startShift(courierId);
+        } else if ("offline".equals(newStatus)) {
+            cws.endShift(courierId);
+        } else if ("on_delivery".equals(newStatus) && currentOrderId != null) {
+            cws.acceptOrder(courierId, currentOrderId);
+        }
+
+        response.setStatus(200);
+    }
+
+
+    // ======================================================================
+    // WITHDRAW
+    // ======================================================================
+
+    private void handleWithdraw(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+
+        Long courierId = SessionManager.getUserId(request.getSession());
+        if (courierId == null) {
+            response.sendRedirect(request.getContextPath() + "/courier/login");
+            return;
+        }
+
+        cws.withdraw(courierId);
+        response.sendRedirect(request.getContextPath() + "/courier/dashboard?withdrawn=true");
     }
 }

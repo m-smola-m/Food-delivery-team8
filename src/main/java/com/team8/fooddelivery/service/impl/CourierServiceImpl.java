@@ -233,4 +233,19 @@ public class CourierServiceImpl implements CourierService, CourierManagementServ
             return null;
         }
     }
+
+    @Override
+    public void withdraw(Long courierId) {
+        try {
+            Optional<Courier> courierOpt = courierRepository.findById(courierId);
+            if (courierOpt.isPresent()) {
+                Courier c = courierOpt.get();
+                // For simplicity, withdraw all balance
+                c.setCurrentBalance(0.0);
+                courierRepository.update(c);
+            }
+        } catch (SQLException e) {
+            logger.error("Ошибка при выводе средств", e);
+        }
+    }
 }

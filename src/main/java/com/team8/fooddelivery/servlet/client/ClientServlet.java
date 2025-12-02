@@ -3,7 +3,8 @@ package com.team8.fooddelivery.servlet.client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.team8.fooddelivery.dto.OrderHistoryResponse;
+import com.team8.fooddelivery.util.OrderHistoryResponse;
+import com.team8.fooddelivery.util.NotificationDto;
 import com.team8.fooddelivery.model.Address;
 import com.team8.fooddelivery.model.AuthResponse;
 import com.team8.fooddelivery.model.client.Client;
@@ -28,12 +29,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @WebServlet("/client/*")
 public class ClientServlet extends HttpServlet {
 
     private static final Logger log = LoggerFactory.getLogger(ClientServlet.class);
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss").withZone(ZoneId.systemDefault());
 
     private final CartServiceImpl cartService = new CartServiceImpl();
     private final ClientService clientService = new ClientServiceImpl(new ClientRepository(), cartService);
@@ -204,16 +208,24 @@ public class ClientServlet extends HttpServlet {
         String password = request.getParameter("password");
 
         try {
-            AuthResponse auth = clientService.login(login, password);
-            Client client = clientService.getById(auth.getClientId());
+            // Сначала найдем клиента, чтобы проверить его статус
+            Client client = clientService.getByPhone(login);
+            if (client == null) {
+                client = clientService.getByEmail(login);
+            }
 
-            if (client.getStatus() == ClientStatus.INACTIVE) {
+            // Если клиент существует и он неактивен, выводим ошибку
+            if (client != null && !client.isActive()) {
                 request.setAttribute("error", "Ваш аккаунт деактивирован. Обратитесь в поддержку.");
                 request.getRequestDispatcher("/WEB-INF/jsp/client/login.jsp").forward(request, response);
                 return;
             }
 
-            SessionManager.createSession(request.getSession(), client);
+            // Если клиент активен или не найден, продолжаем стандартную процедуру входа
+            AuthResponse auth = clientService.login(login, password);
+            Client loggedInClient = clientService.getById(auth.getClientId());
+
+            SessionManager.createSession(request.getSession(), loggedInClient);
 
             // сохраняем JWT
             request.getSession().setAttribute("token", auth.getAuthToken());
@@ -222,7 +234,7 @@ public class ClientServlet extends HttpServlet {
 
         } catch (Exception e) {
             log.warn("Login failed: {}", e.getMessage());
-            request.setAttribute("error", e.getMessage());
+            request.setAttribute("error", "Неверный логин или пароль");
             request.getRequestDispatcher("/WEB-INF/jsp/client/login.jsp").forward(request, response);
         }
     }
@@ -337,7 +349,7 @@ public class ClientServlet extends HttpServlet {
                         .id(order.getId())
                         .status(order.getStatus() != null ? order.getStatus().name() : "")
                         .total(order.getTotalPrice())
-                        .createdAt(order.getCreatedAt() != null ? order.getCreatedAt().toString() : "")
+                        .createdAt(order.getCreatedAt() != null ? FORMATTER.format(order.getCreatedAt()) : "")
                         .items(order.getItems().stream()
                                 .map(item -> OrderHistoryResponse.Item.builder()
                                         .name(item.getProductName())
@@ -359,9 +371,19 @@ public class ClientServlet extends HttpServlet {
             return;
         }
         List<Notification> notifications = notificationService.getNotifications(userId);
+        List<NotificationDto> dtos = notifications.stream()
+                .map(n -> NotificationDto.builder()
+                        .id(n.getId())
+                        .clientId(n.getClientId())
+                        .type(n.getType())
+                        .message(n.getMessage())
+                        .timestamp(n.getTimestamp() != null ? FORMATTER.format(n.getTimestamp().atZone(ZoneId.systemDefault())) : "")
+                        .isRead(n.isRead())
+                        .build())
+                .toList();
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        objectMapper.writeValue(response.getWriter(), notifications);
+        objectMapper.writeValue(response.getWriter(), dtos);
     }
 
     private void markNotificationsRead(HttpServletRequest request, HttpServletResponse response) throws IOException {

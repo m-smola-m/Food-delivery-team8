@@ -38,7 +38,7 @@
 
         <div class="courier-actions">
             <c:choose>
-                <c:when test="${courier.status == 'OFFLINE' || courier.status == 'offline'}">
+                <c:when test="${courier.status == 'OFF_SHIFT'}">
                     <form method="POST" action="${pageContext.request.contextPath}/courier/start-shift" class="inline-form">
                         <label for="lastAddress">Адрес начала смены</label>
                         <input type="text" id="lastAddress" name="lastAddress" value="${courier.lastAddress}" placeholder="Укажите, где вы находитесь" required>

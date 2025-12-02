@@ -1,4 +1,4 @@
-package com.team8.fooddelivery.dto;
+package com.team8.fooddelivery.util;
 
 import lombok.Builder;
 import lombok.Value;
@@ -22,4 +22,5 @@ public class OrderHistoryResponse {
         Double price;
     }
 }
+
 
