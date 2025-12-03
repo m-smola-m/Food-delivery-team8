@@ -11,9 +11,9 @@
 ## TL;DR
 | Цель | Команда |
 |------|---------|
-| Поднять БД | `docker compose up -d postgres`
+| Поднять БД | `docker compose up`
 | Накатить схему | `PGPASSWORD=postgres psql -h localhost -U postgres -d food_delivery -f src/main/resources/sql/007_main_schema.sql`
-| Собрать | `mvn clean package -DskipTests`
+| Собрать | `mvn clean package`
 | **Запустить с фронтом** | `java -jar target/food-delivery-0.0.1-SNAPSHOT.jar`
 | **Запустить только API/JDBC** | `mvn exec:java -Dexec.mainClass=com.team8.fooddelivery.MainApplication` *(или используйте сервлеты через IDE/Tomcat)*
 
