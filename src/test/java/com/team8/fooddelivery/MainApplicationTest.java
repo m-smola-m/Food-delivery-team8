@@ -1,4 +1,4 @@
-/*package com.team8.fooddelivery;
+package com.team8.fooddelivery;
 
 import org.junit.jupiter.api.Test;
 import java.io.IOException;
@@ -17,20 +17,6 @@ class MainApplicationTest {
             assertTrue(java.lang.reflect.Modifier.isStatic(method.getModifiers()));
             assertTrue(java.lang.reflect.Modifier.isPublic(method.getModifiers()));
         });
-    }
-
-    @Test
-    void testMainMethodCanBeCalled() {
-        // Вызываем main метод - он может упасть, но это нормально для теста покрытия
-        try {
-            MainApplication.main(new String[]{});
-        } catch (Exception e) {
-            // Ожидаемо - скрипт может не существовать или БД может быть недоступна
-            assertTrue(e instanceof RuntimeException || 
-                      e instanceof IOException || 
-                      e instanceof InterruptedException ||
-                      e.getCause() instanceof RuntimeException);
-        }
     }
 
     @Test
@@ -54,4 +40,3 @@ class MainApplicationTest {
         assertTrue(true, "Method runSchemeScript does not exist");
     }
 }
- */
