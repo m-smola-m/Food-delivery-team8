@@ -8,6 +8,7 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
+@Builder
 public class Shop {  // Shop
   private Long shopId;
   private String naming;
