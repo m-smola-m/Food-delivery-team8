@@ -9,13 +9,14 @@ import java.sql.SQLException;
 
 public class ShopUserStory {
   public static void main(String[] args) {
-    DatabaseInitializerService.initializeDatabase();
+    DatabaseInitializerService.resetDatabaseWithTestData();
 
     ShopInfoServiceImpl service = new ShopInfoServiceImpl();
     ShopRepository shopRepository = new ShopRepository();
 
     String phone = "+79123456789";
     String email = "Test@mail.com";
+    String currentPassword = "Password123!";
 
     Shop shop;
     try {
@@ -27,7 +28,7 @@ public class ShopUserStory {
     if (shop.getShopId() == null) {
       shop.setNaming("Test Shop");
       shop.setPhoneForAuth(phone);
-      Shop registeredShop = service.registerShop(shop, email, "Password123!", phone);
+      Shop registeredShop = service.registerShop(shop, email, currentPassword, phone);
       shop = registeredShop;
       System.out.println("Магазин зарегистрирован: " + registeredShop.getShopId() + ", статус: " + registeredShop.getStatus());
     } else {
@@ -39,13 +40,15 @@ public class ShopUserStory {
 
     System.out.println(shop);
 
-    String passResult = service.changePassword(shop.getShopId(), email, phone, "NewPassword123!", "Password123!");
+    String newPassword = "NewPassword123!";
+    String passResult = service.changePassword(shop.getShopId(), email, phone, newPassword, currentPassword);
     System.out.println("Смена пароля: " + passResult);
+    currentPassword = newPassword;
 
-    String emailResult = service.changeEmailForAuth(shop.getShopId(), phone, "NewPassword123!", "new@mail.com");
+    String emailResult = service.changeEmailForAuth(shop.getShopId(), phone, currentPassword, "new@mail.com");
     System.out.println("Смена email: " + emailResult);
 
-    String phoneResult = service.changePhoneForAuth(shop.getShopId(), "new@mail.com", "NewPassword123!", "+79099999999");
+    String phoneResult = service.changePhoneForAuth(shop.getShopId(), "new@mail.com", currentPassword, "+79099999999");
     System.out.println("Смена телефона: " + phoneResult);
 
   }

@@ -13,9 +13,9 @@ import com.team8.fooddelivery.util.JWTUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.team8.fooddelivery.service.impl.NotificationServiceImpl;
 
 import java.sql.SQLException;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -23,14 +23,14 @@ import java.util.*;
 public class ClientServiceImpl implements ClientService {
 
     private static final Logger logger = LoggerFactory.getLogger(ClientServiceImpl.class);
-    NotificationServiceImpl notificationService = new NotificationServiceImpl();
+    private final NotificationServiceImpl notificationService = NotificationServiceImpl.getInstance();
 
     private final ClientRepository clientRepository;
     private final CartServiceImpl cartService;
 
-    public ClientServiceImpl(CartServiceImpl cartService) {
+    public ClientServiceImpl(ClientRepository clientRepository, CartServiceImpl cartService) {
         this.cartService = cartService;
-        this.clientRepository = new ClientRepository();
+        this.clientRepository = clientRepository;
     }
 
 
@@ -83,7 +83,7 @@ public class ClientServiceImpl implements ClientService {
                 .passwordHash(hashedPassword)
                 .email(email)
                 .address(address)
-                .createdAt(Instant.now())
+                .createdAt(LocalDateTime.now())
                 .status(ClientStatus.ACTIVE)
                 .isActive(true)
                 .cart(cart)

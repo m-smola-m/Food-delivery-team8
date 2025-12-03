@@ -8,14 +8,17 @@ import com.team8.fooddelivery.service.impl.CartServiceImpl;
 import com.team8.fooddelivery.service.impl.ClientServiceImpl;
 import com.team8.fooddelivery.util.JWTUtil;
 import com.team8.fooddelivery.service.DatabaseInitializerService;
+import com.team8.fooddelivery.repository.ClientRepository;
+import com.team8.fooddelivery.service.impl.NotificationServiceImpl;
 
 public class ClientUserStories {
 
     public static void main(String[] args) {
-        DatabaseInitializerService.initializeDatabase();
+        DatabaseInitializerService.resetDatabaseWithTestData();
 
         CartServiceImpl cartService = new CartServiceImpl();
-        ClientServiceImpl clientService = new ClientServiceImpl(cartService);
+        ClientServiceImpl clientService = new ClientServiceImpl(new ClientRepository(), cartService);
+        NotificationServiceImpl notificationService = NotificationServiceImpl.getInstance();
 
         // =====================
         // 1. Регистрация клиентов
@@ -35,11 +38,13 @@ public class ClientUserStories {
         Client c1 = clientService.getByPhone("89991112233");
         if (c1 == null) {
             c1 = clientService.register("89991112233", "Ivan123!", "Иван Иванов", "ivan@example.com", address1);
+            notificationService.notifyWelcome(c1.getId(), c1.getName());
         }
 
         Client c2 = clientService.getByPhone("89995556677");
         if (c2 == null) {
             c2 = clientService.register("89995556677", "Maria456@", "Мария Петрова", "maria@example.com", address2);
+            notificationService.notifyWelcome(c2.getId(), c2.getName());
         }
 
         System.out.println("Клиенты зарегистрированы:");
@@ -88,6 +93,7 @@ public class ClientUserStories {
         // 5. Обновление клиента (email)
         // =====================
         clientService.update(c2.getId(), null, "masha@example.com", address1);
+        notificationService.notifyAccount(c2.getId(), "Email обновлён");
         Client updatedC2 = clientService.getById(c2.getId());
         updatedC2.setStatus(ClientStatus.UPDATED);
         System.out.println("\nПосле обновления email второго клиента:");

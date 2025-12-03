@@ -13,6 +13,7 @@ import com.team8.fooddelivery.model.shop.Shop;
 import com.team8.fooddelivery.model.shop.ShopStatus;
 import com.team8.fooddelivery.repository.*;
 import com.team8.fooddelivery.service.DatabaseConnectionService;
+import com.team8.fooddelivery.service.DatabaseInitializerService;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.DisplayName;
 
@@ -37,15 +38,21 @@ public class OrderCourierIntegrationTest {
     String dbUrl = System.getProperty("db.url", "jdbc:postgresql://localhost:5432/food_delivery");
     String dbUser = System.getProperty("db.user", "postgres");
     String dbPassword = System.getProperty("db.password", "postgres");
+
     DatabaseConnectionService.setConnectionParams(dbUrl, dbUser, dbPassword);
 
     if (!DatabaseConnectionService.testConnection()) {
       throw new RuntimeException("Не удалось подключиться к базе данных");
     }
+    // Инициализируем схему один раз, если ее нет
+    DatabaseInitializerService.initializeDatabase();
   }
 
   @BeforeEach
   void setUp() {
+    // Сбрасываем БД к тестовым данным перед каждым тестом
+    DatabaseInitializerService.resetDatabaseWithTestData();
+
     courierRepository = new CourierRepository();
     clientRepository = new ClientRepository();
     shopRepository = new ShopRepository();

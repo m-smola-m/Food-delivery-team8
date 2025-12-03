@@ -9,6 +9,7 @@ import com.team8.fooddelivery.repository.CourierRepository;
 import com.team8.fooddelivery.repository.OrderRepository;
 import com.team8.fooddelivery.service.impl.CourierServiceImpl;
 import com.team8.fooddelivery.service.DatabaseInitializerService;
+import com.team8.fooddelivery.service.NotificationService;
 
 import java.sql.SQLException;
 import java.util.Comparator;
@@ -17,11 +18,12 @@ import java.util.Optional;
 public class CourierUserStory {
 
     public static void main(String[] args) {
-        DatabaseInitializerService.initializeDatabase();
+        DatabaseInitializerService.resetDatabaseWithTestData();
 
         CourierServiceImpl courierService = new CourierServiceImpl();
         CourierRepository courierRepository = new CourierRepository();
         OrderRepository orderRepository = new OrderRepository();
+        NotificationService notificationService = NotificationService.getInstance();
 
         System.out.println("=== СИСТЕМА ДОСТАВКИ: КУРЬЕР ===");
 
@@ -80,6 +82,7 @@ public class CourierUserStory {
         System.out.println("Заказ забран. Текущий статус: " + courierService.login(courierPhone, "Ivan123!").getStatus());
 
         courierService.completeOrder(courierId, order.getId());
+        notificationService.notifyDelivery(order.getCustomerId(), "Доставка заказа #" + order.getId());
         courier = courierService.login(courierPhone, "Ivan123!");
         System.out.println("Заказ доставлен. Статус: " + courier.getStatus());
         System.out.println("Баланс курьера: " + courier.getCurrentBalance());

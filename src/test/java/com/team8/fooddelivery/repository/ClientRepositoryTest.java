@@ -8,7 +8,7 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.DisplayName;
 
 import java.sql.SQLException;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -83,7 +83,7 @@ public class ClientRepositoryTest {
                 .address(address)
                 .status(ClientStatus.ACTIVE)
                 .isActive(true)
-                .createdAt(Instant.now())
+                .createdAt(LocalDateTime.now())
                 .orderHistory(List.of())
                 .build();
 
@@ -170,4 +170,3 @@ public class ClientRepositoryTest {
         assertTrue(clientOpt.isPresent(), "Клиент должен остаться в базе для последующих проверок");
     }
 }
-

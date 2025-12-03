@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -35,7 +35,7 @@ public class ClientRepository {
             stmt.setString(4, client.getEmail());
             stmt.setObject(5, addressId, Types.BIGINT);
             stmt.setString(6, client.getStatus() != null ? client.getStatus().name() : ClientStatus.ACTIVE.name());
-            stmt.setTimestamp(7, Timestamp.from(client.getCreatedAt() != null ? client.getCreatedAt() : Instant.now()));
+            stmt.setTimestamp(7, Timestamp.valueOf(client.getCreatedAt() != null ? client.getCreatedAt() : LocalDateTime.now()));
             stmt.setBoolean(8, client.isActive());
             
             Array orderHistoryArray = conn.createArrayOf("text", 
@@ -171,7 +171,7 @@ public class ClientRepository {
                 .passwordHash(rs.getString("password_hash"))
                 .email(rs.getString("email"))
                 .status(ClientStatus.valueOf(rs.getString("status")))
-                .createdAt(rs.getTimestamp("created_at").toInstant())
+                .createdAt(rs.getTimestamp("created_at").toLocalDateTime())
                 .isActive(rs.getBoolean("is_active"));
 
         Long addressId = rs.getObject("address_id", Long.class);

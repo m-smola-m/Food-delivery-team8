@@ -22,7 +22,9 @@ public class ShopProductServiceImpl implements ShopProductService {
   @Override
   public List<Product> getProductsByCategory(Long shopId, ProductCategory category) {
     try {
-      return productRepository.findByShopIdAndCategory(shopId, category);
+      return productRepository.findByShopIdAndCategory(shopId, category).stream()
+          .filter(Product::getAvailable)
+          .toList();
     } catch (SQLException e) {
       logger.error("Ошибка при получении продуктов по категории", e);
       return new ArrayList<>();
@@ -120,9 +122,20 @@ public class ShopProductServiceImpl implements ShopProductService {
   @Override
   public List<Product> getShopProducts(Long shopId) {
     try {
-      return productRepository.findByShopId(shopId);
+      return productRepository.findByShopId(shopId).stream()
+          .filter(Product::getAvailable)
+          .toList();
     } catch (SQLException e) {
       logger.error("Ошибка при получении продуктов магазина", e);
+      return new ArrayList<>();
+    }
+  }
+
+  public List<ProductCategory> getShopCategories(Long shopId) {
+    try {
+      return productRepository.findCategoriesByShopId(shopId);
+    } catch (SQLException e) {
+      logger.error("Ошибка при получении категорий магазина", e);
       return new ArrayList<>();
     }
   }

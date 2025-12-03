@@ -19,10 +19,9 @@ public class SimpleConnectionTest {
         String dbPassword = System.getProperty("db.password", "postgres");
 
         DatabaseConnectionService.setConnectionParams(dbUrl, dbUser, dbPassword);
-        DatabaseInitializerService.fullCleanDatabase();
         try {
-            DatabaseConnectionService.initializeDatabase();
-            System.out.println("✅ База данных успешно инициализирована");
+            DatabaseInitializerService.resetDatabaseWithTestData();
+            System.out.println("✅ База данных успешно пересоздана и наполнена тестовыми данными");
         } catch (Exception e) {
             System.err.println("❌ Ошибка инициализации БД: " + e.getMessage());
             throw new RuntimeException("Не удалось инициализировать тестовую БД", e);

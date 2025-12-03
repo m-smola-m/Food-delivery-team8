@@ -3,20 +3,20 @@ package com.team8.fooddelivery.service;
 public interface CourierService { // + methods from user stories + methods for courier management
 
 
-  void startShift(long courierId);
+  void startShift(Long courierId);
 
 
-  void endShift(long courierId);
+  void endShift(Long courierId);
 
 
-  boolean acceptOrder(long courierId, long currentOrderId);
+  boolean acceptOrder(Long courierId, Long orderId);
 
 
-  void pickupOrder(long courierId, long currentOrderId);
+  void pickupOrder(Long courierId, Long orderId);
 
 
-  void completeOrder(long courierId, long currentOrderId);
+  void completeOrder(Long courierId, Long orderId);
 
 
-  long registerNewCourier(String name, String phoneNumber, String transportType);
+  Long registerNewCourier(String name, String phoneNumber, String password, String transportType);
 }

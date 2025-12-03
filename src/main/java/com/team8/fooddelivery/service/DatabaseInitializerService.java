@@ -1,5 +1,6 @@
 package com.team8.fooddelivery.service;
 
+import com.team8.fooddelivery.util.SchemaBootstrap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,6 +11,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Класс для инициализации структуры базы данных
@@ -34,7 +36,23 @@ public class DatabaseInitializerService {
       "sql/002_create_shop_tables/006_add_shop_foreign_keys.sql",
       "sql/004_create_order_tables/012_add_cart_foreign_keys.sql",
       "sql/004_create_order_tables/013_create_payments.sql",
+      "sql/004_create_order_tables/017_create_notifications.sql",
       "sql/005_create_indexes/013_create_indexes.sql"
+  );
+
+  private static final List<String> TEST_DATA_FILES = Arrays.asList(
+      "sql/test_data/000_insert_addresses.sql",
+      "sql/test_data/001_insert_working_hours.sql",
+      "sql/test_data/002_insert_clients.sql",
+      "sql/test_data/003_insert_shops.sql",
+      "sql/test_data/004_insert_products.sql",
+      "sql/test_data/005_insert_couriers.sql",
+      "sql/test_data/006_insert_orders.sql",
+      "sql/test_data/007_insert_order_items.sql",
+      "sql/test_data/008_insert_carts.sql",
+      "sql/test_data/009_insert_cart_items.sql",
+      "sql/test_data/010_insert_payments.sql",
+      "sql/test_data/011_insert_notifications.sql"
   );
 
   /**
@@ -45,32 +63,32 @@ public class DatabaseInitializerService {
       logger.info("База данных уже инициализирована, повторная загрузка схемы пропущена");
       return;
     }
+    runSqlFiles(SQL_FILES);
+    ensureOrderColumns();
+  }
 
-    logger.info("Начинается инициализация базы данных...");
+  /**
+   * Полный цикл для user story: очистить БД, пересоздать схему и залить тестовые данные
+   */
+  public static void resetDatabaseWithTestData() {
+    logger.info("Полный сброс БД перед user story...");
+    tryFullCleanDatabase();
+    runSqlFiles(SQL_FILES);
+    ensureOrderColumns();
+    loadTestData();
+  }
 
-    try (Connection conn = DatabaseConnectionService.getConnection()) {
-      conn.setAutoCommit(false); // Начинаем транзакцию
-
-      try {
-        // Выполняем все SQL файлы в правильном порядке
-        for (String sqlFile : SQL_FILES) {
-          executeSqlFile(conn, sqlFile);
-        }
-
-        conn.commit(); // Коммитим транзакцию
-        logger.info("✅ База данных успешно инициализирована");
-
-      } catch (SQLException e) {
-        conn.rollback(); // Откатываем при ошибке
-        logger.error("❌ Ошибка инициализации базы данных, транзакция откачена", e);
-        throw new RuntimeException("Не удалось инициализировать базу данных", e);
-      } finally {
-        conn.setAutoCommit(true); // Восстанавливаем auto-commit
-      }
-
-    } catch (SQLException e) {
-      logger.error("❌ Ошибка подключения при инициализации базы данных", e);
-      throw new RuntimeException("Не удалось подключиться к базе данных", e);
+  /**
+   * Загружает тестовые данные в базу данных
+   */
+  public static void loadTestData() {
+    logger.info("Загрузка тестовых данных из sql/test_data...");
+    try {
+      runSqlFiles(TEST_DATA_FILES);
+      ensureOrderColumns();
+    } catch (Exception e) {
+      logger.warn("⚠️ Не удалось загрузить некоторые тестовые данные. Приложение все равно запустится, но без тестовых данных", e);
+      // Не выбрасываем исключение, позволяем приложению работать без тестовых данных
     }
   }
 
@@ -78,8 +96,11 @@ public class DatabaseInitializerService {
    * Выполняет SQL команды с улучшенной обработкой ошибок
    */
   private static void executeSqlStatements(Connection conn, String sql) throws SQLException {
+    // Удаляем комментарии перед выполнением
+    String cleanedSql = removeComments(sql);
+
     // Разделяем SQL на отдельные команды, игнорируя точки с запятой внутри кавычек
-    String[] statements = sql.split(";(?=(?:[^']*'[^']*')*[^']*$)");
+    String[] statements = cleanedSql.split(";(?=(?:[^']*'[^']*')*[^']*$)");
 
     for (String statement : statements) {
       String trimmed = statement.trim();
@@ -91,10 +112,42 @@ public class DatabaseInitializerService {
             logger.debug("Выполнено: {}", getStatementPreview(trimmed));
           }
         } catch (SQLException e) {
-          handleSqlException(trimmed, e);
+          // Логируем ошибку, но продолжаем выполнение остальных команд
+          String errorMsg = e.getMessage().toLowerCase();
+          if (errorMsg.contains("already exists") || errorMsg.contains("существует") ||
+              errorMsg.contains("duplicate key") || errorMsg.contains("уникальн")) {
+            logger.debug("⚠️ Объект уже существует, пропускаем: {}", getStatementPreview(trimmed));
+          } else {
+            logger.warn("⚠️ Ошибка выполнения SQL команды (пропускаем): {} | Ошибка: {}",
+                       getStatementPreview(trimmed), e.getMessage());
+          }
         }
       }
     }
+  }
+
+  /**
+   * Удаляет комментарии из SQL текста
+   */
+  private static String removeComments(String sql) {
+    StringBuilder result = new StringBuilder();
+    String[] lines = sql.split("\n");
+
+    for (String line : lines) {
+      // Удаляем однострочные комментарии
+      int commentIndex = line.indexOf("--");
+      if (commentIndex >= 0) {
+        line = line.substring(0, commentIndex);
+      }
+
+      // Пропускаем пустые строки
+      String trimmed = line.trim();
+      if (!trimmed.isEmpty()) {
+        result.append(trimmed).append(" ");
+      }
+    }
+
+    return result.toString();
   }
 
   private static boolean isExecutableStatement(String statement) {
@@ -147,9 +200,29 @@ public class DatabaseInitializerService {
     }
   }
 
+  private static void runSqlFiles(List<String> files) {
+    for (String file : files) {
+      try (Connection conn = DatabaseConnectionService.getConnection()) {
+        conn.setAutoCommit(true);
+        executeSqlFile(conn, file);
+      } catch (SQLException e) {
+        logger.warn("⚠️ Ошибка при выполнении файла {}, продолжаем со следующего: {}", file, e.getMessage());
+        // Продолжаем выполнение остальных файлов
+      }
+    }
+  }
+
+  private static void ensureOrderColumns() {
+    try (Connection conn = DatabaseConnectionService.getConnection()) {
+      SchemaBootstrap.ensureOrderColumns(conn);
+    } catch (SQLException e) {
+      logger.warn("Не удалось проверить структуру таблицы orders", e);
+    }
+  }
+
   public static boolean isDatabaseInitialized() {
     // Проверяем наличие ключевых таблиц
-    String[] testTables = {"addresses", "clients", "shops", "orders", "products"};
+    String[] testTables = {"addresses", "clients", "shops", "orders", "products", "notifications"};
 
     try (Connection conn = DatabaseConnectionService.getConnection();
          Statement stmt = conn.createStatement()) {
@@ -171,12 +244,23 @@ public class DatabaseInitializerService {
     try (Connection conn = DatabaseConnectionService.getConnection()) {
       conn.setAutoCommit(false);
 
-      try (Statement stmt = conn.createStatement()) {
-        // Отключаем проверку внешних ключей для безопасного удаления
-        stmt.execute("SET session_replication_role = 'replica'");
+      Statement stmt = conn.createStatement();
+      try {
+        boolean fkDisabled = false;
+        try {
+          stmt.execute("SET session_replication_role = 'replica'");
+          fkDisabled = true;
+        } catch (SQLException e) {
+          logger.warn("Не удалось отключить проверку внешних ключей: {}", e.getMessage());
+          conn.rollback();
+          conn.setAutoCommit(false);
+          stmt.close();
+          stmt = conn.createStatement();
+        }
 
         // Удаляем таблицы в правильном порядке (от дочерних к родительским)
         String[] tables = {
+            "notifications",
             "cart_items", "carts", "order_items", "payments", "orders",
             "products", "couriers", "shops", "clients",
             "working_hours", "addresses"
@@ -190,11 +274,24 @@ public class DatabaseInitializerService {
             logger.debug("Таблица {} удалена", table);
           } catch (SQLException e) {
             logger.warn("Не удалось удалить таблицу {}: {}", table, e.getMessage());
+            conn.rollback();
+            conn.setAutoCommit(false);
+            stmt.close();
+            stmt = conn.createStatement();
           }
         }
 
-        // Включаем проверку внешних ключей обратно
-        stmt.execute("SET session_replication_role = 'origin'");
+        if (fkDisabled) {
+          try {
+            stmt.execute("SET session_replication_role = 'origin'");
+          } catch (SQLException e) {
+            logger.warn("Не удалось вернуть session_replication_role: {}", e.getMessage());
+            conn.rollback();
+            conn.setAutoCommit(false);
+            stmt.close();
+            stmt = conn.createStatement();
+          }
+        }
         conn.commit();
 
         logger.info("✅ Удалено таблиц: {}/{}", droppedTables, tables.length);
@@ -203,12 +300,22 @@ public class DatabaseInitializerService {
         conn.rollback();
         throw e;
       } finally {
+        stmt.close();
         conn.setAutoCommit(true);
       }
 
     } catch (SQLException e) {
       logger.error("❌ Ошибка полной очистки базы данных: {}", e.getMessage());
       throw new RuntimeException("Не удалось очистить базу данных", e);
+    }
+  }
+
+  private static void tryFullCleanDatabase() {
+    try {
+      fullCleanDatabase();
+    } catch (RuntimeException cleanupError) {
+      logger.warn("Не удалось выполнить полную очистку, пробуем мягкую очистку", cleanupError);
+      cleanTestData();
     }
   }
 
@@ -220,6 +327,7 @@ public class DatabaseInitializerService {
 
       // Очищаем таблицы в правильном порядке (из-за foreign keys)
       String[] tablesToClean = {
+          "notifications",
           "cart_items", "carts", "order_items", "payments", "orders",
           "products", "couriers", "shops", "clients", "addresses"
       };

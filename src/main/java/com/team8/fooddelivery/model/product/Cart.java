@@ -35,4 +35,8 @@ public class Cart {
                 .mapToLong(i -> (long) (i.getPrice() * i.getQuantity()))
                 .sum();
     }
+
+    public Long getCartId() {
+        return id;
+    }
 }

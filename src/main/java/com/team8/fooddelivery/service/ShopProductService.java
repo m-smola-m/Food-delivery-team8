@@ -21,6 +21,8 @@ public interface ShopProductService {
 
   List<Product> getShopProducts(Long shopId);
 
+  List<ProductCategory> getShopCategories(Long shopId);
+
   List<Product> getProductsByCategory(Long shopId, ProductCategory category);
 
   void updateProductAvailability(Long shopId, Long productId, boolean isAvailable); // changed Integer to Long

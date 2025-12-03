@@ -19,7 +19,11 @@ import org.slf4j.LoggerFactory;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class OrderServiceImpl implements OrderService {
 
@@ -35,7 +39,7 @@ public class OrderServiceImpl implements OrderService {
         this.cartService = cartService;
         this.orderRepository = new OrderRepository();
         this.paymentRepository = new PaymentRepository();
-        this.notificationService = new NotificationServiceImpl();
+        this.notificationService = NotificationServiceImpl.getInstance();
         this.clientRepository = new ClientRepository();
     }
 
@@ -96,6 +100,87 @@ public class OrderServiceImpl implements OrderService {
         } catch (SQLException e) {
             logger.error("Ошибка при оформлении заказа", e);
             throw new RuntimeException("Не удалось оформить заказ", e);
+        }
+    }
+
+    @Override
+    public List<Order> getAvailableOrdersForCourier() {
+        try {
+            List<Order> allOrders = orderRepository.findAll();
+            return allOrders.stream()
+                    .filter(order -> order.getStatus() == OrderStatus.PAID)
+                    .filter(order -> order.getCourierId() == null || order.getCourierId() == 0)
+                    .collect(Collectors.toList());
+        } catch (SQLException e) {
+            logger.error("Ошибка при получении доступных заказов", e);
+            return List.of();
+        }
+    }
+
+    @Override
+    public List<Order> getCourierDeliveryHistoryByDate(Long courierId, LocalDate date) {
+        try {
+            ZoneId zoneId = ZoneId.systemDefault();
+            List<Order> allOrders = orderRepository.findAll();
+
+            return allOrders.stream()
+                    .filter(order -> order.getCourierId() != null && order.getCourierId().equals(courierId))
+                    .filter(order -> order.getStatus() == OrderStatus.COMPLETED)
+                    .filter(order -> {
+                        LocalDate orderDate = order.getCreatedAt().atZone(zoneId).toLocalDate();
+                        return orderDate.equals(date);
+                    })
+                    .sorted((o1, o2) -> o1.getCreatedAt().compareTo(o2.getCreatedAt()))
+                    .collect(Collectors.toList());
+
+        } catch (SQLException e) {
+            logger.error("Ошибка при получении истории доставок", e);
+            return List.of();
+        }
+    }
+
+    @Override
+    public Optional<Order> getOrderById(Long orderId) {
+        try {
+            return orderRepository.findById(orderId);
+        } catch (SQLException e) {
+            logger.error("Ошибка при получении заказа по ID", e);
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    public void updateOrder(Order order) {
+        try {
+            orderRepository.update(order);
+        } catch (SQLException e) {
+            logger.error("Ошибка при обновлении заказа", e);
+            throw new RuntimeException("Не удалось обновить заказ", e);
+        }
+    }
+
+    @Override
+    public List<Order> getOrdersByClient(Long clientId) {
+        try {
+            return orderRepository.findByCustomerId(clientId);
+        } catch (SQLException e) {
+            logger.error("Ошибка при получении заказов клиента {}", clientId, e);
+            return List.of();
+        }
+    }
+
+    @Override
+    public Order repeatOrder(Long clientId, Long orderId) {
+        try {
+            Order order = orderRepository.findById(orderId)
+                    .filter(o -> o.getCustomerId() != null && o.getCustomerId().equals(clientId))
+                    .orElseThrow(() -> new IllegalArgumentException("Заказ не найден"));
+            cartService.addItemsFromOrder(clientId, order.getItems());
+            notificationService.notifyAccount(clientId, "Повтор заказа #" + orderId);
+            return order;
+        } catch (SQLException e) {
+            logger.error("Не удалось повторить заказ", e);
+            throw new RuntimeException("Не удалось повторить заказ", e);
         }
     }
 

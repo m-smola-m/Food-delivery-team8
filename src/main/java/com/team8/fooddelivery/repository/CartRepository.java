@@ -132,7 +132,7 @@ public class CartRepository {
         }
     }
 
-    public List<CartItem> findCartItemsByCartId(Long cartId) throws SQLException {
+    public List<CartItem> findItemsByCartId(Long cartId) throws SQLException {
         try (Connection conn = DatabaseConnectionService.getConnection()) {
             return findCartItemsByCartId(cartId, conn);
         }
@@ -178,6 +178,21 @@ public class CartRepository {
         }
     }
 
+    public Optional<CartItem> findCartItemById(Long cartItemId) throws SQLException {
+        String sql = "SELECT * FROM cart_items WHERE id = ?";
+
+        try (Connection conn = DatabaseConnectionService.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, cartItemId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return Optional.of(mapResultSetToCartItem(rs));
+            }
+            return Optional.empty();
+        }
+    }
+
     public void clearCart(Long cartId) throws SQLException {
         String sql = "DELETE FROM cart_items WHERE cart_id = ?";
 
@@ -201,4 +216,3 @@ public class CartRepository {
                 .build();
     }
 }
-

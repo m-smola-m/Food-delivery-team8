@@ -1,5 +1,6 @@
 package com.team8.fooddelivery.model.courier;
 
+import com.team8.fooddelivery.model.Address;
 import com.team8.fooddelivery.model.notification.Notification;
 import lombok.Data;
 import java.util.*;
@@ -16,6 +17,7 @@ public class Courier {
   private Long currentOrderId;
   private Double currentBalance;
   private Long bankCard;
+  private Address lastAddress;
   private List<Notification> notifications = new ArrayList<>();
 
   public static final Map<Long, Courier> TEST_COURIERS = new HashMap<>();

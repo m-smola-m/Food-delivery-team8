@@ -2,6 +2,7 @@ package com.team8.fooddelivery.service;
 
 import com.team8.fooddelivery.model.product.Cart;
 import com.team8.fooddelivery.model.product.CartItem;
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface CartService {
@@ -21,7 +22,18 @@ public interface CartService {
     Cart clear(Long clientId);
 
     Long calculateTotal(Long clientId);
+
+    BigDecimal getCartTotal(Long clientId);
+
+    void addToCart(Long clientId, Long productId, int quantity);
+
+    void removeFromCart(Long clientId, Long cartItemId);
+
+    void updateQuantity(Long clientId, Long cartItemId, int quantity);
+
+    Cart getCartByClientId(Long clientId);
+
+    List<CartItem> getCartItems(Long cartId);
+
+    List<CartItem> getCartItemsForClient(Long clientId);
 }
-
-
-

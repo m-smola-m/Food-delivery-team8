@@ -100,6 +100,26 @@ public class ProductRepository {
     }
   }
 
+  public List<ProductCategory> findCategoriesByShopId(Long shopId) throws SQLException {
+    String sql = "SELECT DISTINCT category FROM products WHERE shop_id = ? AND category IS NOT NULL AND is_available = true";
+
+    try (Connection conn = DatabaseConnectionService.getConnection();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+      stmt.setLong(1, shopId);
+      ResultSet rs = stmt.executeQuery();
+
+      List<ProductCategory> categories = new ArrayList<>();
+      while (rs.next()) {
+        String categoryStr = rs.getString("category");
+        if (categoryStr != null) {
+          categories.add(ProductCategory.valueOf(categoryStr));
+        }
+      }
+      return categories;
+    }
+  }
+
   public List<Product> findByShopIdAndCategory(Long shopId, ProductCategory category) throws SQLException {
     String sql = "SELECT * FROM products WHERE shop_id = ? AND category = ?";
 

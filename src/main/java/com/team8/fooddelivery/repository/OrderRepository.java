@@ -82,7 +82,7 @@ public class OrderRepository {
   }
 
   public List<Order> findByCustomerId(Long customerId) throws SQLException {
-    String sql = "SELECT o.* FROM orders o WHERE o.customer_id = ?";
+    String sql = "SELECT o.* FROM orders o WHERE o.customer_id = ? ORDER BY o.created_at DESC";
 
     try (Connection conn = DatabaseConnectionService.getConnection();
          PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -237,7 +237,7 @@ public class OrderRepository {
 
     String paymentMethod = rs.getString("payment_method");
     if (paymentMethod != null) {
-      order.setPaymentMethod(com.team8.fooddelivery.model.client.PaymentMethodForOrder.valueOf(paymentMethod));
+      order.setPaymentMethod(com.team8.fooddelivery.model.client.PaymentMethodForOrder.fromDbValue(paymentMethod));
     }
 
     // Обработка временных меток
@@ -251,6 +251,11 @@ public class OrderRepository {
       order.setEstimatedDeliveryTime(estimatedDeliveryTime.toInstant());
     }
 
+    Timestamp updatedAt = rs.getTimestamp("updated_at");
+    if (updatedAt != null) {
+      order.setUpdatedAt(updatedAt.toInstant());
+    }
+
     // Загружаем элементы заказа
     List<CartItem> items = findOrderItemsByOrderId(order.getId(), conn);
     order.setItems(items);
@@ -260,7 +265,7 @@ public class OrderRepository {
 
   private List<CartItem> findOrderItemsByOrderId(Long orderId, Connection conn) throws SQLException {
     // Убираем product_id из SELECT
-    String sql = "SELECT id, order_id, product_name, quantity, price FROM order_items WHERE order_id = ?";
+    String sql = "SELECT id, order_id, product_id, product_name, quantity, price FROM order_items WHERE order_id = ?";
 
     try (PreparedStatement stmt = conn.prepareStatement(sql)) {
       stmt.setLong(1, orderId);
@@ -271,7 +276,7 @@ public class OrderRepository {
         CartItem item = new CartItem();
         item.setId(rs.getLong("id"));
         item.setCartId(rs.getLong("order_id"));
-        // item.setProductId(rs.getLong("product_id")); // Убираем product_id
+        item.setProductId(rs.getObject("product_id") != null ? rs.getLong("product_id") : null);
         item.setProductName(rs.getString("product_name"));
         item.setQuantity(rs.getInt("quantity"));
         item.setPrice(rs.getDouble("price"));
@@ -283,15 +288,15 @@ public class OrderRepository {
 
   private void saveOrderItems(Long orderId, List<CartItem> items, Connection conn) throws SQLException {
     // Убираем product_id из INSERT, так как у нас может не быть реальных продуктов в БД
-    String sql = "INSERT INTO order_items (order_id, product_name, quantity, price) VALUES (?, ?, ?, ?)";
+    String sql = "INSERT INTO order_items (order_id, product_id, product_name, quantity, price) VALUES (?, ?, ?, ?, ?)";
 
     try (PreparedStatement stmt = conn.prepareStatement(sql)) {
       for (CartItem item : items) {
         stmt.setLong(1, orderId);
-        // stmt.setObject(2, item.getProductId(), Types.BIGINT); // Убираем product_id
-        stmt.setString(2, item.getProductName());
-        stmt.setInt(3, item.getQuantity());
-        stmt.setDouble(4, item.getPrice());
+        stmt.setObject(2, item.getProductId(), Types.BIGINT);
+        stmt.setString(3, item.getProductName());
+        stmt.setInt(4, item.getQuantity());
+        stmt.setDouble(5, item.getPrice());
         stmt.addBatch();
       }
       stmt.executeBatch();

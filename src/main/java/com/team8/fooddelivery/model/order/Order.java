@@ -27,6 +27,7 @@ public class Order {
     private PaymentMethodForOrder paymentMethod;
     private Instant createdAt;
     private Instant estimatedDeliveryTime;
+    private Instant updatedAt;
 
     public static final Map<Long, Order> TEST_ORDERS = new HashMap<>();
 

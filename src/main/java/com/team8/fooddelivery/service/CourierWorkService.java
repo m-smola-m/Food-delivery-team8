@@ -10,4 +10,5 @@ public interface CourierWorkService {
   List<Order> getOrderHistory(Long courierId);
   void startShift(Long courierId);
   void endShift(Long courierId);
+  void withdraw(Long courierId);
 }

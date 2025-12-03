@@ -17,7 +17,7 @@ import org.junit.jupiter.api.DisplayName;
 
 import java.sql.SQLException;
 import java.time.Duration;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,18 +50,15 @@ public class ClientCartIntegrationTest {
                             "4. Параметры подключения корректны"
             );
         }
-        DatabaseInitializerService.fullCleanDatabase();
-        try {
-            DatabaseConnectionService.initializeDatabase();
-            System.out.println("✅ База данных успешно инициализирована");
-        } catch (Exception e) {
-            System.err.println("❌ Ошибка инициализации БД: " + e.getMessage());
-            throw new RuntimeException("Не удалось инициализировать тестовую БД", e);
-        }
+        // Инициализируем схему один раз, если ее нет
+        DatabaseInitializerService.initializeDatabase();
     }
 
     @BeforeEach
     void setUp() {
+        // Сбрасываем БД к тестовым данным перед каждым тестом
+        DatabaseInitializerService.resetDatabaseWithTestData();
+
         addressRepository = new AddressRepository();
         clientRepository = new ClientRepository();
         cartRepository = new CartRepository();
@@ -96,7 +93,7 @@ public class ClientCartIntegrationTest {
                 .address(address)
                 .status(ClientStatus.ACTIVE)
                 .isActive(true)
-                .createdAt(Instant.now())
+                .createdAt(LocalDateTime.now())
                 .orderHistory(List.of())
                 .build();
         Long clientId = clientRepository.save(client);
@@ -188,7 +185,7 @@ public class ClientCartIntegrationTest {
                 .address(address)
                 .status(ClientStatus.ACTIVE)
                 .isActive(true)
-                .createdAt(Instant.now())
+                .createdAt(LocalDateTime.now())
                 .orderHistory(List.of())
                 .build();
         Long clientId = clientRepository.save(client);

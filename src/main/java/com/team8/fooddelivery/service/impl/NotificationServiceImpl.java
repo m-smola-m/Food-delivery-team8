@@ -2,40 +2,45 @@ package com.team8.fooddelivery.service.impl;
 
 import com.team8.fooddelivery.model.notification.Notification;
 import com.team8.fooddelivery.model.notification.NotificationTemplate;
+import com.team8.fooddelivery.repository.NotificationRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Collections;
+import java.util.List;
 
 public class NotificationServiceImpl {
 
     private static final Logger logger = LoggerFactory.getLogger(NotificationServiceImpl.class);
+    private static final NotificationServiceImpl INSTANCE = new NotificationServiceImpl();
 
-    private final Map<Long, List<Notification>> notifications = new ConcurrentHashMap<>();
-    private long notificationIdSeq = 1;
+    private final NotificationRepository notificationRepository = new NotificationRepository();
 
-    /** Базовый метод */
+    private NotificationServiceImpl() {
+    }
+
+    public static NotificationServiceImpl getInstance() {
+        return INSTANCE;
+    }
+
     public void notify(Long clientId, NotificationTemplate template, Object... args) {
         Notification notification = Notification.builder()
-                .id(notificationIdSeq++)
                 .clientId(clientId)
                 .type(template.getType())
                 .message(template.format(args))
                 .timestamp(LocalDateTime.now())
+                .isRead(false)
                 .build();
-
-        notifications.computeIfAbsent(clientId, k -> new ArrayList<>()).add(notification);
-
+        try {
+            notificationRepository.save(notification);
+        } catch (SQLException e) {
+            logger.error("Не удалось сохранить уведомление", e);
+        }
         logger.info("[{}] Notification for client {}: {}", template.getType(), clientId, notification.getMessage());
     }
 
-    // =============================
-    // УНИФИЦИРОВАННЫЕ МЕТОДЫ
-    // =============================
-
-    /** Account notifications */
     public void notifyAccount(Long clientId, String messageArg) {
         notify(clientId, NotificationTemplate.PROFILE_UPDATED, messageArg);
     }
@@ -44,7 +49,6 @@ public class NotificationServiceImpl {
         notify(clientId, NotificationTemplate.WELCOME_ACCOUNT, clientName);
     }
 
-    /** Order notifications */
     public void notifyOrderPlaced(Long clientId, long orderId, long price) {
         notify(clientId, NotificationTemplate.ORDER_PLACED, orderId, price);
     }
@@ -57,16 +61,21 @@ public class NotificationServiceImpl {
         notify(clientId, NotificationTemplate.ORDER_DELIVERED, orderId);
     }
 
-    // =============================
-    // CRUD уведомлений
-    // =============================
-
     public List<Notification> getNotifications(Long clientId) {
-        return notifications.getOrDefault(clientId, Collections.emptyList());
+        try {
+            return notificationRepository.findByClientId(clientId);
+        } catch (SQLException e) {
+            logger.error("Не удалось загрузить уведомления", e);
+            return Collections.emptyList();
+        }
     }
 
     public void clear(Long clientId) {
-        notifications.remove(clientId);
+        try {
+            notificationRepository.markAllAsRead(clientId);
+        } catch (SQLException e) {
+            logger.error("Не удалось обновить уведомления", e);
+        }
         logger.info("Notifications cleared for client {}", clientId);
     }
 }

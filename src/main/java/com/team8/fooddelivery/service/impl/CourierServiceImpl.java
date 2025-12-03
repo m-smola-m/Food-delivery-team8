@@ -7,9 +7,10 @@ import com.team8.fooddelivery.model.order.OrderStatus;
 import com.team8.fooddelivery.repository.CourierRepository;
 import com.team8.fooddelivery.repository.OrderRepository;
 import com.team8.fooddelivery.service.CourierManagementService;
+import com.team8.fooddelivery.service.CourierService;
 import com.team8.fooddelivery.service.CourierWorkService;
-import com.team8.fooddelivery.util.ValidationUtils;
 import com.team8.fooddelivery.util.PasswordUtils;
+import com.team8.fooddelivery.util.ValidationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +18,7 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class CourierServiceImpl implements CourierManagementService, CourierWorkService {
+public class CourierServiceImpl implements CourierService, CourierManagementService, CourierWorkService {
 
     private static final Logger logger = LoggerFactory.getLogger(CourierServiceImpl.class);
     private final CourierRepository courierRepository = new CourierRepository();
@@ -230,6 +231,21 @@ public class CourierServiceImpl implements CourierManagementService, CourierWork
         } catch (SQLException e) {
             logger.error("Ошибка при получении курьера", e);
             return null;
+        }
+    }
+
+    @Override
+    public void withdraw(Long courierId) {
+        try {
+            Optional<Courier> courierOpt = courierRepository.findById(courierId);
+            if (courierOpt.isPresent()) {
+                Courier c = courierOpt.get();
+                // For simplicity, withdraw all balance
+                c.setCurrentBalance(0.0);
+                courierRepository.update(c);
+            }
+        } catch (SQLException e) {
+            logger.error("Ошибка при выводе средств", e);
         }
     }
 }

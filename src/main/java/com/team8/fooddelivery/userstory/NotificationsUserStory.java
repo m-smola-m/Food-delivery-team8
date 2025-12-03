@@ -9,8 +9,8 @@ import java.util.List;
 public class NotificationsUserStory {
 
     public static void main(String[] args) {
-        DatabaseInitializerService.initializeDatabase();
-        NotificationServiceImpl notificationService = new NotificationServiceImpl();
+        DatabaseInitializerService.resetDatabaseWithTestData();
+        NotificationServiceImpl notificationService = NotificationServiceImpl.getInstance();
         Long clientId = 1L;
 
         // ==== 1. Отправка уведомлений готовыми шаблонами ====

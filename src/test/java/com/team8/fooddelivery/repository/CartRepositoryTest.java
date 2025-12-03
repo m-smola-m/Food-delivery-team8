@@ -37,6 +37,7 @@ public class CartRepositoryTest {
         String dbUser = System.getProperty("db.user", "postgres");
         String dbPassword = System.getProperty("db.password", "postgres");
         DatabaseConnectionService.setConnectionParams(dbUrl, dbUser, dbPassword);
+        DatabaseConnectionService.initializeDatabase();
 
         if (!DatabaseConnectionService.testConnection()) {
             throw new RuntimeException("Не удалось подключиться к базе данных");
@@ -64,9 +65,15 @@ public class CartRepositoryTest {
         // Создаем тестовый магазин и продукт
         Shop testShop = new Shop();
         testShop.setNaming("Тестовый Магазин " + suffix);
+        testShop.setDescription("Test Description");
+        testShop.setPublicEmail("public_" + suffix + "@shop.com");
         testShop.setEmailForAuth("testshop" + suffix + "@example.com");
         testShop.setPhoneForAuth("+7888" + (suffix % 1_000_0000));
+        testShop.setPublicPhone("+7444" + (suffix % 1_000_0000));
         testShop.setStatus(ShopStatus.APPROVED);
+        testShop.setOwnerName("Owner " + suffix);
+        testShop.setOwnerContactPhone("+7555" + (suffix % 1_000_0000));
+        testShop.setType(com.team8.fooddelivery.model.shop.ShopType.RESTAURANT);
         testShop.setPassword("password");
         testShopId = shopRepository.save(testShop);
 
@@ -133,7 +140,7 @@ public class CartRepositoryTest {
     void testFindCartItems() throws SQLException {
         assumeTrue(testCartId != null);
 
-        List<CartItem> items = cartRepository.findCartItemsByCartId(testCartId);
+        List<CartItem> items = cartRepository.findItemsByCartId(testCartId);
         assertNotNull(items);
         assertFalse(items.isEmpty(), "В корзине должен быть хотя бы один элемент");
     }
@@ -145,7 +152,7 @@ public class CartRepositoryTest {
         assumeTrue(testCartId != null);
 
         cartRepository.clearCart(testCartId);
-        List<CartItem> items = cartRepository.findCartItemsByCartId(testCartId);
+        List<CartItem> items = cartRepository.findItemsByCartId(testCartId);
         assertTrue(items.isEmpty(), "Корзина должна быть пустой");
     }
 
@@ -182,4 +189,3 @@ public class CartRepositoryTest {
         }
     }
 }
-

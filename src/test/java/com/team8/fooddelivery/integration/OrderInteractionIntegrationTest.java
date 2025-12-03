@@ -8,6 +8,7 @@ import com.team8.fooddelivery.model.courier.Courier;
 import com.team8.fooddelivery.model.courier.CourierStatus;
 import com.team8.fooddelivery.model.order.OrderStatus;
 import com.team8.fooddelivery.model.product.CartItem;
+import com.team8.fooddelivery.model.product.Product;
 import com.team8.fooddelivery.model.shop.Shop;
 import com.team8.fooddelivery.model.shop.ShopStatus;
 import com.team8.fooddelivery.repository.*;
@@ -36,12 +37,14 @@ class OrderInteractionIntegrationTest {
   private ShopRepository shopRepository;
   private OrderRepository orderRepository;
   private AddressRepository addressRepository;
+  private ProductRepository productRepository;
 
   @BeforeAll
   static void setupDatabaseConnection() {
     String dbUrl = System.getProperty("db.url", "jdbc:postgresql://localhost:5432/food_delivery");
     String dbUser = System.getProperty("db.user", "postgres");
     String dbPassword = System.getProperty("db.password", "postgres");
+
     DatabaseConnectionService.setConnectionParams(dbUrl, dbUser, dbPassword);
 
     if (!DatabaseConnectionService.testConnection()) {
@@ -58,26 +61,32 @@ class OrderInteractionIntegrationTest {
     shopRepository = new ShopRepository();
     orderRepository = new OrderRepository();
     addressRepository = new AddressRepository();
+    productRepository = new ProductRepository();
   }
 
-  @AfterEach
+  @AfterAll
   void cleanUp() throws SQLException {
-    // Очищаем данные после каждого теста
     DatabaseInitializerService.cleanTestData();
   }
 
   @Test
   @DisplayName("Клиент оформляет заказ в магазине с полным адресом и товарами")
   void customerCreatesOrderWithAddressAndItems() throws SQLException {
-    Long clientId = saveActiveClient("client-addr-" + UUID.randomUUID());
-    Long shopId = saveApprovedShop("shop-addr-" + UUID.randomUUID());
+    Long clientId = saveActiveClient("client-addr-" + 100L);
+    Long shopId = saveApprovedShop("shop-addr-" + 745L);
 
     Address deliveryAddress = sampleAddress("Питер", "Невский", "10", "77");
+
+    // Создаем продукты и используем реальные product_id
+    Long prodPizzaId = createTestProduct(shopId, "Пицца Маргарита", 750.0);
+    Long prodLemonadeId = createTestProduct(shopId, "Лимонад", 120.0);
+
     List<CartItem> items = List.of(
-        CartItem.builder().productId(101L).productName("Пицца Маргарита").quantity(1).price(750.0).build(),
-        CartItem.builder().productId(102L).productName("Лимонад").quantity(2).price(120.0).build()
+        CartItem.builder().productId(prodPizzaId).productName("Пицца Маргарита").quantity(1).price(750.0).build(),
+        CartItem.builder().productId(prodLemonadeId).productName("Лимонад").quantity(2).price(120.0).build()
     );
 
+    System.out.println(items);
     Order order = new Order();
     order.setStatus(OrderStatus.PENDING);
     order.setCustomerId(clientId);
@@ -113,12 +122,20 @@ class OrderInteractionIntegrationTest {
     log.info("Заказ успешно создан с ID: {}, адрес: {}", orderId, storedOrder.getDeliveryAddress());
   }
 
+  private Long createTestProduct(Long shopId, String name, Double price) throws SQLException {
+      Product product = new Product(null, name, "Description", 100.0, price, com.team8.fooddelivery.model.product.ProductCategory.OTHER, true, java.time.Duration.ofMinutes(10));
+      return productRepository.saveForShop(shopId, product);
+  }
+
   @Test
   @DisplayName("Курьер берет заказ и довозит его до клиента")
   void courierTakesAndCompletesOrder() throws SQLException {
     Long courierId = saveCourierWithStatus(CourierStatus.ON_SHIFT, "bike");
     Long clientId = saveActiveClient("client-courier-" + UUID.randomUUID());
     Long shopId = saveApprovedShop("shop-courier-" + UUID.randomUUID());
+
+    // Создаём продукт и используем реальный id
+    Long soupProductId = createTestProduct(shopId, "Суп дня", 450.0);
 
     Order order = new Order();
     order.setStatus(OrderStatus.PENDING);
@@ -127,7 +144,7 @@ class OrderInteractionIntegrationTest {
     order.setDeliveryAddress(sampleAddress("Москва", "Тверская", "5", "21"));
     order.setTotalPrice(450.0);
     order.setItems(List.of(CartItem.builder()
-        .productId(201L)
+        .productId(soupProductId)
         .productName("Суп дня")
         .quantity(1)
         .price(450.0)
@@ -174,6 +191,9 @@ class OrderInteractionIntegrationTest {
     Long clientId = saveActiveClient("client-shop-" + UUID.randomUUID());
     Long shopId = saveApprovedShop("shop-order-" + UUID.randomUUID());
 
+    // Создаем продукт и используем его id
+    Long saladProductId = createTestProduct(shopId, "Салат", 300.0);
+
     Order order = new Order();
     order.setStatus(OrderStatus.PENDING);
     order.setCustomerId(clientId);
@@ -181,7 +201,7 @@ class OrderInteractionIntegrationTest {
     order.setDeliveryAddress(sampleAddress("Казань", "Баумана", "3", "15"));
     order.setTotalPrice(300.0);
     order.setItems(List.of(CartItem.builder()
-        .productId(301L)
+        .productId(saladProductId)
         .productName("Салат")
         .quantity(1)
         .price(300.0)
@@ -222,11 +242,9 @@ class OrderInteractionIntegrationTest {
     Order order2 = createSampleOrder(clientId, shopId, OrderStatus.PREPARING, 200.0);
     Order order3 = createSampleOrder(clientId, shopId, OrderStatus.DELIVERING, 300.0);
 
+    // Устанавливаем курьера и обновляем существующий заказ (не сохраняем повторно)
     order3.setCourierId(courierId);
-    Long order3Id = orderRepository.save(order3);
-    order3.setId(order3Id);
-
-    // Обновляем order3 с курьером
+    Long order3Id = order3.getId();
     orderRepository.update(order3);
 
     // Тестируем поиск по клиенту
@@ -253,6 +271,9 @@ class OrderInteractionIntegrationTest {
     Long clientId = saveActiveClient("client-addr-update-" + UUID.randomUUID());
     Long shopId = saveApprovedShop("shop-addr-update-" + UUID.randomUUID());
 
+    // Создаем продукт и используем его id
+    Long teaProductId = createTestProduct(shopId, "Чай", 500.0);
+
     Order order = new Order();
     order.setStatus(OrderStatus.PENDING);
     order.setCustomerId(clientId);
@@ -260,7 +281,7 @@ class OrderInteractionIntegrationTest {
     order.setDeliveryAddress(sampleAddress("Москва", "Старая", "1", "1"));
     order.setTotalPrice(500.0);
     order.setItems(List.of(CartItem.builder()
-        .productId(401L)
+        .productId(teaProductId)
         .productName("Чай")
         .quantity(1)
         .price(500.0)
@@ -295,13 +316,21 @@ class OrderInteractionIntegrationTest {
     order.setRestaurantId(shopId);
     order.setDeliveryAddress(sampleAddress("Город", "Улица", "1", "1"));
     order.setTotalPrice(price);
-    order.setItems(List.of(CartItem.builder()
-        .productId(999L)
+
+    // Создаем продукт и используем реальный id
+    Long productId = createTestProduct(shopId, "Тестовый товар", price);
+    CartItem item = CartItem.builder()
+        .productId(productId)
         .productName("Тестовый товар")
         .quantity(1)
         .price(price)
-        .build()));
-    orderRepository.save(order);
+        .build();
+
+    order.setItems(List.of(item));
+
+    // Сохраняем заказ и устанавливаем id в объекте перед возвратом
+    Long savedId = orderRepository.save(order);
+    order.setId(savedId);
     return order;
   }
 

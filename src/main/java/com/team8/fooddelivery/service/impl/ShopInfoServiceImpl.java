@@ -2,12 +2,15 @@ package com.team8.fooddelivery.service.impl;
 
 import com.team8.fooddelivery.model.shop.Shop;
 import com.team8.fooddelivery.model.shop.ShopStatus;
+import com.team8.fooddelivery.model.shop.ShopType;
 import com.team8.fooddelivery.repository.ShopRepository;
 import com.team8.fooddelivery.service.ShopInfoService;
+import org.mindrot.jbcrypt.BCrypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 
 import static com.team8.fooddelivery.util.ValidationUtils.*;
@@ -48,7 +51,7 @@ public class ShopInfoServiceImpl implements ShopInfoService {
       infoAbout.setStatus(ShopStatus.PENDING);
       infoAbout.setEmailForAuth(emailForAuth);
       infoAbout.setPhoneForAuth(phoneForAuth);
-      infoAbout.setPassword(password);
+      infoAbout.setPassword(BCrypt.hashpw(password, BCrypt.gensalt()));
 
       Long shopId = shopRepository.save(infoAbout);
       infoAbout.setShopId(shopId);
@@ -136,11 +139,17 @@ public class ShopInfoServiceImpl implements ShopInfoService {
         throw new SecurityException("Неверные аутентификационные данные");
       }
 
-      if (password.equals(shop.getPassword())) {
-        shop.setPassword(newPassword);
-        shopRepository.update(shop);
-        logger.info("Пароль для магазина с ID {} успешно изменен", shopId);
+      if (!BCrypt.checkpw(password, shop.getPassword())) {
+        throw new SecurityException("Неверный пароль");
       }
+
+      if (BCrypt.checkpw(newPassword, shop.getPassword())) {
+        throw new IllegalArgumentException("Новый пароль должен отличаться от текущего");
+      }
+
+      shop.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
+      shopRepository.update(shop);
+      logger.info("Пароль для магазина с ID {} успешно изменен", shopId);
       return "Пароль успешно изменен";
     } catch (SQLException e) {
       logger.error("Ошибка при смене пароля магазина", e);
@@ -169,7 +178,7 @@ public class ShopInfoServiceImpl implements ShopInfoService {
         throw new SecurityException("Неверный телефон для аутентификации");
       }
 
-      if (!shop.getPassword().equals(password)) {
+      if (!BCrypt.checkpw(password, shop.getPassword())) {
         throw new SecurityException("Неверный пароль");
       }
 
@@ -206,7 +215,7 @@ public class ShopInfoServiceImpl implements ShopInfoService {
         throw new SecurityException("Неверный email для аутентификации");
       }
 
-      if (!shop.getPassword().equals(password)) {
+      if (!BCrypt.checkpw(password, shop.getPassword())) {
         throw new SecurityException("Неверный пароль");
       }
 
@@ -222,6 +231,63 @@ public class ShopInfoServiceImpl implements ShopInfoService {
     } catch (SQLException e) {
       logger.error("Ошибка при смене телефона магазина", e);
       throw new RuntimeException("Не удалось изменить телефон", e);
+    }
+  }
+
+  @Override
+  public List<Shop> getAllShops() {
+    try {
+      return shopRepository.findAll();
+    } catch (SQLException e) {
+      logger.error("Ошибка при загрузке списка магазинов", e);
+      throw new RuntimeException("Не удалось загрузить магазины", e);
+    }
+  }
+
+  @Override
+  public Optional<Shop> getShopById(Long shopId) {
+    try {
+      return shopRepository.findById(shopId);
+    } catch (SQLException e) {
+      logger.error("Ошибка при загрузке магазина {}", shopId, e);
+      throw new RuntimeException("Не удалось загрузить магазин", e);
+    }
+  }
+
+  @Override
+  public List<Shop> getShopsByType(ShopType type) {
+    try {
+      return shopRepository.findByType(type);
+    } catch (SQLException e) {
+      logger.error("Ошибка при загрузке списка магазинов по типу {}", type, e);
+      throw new RuntimeException("Не удалось загрузить магазины по типу", e);
+    }
+  }
+
+  public Shop login(String login, String password) {
+    if (login == null || password == null) {
+      throw new IllegalArgumentException("Логин и пароль обязательны");
+    }
+
+    try {
+      Optional<Shop> shopOpt = shopRepository.findByEmailForAuth(login);
+      if (shopOpt.isEmpty()) {
+        shopOpt = shopRepository.findByPhoneForAuth(login);
+      }
+
+      if (shopOpt.isEmpty()) {
+        throw new IllegalArgumentException("Магазин не найден");
+      }
+
+      Shop shop = shopOpt.get();
+      if (!BCrypt.checkpw(password, shop.getPassword())) {
+        throw new IllegalArgumentException("Неверный пароль");
+      }
+
+      return shop;
+    } catch (SQLException e) {
+      logger.error("Ошибка при входе магазина", e);
+      throw new RuntimeException("Не удалось выполнить вход", e);
     }
   }
 }
