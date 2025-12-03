@@ -33,6 +33,7 @@ class OrderRepositoryTest {
     @BeforeAll
     static void setup() throws SQLException {
         DatabaseConnectionService.setConnectionParams("jdbc:postgresql://localhost:5432/food_delivery", "postgres", "postgres");
+        DatabaseInitializerService.fullCleanDatabase();
         DatabaseInitializerService.initializeDatabase();
 
         // Создаем тестового клиента (проверяем существование)
@@ -72,54 +73,7 @@ class OrderRepositoryTest {
 
     @AfterAll
     static void tearDown() throws SQLException {
-        // Удаляем тестовые данные в правильном порядке (из-за foreign keys)
-        if (testOrderId != null) {
-            try (Connection conn = DatabaseConnectionService.getConnection();
-                 var stmt = conn.prepareStatement("DELETE FROM order_items WHERE order_id = ?")) {
-                stmt.setLong(1, testOrderId);
-                stmt.executeUpdate();
-            }
-            try (Connection conn = DatabaseConnectionService.getConnection();
-                 var stmt = conn.prepareStatement("DELETE FROM payments WHERE order_id = ?")) {
-                stmt.setLong(1, testOrderId);
-                stmt.executeUpdate();
-            }
-            try (Connection conn = DatabaseConnectionService.getConnection();
-                 var stmt = conn.prepareStatement("DELETE FROM orders WHERE id = ?")) {
-                stmt.setLong(1, testOrderId);
-                stmt.executeUpdate();
-            }
-        }
-        if (testClientId != null && clientRepository != null) {
-            // Удаляем все заказы клиента перед удалением клиента
-            try (Connection conn = DatabaseConnectionService.getConnection();
-                 var stmt = conn.prepareStatement("DELETE FROM order_items WHERE order_id IN (SELECT id FROM orders WHERE customer_id = ?)")) {
-                stmt.setLong(1, testClientId);
-                stmt.executeUpdate();
-            }
-            try (Connection conn = DatabaseConnectionService.getConnection();
-                 var stmt = conn.prepareStatement("DELETE FROM payments WHERE order_id IN (SELECT id FROM orders WHERE customer_id = ?)")) {
-                stmt.setLong(1, testClientId);
-                stmt.executeUpdate();
-            }
-            try (Connection conn = DatabaseConnectionService.getConnection();
-                 var stmt = conn.prepareStatement("DELETE FROM orders WHERE customer_id = ?")) {
-                stmt.setLong(1, testClientId);
-                stmt.executeUpdate();
-            }
-            try (Connection conn = DatabaseConnectionService.getConnection();
-                 var stmt = conn.prepareStatement("DELETE FROM carts WHERE client_id = ?")) {
-                stmt.setLong(1, testClientId);
-                stmt.executeUpdate();
-            }
-            clientRepository.delete(testClientId);
-            try (Connection conn = DatabaseConnectionService.getConnection();
-                 var stmt = conn.prepareStatement("DELETE FROM shops WHERE shop_id = ?")) {
-                stmt.setLong(1, testShopId);
-                stmt.executeUpdate();
-            }
-            shopRepository.delete(testShopId);
-        }
+        DatabaseInitializerService.fullCleanDatabase();
     }
 
     @BeforeEach

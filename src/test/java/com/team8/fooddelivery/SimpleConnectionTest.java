@@ -18,8 +18,8 @@ public class SimpleConnectionTest {
         String dbUrl = System.getProperty("db.url", "jdbc:postgresql://localhost:5432/food_delivery");
         String dbUser = System.getProperty("db.user", "postgres");
         String dbPassword = System.getProperty("db.password", "postgres");
-
         DatabaseConnectionService.setConnectionParams(dbUrl, dbUser, dbPassword);
+        DatabaseInitializerService.fullCleanDatabase();
         try {
             DatabaseConnectionService.initializeDatabase();
             System.out.println("✅ База данных успешно инициализирована");

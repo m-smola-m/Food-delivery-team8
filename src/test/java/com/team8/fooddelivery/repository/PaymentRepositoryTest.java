@@ -45,6 +45,7 @@ class PaymentRepositoryTest {
         String dbUser = System.getProperty("db.user", "postgres");
         String dbPassword = System.getProperty("db.password", "postgres");
         DatabaseConnectionService.setConnectionParams(dbUrl, dbUser, dbPassword);
+        DatabaseInitializerService.fullCleanDatabase();
         DatabaseInitializerService.initializeDatabase();
 
         orderRepository = new OrderRepository();
