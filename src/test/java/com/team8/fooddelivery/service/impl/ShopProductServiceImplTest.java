@@ -155,7 +155,7 @@ class ShopProductServiceImplTest {
     @DisplayName("Get shop products")
     void testGetShopProducts() {
         List<Product> products = shopProductService.getShopProducts(testShopId);
-        assertNotNull(products);
+        assertNotNull(products, "Products list should not be null");
         assertFalse(products.isEmpty());
     }
 
@@ -168,7 +168,7 @@ class ShopProductServiceImplTest {
     }
 
     @Test
-    @Order(6)
+    @Order(5)
     @DisplayName("Update product availability")
     void testUpdateProductAvailability() {
         if (testProductId == null) {
@@ -183,7 +183,7 @@ class ShopProductServiceImplTest {
                 .filter(p -> p.getProductId().equals(testProductId))
                 .findFirst()
                 .orElse(null);
-        assertNotNull(product);
+        assertNotNull(product, "Product should not be null");
         assertFalse(product.getAvailable());
     }
 
@@ -205,9 +205,9 @@ class ShopProductServiceImplTest {
     }
 
     @Test
-    @Order(8)
-    @DisplayName("Delete product")
-    void testDeleteProduct() {
+    @Order(6)
+    @DisplayName("Remove product")
+    void testRemoveProduct() {
         if (testProductId == null) {
             Product product = new Product(null, "Test Product 4", "Description",
                     100.0, 10.0, ProductCategory.MAIN_DISH, true, Duration.ofMinutes(15));

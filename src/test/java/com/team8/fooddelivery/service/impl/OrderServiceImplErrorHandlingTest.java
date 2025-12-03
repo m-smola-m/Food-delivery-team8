@@ -50,7 +50,7 @@ class OrderServiceImplErrorHandlingTest {
         cartService = new CartServiceImpl();
         clientRepository = new ClientRepository();
         clientService = new ClientServiceImpl(clientRepository, cartService);
-        notificationService = new NotificationServiceImpl();
+        notificationService = NotificationServiceImpl.getInstance();
         orderService = new OrderServiceImpl(cartService);
 
         deliveryAddress = Address.builder()

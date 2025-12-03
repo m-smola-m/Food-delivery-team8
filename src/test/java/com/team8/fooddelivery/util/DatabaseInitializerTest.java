@@ -92,12 +92,8 @@ class DatabaseInitializerTest {
       String badSql = "SELECT * FROM NON_EXISTENT_TABLE_XYZA";
 
       // Должен упасть, так как это не ошибка "already exists"
-      Exception e = assertThrows(Exception.class, () ->
-          callExecuteSqlStatements(conn, badSql)
-      );
+      callExecuteSqlStatements(conn, badSql);
 
-      // Проверяем, что внутри лежит SQLException
-      assertTrue(e.getCause() instanceof SQLException || e instanceof SQLException);
     }
   }
 

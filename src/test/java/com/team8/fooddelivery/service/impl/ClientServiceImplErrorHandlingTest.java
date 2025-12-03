@@ -70,7 +70,7 @@ class ClientServiceImplErrorHandlingTest {
                 .apartment("10").entrance("1").floor(1)
                 .latitude(55.7558).longitude(37.6173).build();
         
-        String uniquePhone = "+7999" + (System.currentTimeMillis() % 10000000 + 999999);
+        String uniquePhone = "+7999" + (1000000 + System.currentTimeMillis() % 9000000);
         System.out.println(uniquePhone);
         String uniqueEmail = "phone_test_" + System.currentTimeMillis() + "@test.com";
         
@@ -90,7 +90,7 @@ class ClientServiceImplErrorHandlingTest {
                 .apartment("10").entrance("1").floor(1)
                 .latitude(55.7558).longitude(37.6173).build();
         
-        String uniquePhone = "+7999" + (System.currentTimeMillis() % 10000000);
+        String uniquePhone = "+7999" + (1000000 + System.currentTimeMillis() % 9000000);
         String uniqueEmail = "email_test_" + System.currentTimeMillis() + "@test.com";
         
         Client client = clientService.register(uniquePhone, "Password123!", "Email Test Client", uniqueEmail, address);

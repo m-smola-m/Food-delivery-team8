@@ -8,10 +8,11 @@ class PaymentStatusTest {
     @Test
     void testEnumValues() {
         PaymentStatus[] values = PaymentStatus.values();
-        assertEquals(3, values.length);
+        assertEquals(4, values.length);
         assertTrue(containsValue(values, PaymentStatus.PENDING));
         assertTrue(containsValue(values, PaymentStatus.SUCCESS));
         assertTrue(containsValue(values, PaymentStatus.FAILED));
+        assertTrue(containsValue(values, PaymentStatus.PAID));
     }
 
     @Test
@@ -19,6 +20,7 @@ class PaymentStatusTest {
         assertEquals(PaymentStatus.PENDING, PaymentStatus.valueOf("PENDING"));
         assertEquals(PaymentStatus.SUCCESS, PaymentStatus.valueOf("SUCCESS"));
         assertEquals(PaymentStatus.FAILED, PaymentStatus.valueOf("FAILED"));
+        assertEquals(PaymentStatus.PAID, PaymentStatus.valueOf("PAID"));
     }
 
     @Test
@@ -35,4 +37,3 @@ class PaymentStatusTest {
         return false;
     }
 }
-

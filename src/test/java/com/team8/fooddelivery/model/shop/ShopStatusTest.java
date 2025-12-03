@@ -8,13 +8,14 @@ class ShopStatusTest {
     @Test
     void testEnumValues() {
         ShopStatus[] values = ShopStatus.values();
-        assertEquals(6, values.length);
+        assertEquals(7, values.length);
         assertTrue(containsValue(values, ShopStatus.PENDING));
         assertTrue(containsValue(values, ShopStatus.ACTIVE));
         assertTrue(containsValue(values, ShopStatus.SUSPENDED));
         assertTrue(containsValue(values, ShopStatus.CLOSED));
         assertTrue(containsValue(values, ShopStatus.APPROVED));
         assertTrue(containsValue(values, ShopStatus.REJECTED));
+        assertTrue(containsValue(values, ShopStatus.OPEN));
     }
 
     @Test
@@ -25,6 +26,7 @@ class ShopStatusTest {
         assertEquals(ShopStatus.CLOSED, ShopStatus.valueOf("CLOSED"));
         assertEquals(ShopStatus.APPROVED, ShopStatus.valueOf("APPROVED"));
         assertEquals(ShopStatus.REJECTED, ShopStatus.valueOf("REJECTED"));
+        assertEquals(ShopStatus.OPEN, ShopStatus.valueOf("OPEN"));
     }
 
     @Test
@@ -41,4 +43,3 @@ class ShopStatusTest {
         return false;
     }
 }
-

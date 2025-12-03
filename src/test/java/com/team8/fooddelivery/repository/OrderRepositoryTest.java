@@ -6,6 +6,10 @@ import com.team8.fooddelivery.model.order.OrderStatus;
 import com.team8.fooddelivery.model.client.PaymentMethodForOrder;
 import com.team8.fooddelivery.model.client.PaymentStatus;
 import com.team8.fooddelivery.model.product.CartItem;
+import com.team8.fooddelivery.model.shop.Shop;
+import com.team8.fooddelivery.repository.ClientRepository;
+import com.team8.fooddelivery.repository.OrderRepository;
+import com.team8.fooddelivery.repository.ShopRepository;
 import com.team8.fooddelivery.service.DatabaseConnectionService;
 import com.team8.fooddelivery.service.DatabaseInitializerService;
 import org.junit.jupiter.api.*;
@@ -23,7 +27,9 @@ class OrderRepositoryTest {
 
     private OrderRepository orderRepository;
     private static ClientRepository clientRepository;
+    private static ShopRepository shopRepository;
     private static Long testClientId;
+    private static Long testShopId;
     private static Long testOrderId;
 
     @BeforeAll
@@ -33,6 +39,8 @@ class OrderRepositoryTest {
 
         // Создаем тестового клиента (проверяем существование)
         clientRepository = new ClientRepository();
+        shopRepository = new ShopRepository();
+
         var existingClient = clientRepository.findByPhone("+79999999999");
         if (existingClient.isPresent()) {
             testClientId = existingClient.get().getId();
@@ -47,6 +55,14 @@ class OrderRepositoryTest {
                     .build();
             testClientId = clientRepository.save(client);
         }
+
+        // Создаем тестовый магазин
+        Shop shop = new Shop();
+        shop.setNaming("Test Shop");
+        shop.setEmailForAuth("shop" + System.currentTimeMillis() + "@test.com");
+        shop.setPhoneForAuth("+7999" + (1000000 + System.currentTimeMillis() % 9000000));
+        shop.setPassword("shop_pass");
+        testShopId = shopRepository.save(shop);
     }
 
     @AfterAll
@@ -86,12 +102,10 @@ class OrderRepositoryTest {
                 stmt.setLong(1, testClientId);
                 stmt.executeUpdate();
             }
-            try (Connection conn = DatabaseConnectionService.getConnection();
-                 var stmt = conn.prepareStatement("DELETE FROM carts WHERE client_id = ?")) {
-                stmt.setLong(1, testClientId);
-                stmt.executeUpdate();
-            }
             clientRepository.delete(testClientId);
+        }
+        if (testShopId != null && shopRepository != null) {
+            shopRepository.delete(testShopId);
         }
     }
 
@@ -106,7 +120,7 @@ class OrderRepositoryTest {
     void testSave() throws SQLException {
         Order order = new Order();
         order.setCustomerId(testClientId);
-        order.setRestaurantId(1L);
+        order.setRestaurantId(testShopId);
         order.setStatus(OrderStatus.PENDING);
         order.setDeliveryAddress(Address.builder()
                 .city("Moscow")
@@ -139,7 +153,7 @@ class OrderRepositoryTest {
             // Если заказ не был создан в предыдущем тесте, создаем его здесь
             Order order = new Order();
             order.setCustomerId(testClientId);
-            order.setRestaurantId(1L);
+            order.setRestaurantId(testShopId);
             order.setStatus(OrderStatus.PENDING);
             order.setDeliveryAddress(Address.builder()
                     .city("Moscow")
@@ -173,7 +187,7 @@ class OrderRepositoryTest {
     void testFindByCustomerId() throws SQLException {
         List<Order> orders = orderRepository.findByCustomerId(testClientId);
         assertNotNull(orders);
-        assertTrue(orders.size() > 0);
+        assertFalse(orders.isEmpty());
         assertTrue(orders.stream().anyMatch(o -> o.getId().equals(testOrderId)));
     }
 
@@ -185,7 +199,7 @@ class OrderRepositoryTest {
             // Если заказ не был создан, создаем его здесь
             Order order = new Order();
             order.setCustomerId(testClientId);
-            order.setRestaurantId(1L);
+            order.setRestaurantId(testShopId);
             order.setStatus(OrderStatus.PENDING);
             order.setDeliveryAddress(Address.builder()
                     .city("Moscow")
@@ -225,6 +239,8 @@ class OrderRepositoryTest {
     void testFindByStatus() throws SQLException {
         List<Order> orders = orderRepository.findByStatus(OrderStatus.CONFIRMED);
         assertNotNull(orders);
+        // После выполнения testUpdate статус заказа testOrderId установлен в CONFIRMED,
+        // поэтому он должен присутствовать в результатах поиска по этому статусу.
         assertTrue(orders.stream().anyMatch(o -> o.getId().equals(testOrderId)));
     }
 
@@ -245,7 +261,7 @@ class OrderRepositoryTest {
         // Создаем временный заказ для удаления
         Order tempOrder = new Order();
         tempOrder.setCustomerId(testClientId);
-        tempOrder.setRestaurantId(1L);
+        tempOrder.setRestaurantId(testShopId);
         tempOrder.setStatus(OrderStatus.PENDING);
         tempOrder.setDeliveryAddress(Address.builder()
                 .city("Moscow")

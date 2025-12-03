@@ -140,7 +140,7 @@ public class CartRepositoryTest {
     void testFindCartItems() throws SQLException {
         assumeTrue(testCartId != null);
 
-        List<CartItem> items = cartRepository.findCartItemsByCartId(testCartId);
+        List<CartItem> items = cartRepository.findItemsByCartId(testCartId);
         assertNotNull(items);
         assertFalse(items.isEmpty(), "В корзине должен быть хотя бы один элемент");
     }
@@ -152,7 +152,7 @@ public class CartRepositoryTest {
         assumeTrue(testCartId != null);
 
         cartRepository.clearCart(testCartId);
-        List<CartItem> items = cartRepository.findCartItemsByCartId(testCartId);
+        List<CartItem> items = cartRepository.findItemsByCartId(testCartId);
         assertTrue(items.isEmpty(), "Корзина должна быть пустой");
     }
 

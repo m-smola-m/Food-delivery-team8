@@ -1,12 +1,16 @@
 package com.team8.fooddelivery.service.impl;
 
+import com.team8.fooddelivery.model.client.Client;
 import com.team8.fooddelivery.model.notification.Notification;
 import com.team8.fooddelivery.model.notification.NotificationTemplate;
+import com.team8.fooddelivery.repository.ClientRepository;
 import com.team8.fooddelivery.service.NotificationService;
+import com.team8.fooddelivery.service.DatabaseInitializerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
+import java.sql.SQLException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -14,15 +18,26 @@ import static org.junit.jupiter.api.Assertions.*;
 class NotificationServiceImplTest {
 
     private NotificationServiceImpl notificationService;
+    private ClientRepository clientRepository;
 
     @BeforeEach
     void setUp() {
-        notificationService = new NotificationServiceImpl();
+        DatabaseInitializerService.fullCleanDatabase();
+        DatabaseInitializerService.initializeDatabase();
+        notificationService = NotificationServiceImpl.getInstance();
+        clientRepository = new ClientRepository();
+    }
+
+    private Long createTestClient(String name, String phone) throws SQLException {
+        Client client = new Client();
+        client.setName(name);
+        client.setPhone(phone);
+        return clientRepository.save(client);
     }
 
     @Test
-    void testNotify() {
-        Long clientId = 1L;
+    void testNotify() throws SQLException {
+        Long clientId = createTestClient("Иван", "+79990000001");
         notificationService.notify(clientId, NotificationTemplate.WELCOME_ACCOUNT, "Иван");
 
         List<Notification> notifications = notificationService.getNotifications(clientId);
@@ -33,8 +48,8 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void testNotifyAccount() {
-        Long clientId = 2L;
+    void testNotifyAccount() throws SQLException {
+        Long clientId = createTestClient("Тест Аккаунт", "+79990000002");
         notificationService.notifyAccount(clientId, "Профиль обновлен");
 
         List<Notification> notifications = notificationService.getNotifications(clientId);
@@ -43,8 +58,8 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void testNotifyWelcome() {
-        Long clientId = 3L;
+    void testNotifyWelcome() throws SQLException {
+        Long clientId = createTestClient("Мария", "+79990000003");
         notificationService.notifyWelcome(clientId, "Мария");
 
         List<Notification> notifications = notificationService.getNotifications(clientId);
@@ -55,8 +70,8 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void testNotifyOrderPlaced() {
-        Long clientId = 4L;
+    void testNotifyOrderPlaced() throws SQLException {
+        Long clientId = createTestClient("Тест Заказ", "+79990000004");
         notificationService.notifyOrderPlaced(clientId, 101L, 1500L);
 
         List<Notification> notifications = notificationService.getNotifications(clientId);
@@ -67,8 +82,8 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void testNotifyOrderPaid() {
-        Long clientId = 5L;
+    void testNotifyOrderPaid() throws SQLException {
+        Long clientId = createTestClient("Тест Оплата", "+79990000005");
         notificationService.notifyOrderPaid(clientId, 102L);
 
         List<Notification> notifications = notificationService.getNotifications(clientId);
@@ -78,8 +93,8 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void testNotifyDelivery() {
-        Long clientId = 6L;
+    void testNotifyDelivery() throws SQLException {
+        Long clientId = createTestClient("Тест Доставка", "+79990000006");
         notificationService.notifyDelivery(clientId, 103L);
 
         List<Notification> notifications = notificationService.getNotifications(clientId);
@@ -97,8 +112,8 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void testGetNotificationsMultiple() {
-        Long clientId = 7L;
+    void testGetNotificationsMultiple() throws SQLException {
+        Long clientId = createTestClient("Тест Множество", "+79990000007");
         notificationService.notifyWelcome(clientId, "Тест");
         notificationService.notifyOrderPlaced(clientId, 1L, 100L);
         notificationService.notifyOrderPaid(clientId, 1L);
@@ -108,8 +123,8 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void testClear() {
-        Long clientId = 8L;
+    void testClear() throws SQLException {
+        Long clientId = createTestClient("Тест Очистка", "+79990000008");
         notificationService.notifyWelcome(clientId, "Тест");
         notificationService.notifyOrderPlaced(clientId, 1L, 100L);
 
@@ -123,9 +138,9 @@ class NotificationServiceImplTest {
     }
 
     @Test
-    void testNotificationIdSequence() {
-        Long clientId1 = 10L;
-        Long clientId2 = 11L;
+    void testNotificationIdSequence() throws SQLException {
+        Long clientId1 = createTestClient("Тест1", "+79990000010");
+        Long clientId2 = createTestClient("Тест2", "+79990000011");
 
         notificationService.notifyWelcome(clientId1, "Тест1");
         notificationService.notifyWelcome(clientId2, "Тест2");
@@ -144,7 +159,7 @@ class NotificationServiceImplTest {
 
     @Test
     void testNotificationServiceImpl() {
-        NotificationServiceImpl notificationService = new NotificationServiceImpl();
+        NotificationServiceImpl notificationService = NotificationServiceImpl.getInstance();
         assertNotNull(notificationService);
     }
 

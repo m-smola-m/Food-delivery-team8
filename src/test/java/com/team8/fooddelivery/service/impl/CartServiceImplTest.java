@@ -77,7 +77,7 @@ class CartServiceImplTest {
     cartService.addItem(testClientId, item);
 
     // ПРОВЕРКА В БД
-    List<CartItem> dbItems = cartRepository.findCartItemsByCartId(cart.getId());
+    List<CartItem> dbItems = cartRepository.findItemsByCartId(cart.getId());
     assertEquals(1, dbItems.size());
     assertEquals("Pizza", dbItems.get(0).getProductName());
 
@@ -89,14 +89,14 @@ class CartServiceImplTest {
     cartService.addItem(testClientId, sameItem);
 
     // ПРОВЕРКА В БД (1 + 2 = 3)
-    dbItems = cartRepository.findCartItemsByCartId(cart.getId());
+    dbItems = cartRepository.findItemsByCartId(cart.getId());
     assertEquals(3, dbItems.get(0).getQuantity(), "Количество должно сложиться в базе");
 
     // 4. Обновление (Update)
     cartService.updateItem(testClientId, productId, 5); // Ставим 5 штук
 
     // ПРОВЕРКА В БД
-    dbItems = cartRepository.findCartItemsByCartId(cart.getId());
+    dbItems = cartRepository.findItemsByCartId(cart.getId());
     assertEquals(5, dbItems.get(0).getQuantity(), "Количество должно обновиться в базе до 5");
 
     // 5. Проверка списка (List Items)
@@ -107,7 +107,7 @@ class CartServiceImplTest {
     cartService.removeItem(testClientId, productId);
 
     // ПРОВЕРКА В БД
-    dbItems = cartRepository.findCartItemsByCartId(cart.getId());
+    dbItems = cartRepository.findItemsByCartId(cart.getId());
     assertTrue(dbItems.isEmpty(), "Товар должен удалиться из базы");
   }
 
@@ -146,7 +146,7 @@ class CartServiceImplTest {
     cartService.clear(testClientId);
 
     // Проверка в БД
-    List<CartItem> items = cartRepository.findCartItemsByCartId(cartService.getCartForClient(testClientId).getId());
+    List<CartItem> items = cartRepository.findItemsByCartId(cartService.getCartForClient(testClientId).getId());
     assertTrue(items.isEmpty(), "Корзина в БД должна быть пуста");
   }
 

@@ -8,7 +8,7 @@ class OrderStatusTest {
     @Test
     void testEnumValues() {
         OrderStatus[] values = OrderStatus.values();
-        assertEquals(9, values.length);
+        assertEquals(10, values.length);
         assertTrue(containsValue(values, OrderStatus.PENDING));
         assertTrue(containsValue(values, OrderStatus.PREPARING));
         assertTrue(containsValue(values, OrderStatus.CONFIRMED));
@@ -16,6 +16,7 @@ class OrderStatusTest {
         assertTrue(containsValue(values, OrderStatus.READY_FOR_PICKUP));
         assertTrue(containsValue(values, OrderStatus.DELIVERING));
         assertTrue(containsValue(values, OrderStatus.PICKED_UP));
+        assertTrue(containsValue(values, OrderStatus.DELIVERED));
         assertTrue(containsValue(values, OrderStatus.COMPLETED));
         assertTrue(containsValue(values, OrderStatus.CANCELLED));
     }
@@ -29,6 +30,7 @@ class OrderStatusTest {
         assertEquals(OrderStatus.READY_FOR_PICKUP, OrderStatus.valueOf("READY_FOR_PICKUP"));
         assertEquals(OrderStatus.DELIVERING, OrderStatus.valueOf("DELIVERING"));
         assertEquals(OrderStatus.PICKED_UP, OrderStatus.valueOf("PICKED_UP"));
+        assertEquals(OrderStatus.DELIVERED, OrderStatus.valueOf("DELIVERED"));
         assertEquals(OrderStatus.COMPLETED, OrderStatus.valueOf("COMPLETED"));
         assertEquals(OrderStatus.CANCELLED, OrderStatus.valueOf("CANCELLED"));
     }
@@ -47,4 +49,3 @@ class OrderStatusTest {
         return false;
     }
 }
-

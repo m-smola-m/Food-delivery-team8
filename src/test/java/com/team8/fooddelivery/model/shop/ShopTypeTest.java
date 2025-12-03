@@ -13,7 +13,7 @@ import java.util.Set;
  */
 public class ShopTypeTest {
 
-  private final int EXPECTED_COUNT = 7;
+private static final int EXPECTED_COUNT = 10;
 
   /**
    * Тест проверяет, что количество объявленных констант соответствует ожидаемому.
@@ -37,7 +37,7 @@ public class ShopTypeTest {
     }
 
     Set<String> expectedNames = new HashSet<>(Arrays.asList(
-        "RESTAURANT", "CAFE", "BAKERY", "GROCERY", "PHARMACY", "OTHER", "FAST_FOOD"
+        "RESTAURANT", "CAFE", "BAKERY", "GROCERY", "PHARMACY", "OTHER", "FAST_FOOD", "PIZZA", "SUSHI", "COFFEE"
     ));
 
     assertEquals(expectedNames, actualNames, "Объявленные имена констант не совпадают с ожидаемыми.");
