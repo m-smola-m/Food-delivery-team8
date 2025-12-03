@@ -12,7 +12,7 @@
 | Цель | Команда |
 |------|---------|
 | Поднять БД | `docker compose up -d postgres`
-| Накатить схему | `PGPASSWORD=fooddelivery_pass psql -h localhost -U fooddelivery_user -d food_delivery -f src/main/resources/sql/007_main_schema.sql`
+| Накатить схему | `PGPASSWORD=postgres psql -h localhost -U postgres -d food_delivery -f src/main/resources/sql/007_main_schema.sql`
 | Собрать | `mvn clean package -DskipTests`
 | **Запустить с фронтом** | `java -jar target/food-delivery-0.0.1-SNAPSHOT.jar`
 | **Запустить только API/JDBC** | `mvn exec:java -Dexec.mainClass=com.team8.fooddelivery.MainApplication` *(или используйте сервлеты через IDE/Tomcat)*
@@ -20,19 +20,19 @@
 ## Подготовка базы данных
 1. Создайте пользователя и БД (если не пользуетесь compose):
    ```bash
-   psql -U postgres -c "CREATE USER fooddelivery_user WITH PASSWORD 'fooddelivery_pass';"
-   psql -U postgres -c "CREATE DATABASE food_delivery OWNER fooddelivery_user;"
+   psql -U postgres -c "CREATE USER postgres WITH PASSWORD 'postgres';"
+   psql -U postgres -c "CREATE DATABASE food_delivery OWNER postgres;"
    ```
-   > Все дальнейшие SQL скрипты **выполняйте под `fooddelivery_user`**, чтобы объекты сразу создавались нужным владельцем. Если раньше таблицы создавались под `postgres`, выровняйте владельцев, иначе тесты не смогут выполнять `DROP TABLE`:
+   > Все дальнейшие SQL скрипты **выполняйте под `postgres`**, чтобы объекты сразу создавались нужным владельцем. Если раньше таблицы создавались под `postgres`, выровняйте владельцев, иначе тесты не смогут выполнять `DROP TABLE`:
    ```bash
-   psql -U postgres -d food_delivery -c "ALTER DATABASE food_delivery OWNER TO fooddelivery_user;"
-   psql -U postgres -d food_delivery -c "REASSIGN OWNED BY postgres TO fooddelivery_user;"
-   psql -U postgres -d food_delivery -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO fooddelivery_user;"
-   psql -U postgres -d food_delivery -c "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO fooddelivery_user;"
+   psql -U postgres -d food_delivery -c "ALTER DATABASE food_delivery OWNER TO postgres;"
+   psql -U postgres -d food_delivery -c "REASSIGN OWNED BY postgres TO postgres;"
+   psql -U postgres -d food_delivery -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO postgres;"
+   psql -U postgres -d food_delivery -c "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO postgres;"
    ```
 2. Примените основную схему:
    ```bash
-   PGPASSWORD=fooddelivery_pass psql -h localhost -U fooddelivery_user -d food_delivery -f src/main/resources/sql/007_main_schema.sql
+   PGPASSWORD=postgres psql -h localhost -U postgres -d food_delivery -f src/main/resources/sql/007_main_schema.sql
    ```
 3. (Опционально) заполните тестовыми данными из `src/main/resources/sql/test_data/*.sql` в порядке нумерации.
 
@@ -65,14 +65,14 @@
 3. Используйте любой контейнер сервлетов (Tomcat/Jetty) или `mvn exec:java` для запуска `MainApplication`. Для headless режима можно отключить извлечение webapp и обращаться к сервлетам/REST напрямую, либо запускать интеграционные тесты.
 
 ## Настройка подключения
-По умолчанию: `jdbc:postgresql://localhost:5432/food_delivery`, логин `fooddelivery_user`, пароль `fooddelivery_pass`.
+По умолчанию: `jdbc:postgresql://localhost:5432/food_delivery`, логин `postgres`, пароль `postgres`.
 - Переопределение через переменные окружения: `DB_URL`, `DB_USER`, `DB_PASSWORD`.
 - Или JVM-параметры: `-Ddb.url=... -Ddb.user=... -Ddb.password=...`.
 
 ## Тесты
 Запускаются через Maven:
 ```bash
-mvn test -Ddb.user=fooddelivery_user -Ddb.password=fooddelivery_pass -Dtest=ClientRepositoryTest,CartRepositoryTest
+mvn test -Ddb.user=postgres -Ddb.password=postgres -Dtest=ClientRepositoryTest,CartRepositoryTest
 ```
 (дополнительно есть интеграционные тесты для заказов/курьеров/магазинов в `src/test/java/com/team8/fooddelivery/integration`).
 
@@ -88,6 +88,6 @@ mvn test -Ddb.user=fooddelivery_user -Ddb.password=fooddelivery_pass -Dtest=Clie
 mvn clean package -DskipTests && java -jar target/food-delivery-0.0.1-SNAPSHOT.jar
 
 # Очистить БД и накатить схему заново
-PGPASSWORD=fooddelivery_pass psql -h localhost -U fooddelivery_user -d food_delivery -f src/main/resources/sql/000_drop_tables.sql
-PGPASSWORD=fooddelivery_pass psql -h localhost -U fooddelivery_user -d food_delivery -f src/main/resources/sql/007_main_schema.sql
+PGPASSWORD=postgres psql -h localhost -U postgres -d food_delivery -f src/main/resources/sql/000_drop_tables.sql
+PGPASSWORD=postgres psql -h localhost -U postgres -d food_delivery -f src/main/resources/sql/007_main_schema.sql
 ```

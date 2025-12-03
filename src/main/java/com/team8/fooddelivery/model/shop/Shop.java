@@ -28,5 +28,5 @@ public class Shop {  // Shop
   private String password;
   // private List<Notification> notifications;
 
-  public Shop() {};
+  public Shop() {}
 }

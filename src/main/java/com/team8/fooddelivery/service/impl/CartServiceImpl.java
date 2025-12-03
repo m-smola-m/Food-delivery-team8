@@ -49,7 +49,7 @@ public class CartServiceImpl implements CartService {
             Long cartId = cartRepository.save(cart);
             cart.setId(cartId);
             return cart;
-        } catch (SQLException e) {
+        } catch (Exception e) {
             logger.error("Ошибка при создании корзины для клиента {}", clientId, e);
             throw new RuntimeException("Не удалось создать корзину", e);
         }
@@ -60,7 +60,7 @@ public class CartServiceImpl implements CartService {
         validateClient(clientId);
         try {
             return cartRepository.findByClientId(clientId).orElse(null);
-        } catch (SQLException e) {
+        } catch (Exception e) {
             logger.error("Ошибка при получении корзины для клиента {}", clientId, e);
             return null;
         }

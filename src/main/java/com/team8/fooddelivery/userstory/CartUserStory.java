@@ -32,6 +32,9 @@ public class CartUserStory {
     public static void main(String[] args) {
         DatabaseInitializerService.resetDatabaseWithTestData();
 
+        // =====================
+        // 0. Инициализация сервисов
+        // =====================
         CartServiceImpl cartService = new CartServiceImpl();
         ClientServiceImpl clientService = new ClientServiceImpl(new ClientRepository(), cartService);
         OrderServiceImpl orderService = new OrderServiceImpl(cartService);
