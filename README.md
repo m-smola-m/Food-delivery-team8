@@ -17,7 +17,7 @@
 | **Запустить с фронтом** | `java -jar target/food-delivery-0.0.1-SNAPSHOT.jar`
 | **Запустить только API/JDBC** | `mvn exec:java -Dexec.mainClass=com.team8.fooddelivery.MainApplication` *(или используйте сервлеты через IDE/Tomcat)*
 
-## Подготовка базы данных
+## Подготовка базы данных (на случай, если что-то пойдет не так)
 1. Создайте пользователя и БД (если не пользуетесь compose):
    ```bash
    psql -U postgres -c "CREATE USER postgres WITH PASSWORD 'postgres';"
