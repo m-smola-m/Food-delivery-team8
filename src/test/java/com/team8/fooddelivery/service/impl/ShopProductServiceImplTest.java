@@ -316,4 +316,3 @@ class ShopProductServiceImplTest {
         assertNull(shop);
     }
 }
-

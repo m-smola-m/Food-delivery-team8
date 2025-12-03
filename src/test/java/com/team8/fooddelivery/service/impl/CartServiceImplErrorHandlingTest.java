@@ -9,6 +9,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -16,6 +17,7 @@ class CartServiceImplErrorHandlingTest {
 
     private CartServiceImpl cartService;
     private ClientRepository clientRepository;
+    private final Random random = new Random();
 
     @BeforeEach
     void setUp() throws SQLException {
@@ -51,8 +53,9 @@ class CartServiceImplErrorHandlingTest {
                 .country("Russia").city("Moscow").street("Test").building("1")
                 .apartment("10").entrance("1").floor(1)
                 .latitude(55.7558).longitude(37.6173).build();
-        
-        String uniquePhone = "+7999" + (System.currentTimeMillis() % 10000000);
+        String operatorCode = "900"; // или выбираем случайный
+        int number = 9000000 + random.nextInt(1000000); // 9000000-9999999
+        String uniquePhone = "+7" + operatorCode + number;
         String uniqueEmail = "cart_test_" + System.currentTimeMillis() + "@test.com";
         
         com.team8.fooddelivery.model.client.Client client = clientService.register(

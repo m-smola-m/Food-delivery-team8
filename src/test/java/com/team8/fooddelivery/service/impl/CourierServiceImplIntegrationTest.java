@@ -8,6 +8,7 @@ import org.junit.jupiter.api.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -17,6 +18,7 @@ class CourierServiceImplIntegrationTest {
     private CourierServiceImpl courierService;
     private static Long testCourierId;
     private static String testPhone;
+    private final Random random = new Random();
 
     @BeforeAll
     static void setupDatabase() {
@@ -43,7 +45,10 @@ class CourierServiceImplIntegrationTest {
     @BeforeEach
     void setUp() {
         courierService = new CourierServiceImpl();
-        testPhone = "+7999" + (System.currentTimeMillis() % 10000000);
+        String operatorCode = "900"; // или выбираем случайный
+        int number = 9000000 + random.nextInt(1000000); // 9000000-9999999
+        String uniquePhone = "+7" + operatorCode + number;
+        testPhone = uniquePhone;
     }
 
     @Test

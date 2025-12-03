@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.Random;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -20,6 +21,7 @@ class CourierServiceImplErrorHandlingTest {
     private CourierServiceImpl courierService;
     private CourierRepository courierRepository;
     private Long testCourierId;
+    private final Random random = new Random();
 
     @BeforeEach
     void setUp() throws SQLException {
@@ -62,7 +64,9 @@ class CourierServiceImplErrorHandlingTest {
     @Test
     @DisplayName("getCourierById: Should return courier when exists")
     void testGetCourierById_Success() throws SQLException {
-        String uniquePhone = "+7999" + (System.currentTimeMillis() % 10000000);
+        String operatorCode = "900"; // или выбираем случайный
+        int number = 9000000 + random.nextInt(1000000); // 9000000-9999999
+        String uniquePhone = "+7" + operatorCode + number;
         testCourierId = courierService.registerNewCourier("Test Courier", uniquePhone, "Password123!", "bike");
         
         Courier result = courierService.getCourierById(testCourierId);
@@ -73,7 +77,9 @@ class CourierServiceImplErrorHandlingTest {
     @Test
     @DisplayName("getOrderHistory: Should return orders when courier exists")
     void testGetOrderHistory_Success() throws SQLException {
-        String uniquePhone = "+7999" + (System.currentTimeMillis() % 10000000);
+        String operatorCode = "900"; // или выбираем случайный
+        int number = 9000000 + random.nextInt(1000000); // 9000000-9999999
+        String uniquePhone = "+7" + operatorCode + number;
         testCourierId = courierService.registerNewCourier("Test Courier", uniquePhone, "Password123!", "bike");
         
         var result = courierService.getOrderHistory(testCourierId);

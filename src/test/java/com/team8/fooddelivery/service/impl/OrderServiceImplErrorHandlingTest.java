@@ -26,6 +26,7 @@ import java.sql.SQLException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -38,6 +39,7 @@ class OrderServiceImplErrorHandlingTest {
     private NotificationServiceImpl notificationService;
     private Long testClientId;
     private Address deliveryAddress;
+    private final Random random = new Random();
 
     @BeforeEach
     void setUp() throws SQLException {
@@ -100,8 +102,9 @@ class OrderServiceImplErrorHandlingTest {
                 .country("Russia").city("Moscow").street("Test").building("1")
                 .apartment("10").entrance("1").floor(1)
                 .latitude(55.7558).longitude(37.6173).build();
-        
-        String uniquePhone = "+7999" + (System.currentTimeMillis() % 10000000);
+        String operatorCode = "900"; // или выбираем случайный
+        int number = 9000000 + random.nextInt(1000000); // 9000000-9999999
+        String uniquePhone = "+7" + operatorCode + number;
         String uniqueEmail = "inactive_" + System.currentTimeMillis() + "@test.com";
         
         Client client = clientService.register(uniquePhone, "Password123!", "Inactive Client", uniqueEmail, address);
@@ -133,8 +136,9 @@ class OrderServiceImplErrorHandlingTest {
                 .country("Russia").city("Moscow").street("Test").building("1")
                 .apartment("10").entrance("1").floor(1)
                 .latitude(55.7558).longitude(37.6173).build();
-        
-        String uniquePhone = "+7999" + (System.currentTimeMillis() % 10000000);
+        String operatorCode = "900"; // или выбираем случайный
+        int number = 9000000 + random.nextInt(1000000); // 9000000-9999999
+        String uniquePhone = "+7" + operatorCode + number;
         String uniqueEmail = "nocart_" + System.currentTimeMillis() + "@test.com";
         
         Client client = clientService.register(uniquePhone, "Password123!", "No Cart Client", uniqueEmail, address);
@@ -154,8 +158,9 @@ class OrderServiceImplErrorHandlingTest {
                 .country("Russia").city("Moscow").street("Test").building("1")
                 .apartment("10").entrance("1").floor(1)
                 .latitude(55.7558).longitude(37.6173).build();
-        
-        String uniquePhone = "+7999" + (System.currentTimeMillis() % 10000000);
+        String operatorCode = "900"; // или выбираем случайный
+        int number = 9000000 + random.nextInt(1000000); // 9000000-9999999
+        String uniquePhone = "+7" + operatorCode + number;
         String uniqueEmail = "emptycart_" + System.currentTimeMillis() + "@test.com";
         
         Client client = clientService.register(uniquePhone, "Password123!", "Empty Cart Client", uniqueEmail, address);
@@ -178,8 +183,9 @@ class OrderServiceImplErrorHandlingTest {
                 .country("Russia").city("Moscow").street("Test").building("1")
                 .apartment("10").entrance("1").floor(1)
                 .latitude(55.7558).longitude(37.6173).build();
-        
-        String uniquePhone = "+7999" + (System.currentTimeMillis() % 10000000);
+        String operatorCode = "900"; // или выбираем случайный
+        int number = 9000000 + random.nextInt(1000000); // 9000000-9999999
+        String uniquePhone = "+7" + operatorCode + number;
         String uniqueEmail = "sqlerror_" + System.currentTimeMillis() + "@test.com";
         
         Client client = clientService.register(uniquePhone, "Password123!", "SQL Error Client", uniqueEmail, address);
@@ -217,8 +223,9 @@ class OrderServiceImplErrorHandlingTest {
                 .country("Russia").city("Moscow").street("Test").building("1")
                 .apartment("10").entrance("1").floor(1)
                 .latitude(55.7558).longitude(37.6173).build();
-        
-        String uniquePhone = "+7999" + (System.currentTimeMillis() % 10000000);
+        String operatorCode = "900"; // или выбираем случайный
+        int number = 9000000 + random.nextInt(1000000); // 9000000-9999999
+        String uniquePhone = "+7" + operatorCode + number;
         String uniqueEmail = "pending_" + System.currentTimeMillis() + "@test.com";
         
         Client client = clientService.register(uniquePhone, "Password123!", "Pending Client", uniqueEmail, address);
@@ -270,8 +277,9 @@ class OrderServiceImplErrorHandlingTest {
     private Long createTestShop() throws SQLException {
         String uniqueName = "Test Shop " + System.currentTimeMillis();
         String uniqueEmail = "test_shop_" + System.currentTimeMillis() + "@test.com";
-        String uniquePhone = "+7999" + (System.currentTimeMillis() % 10000000);
-        
+        String operatorCode = "900"; // или выбираем случайный
+        int number = 9000000 + random.nextInt(1000000); // 9000000-9999999
+        String uniquePhone = "+7" + operatorCode + number;
         String sql = "INSERT INTO shops (naming, description, status, registration_date, email_for_auth, phone_for_auth, password, public_email, public_phone, owner_name, owner_contact_phone, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING shop_id";
         try (Connection conn = DatabaseConnectionService.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)) {

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -22,6 +23,7 @@ class ShopInfoServiceImplIntegrationTest {
     private static Long testAddressId;
     private static Long testWorkingHoursId;
     private static String testEmail;
+    private final Random random = new Random();
     private static String testPhone;
 
     @BeforeAll
@@ -66,7 +68,10 @@ class ShopInfoServiceImplIntegrationTest {
         shopInfoService = new ShopInfoServiceImpl();
         long suffix = System.currentTimeMillis();
         testEmail = "shop" + suffix + "@test.com";
-        testPhone = "+7999" + (suffix % 10000000);
+        String operatorCode = "900"; // или выбираем случайный
+        int number = 9000000 + random.nextInt(1000000); // 9000000-9999999
+        String uniquePhone = "+7" + operatorCode + number;
+        testPhone = uniquePhone;
     }
 
     @Test
