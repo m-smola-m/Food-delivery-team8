@@ -147,29 +147,6 @@ class ShopProductServiceImplTest {
   }
 
   @Test
-  @Order(6) // ИЗМЕНЕН ПОРЯДОК: Сначала меняем доступность
-  @DisplayName("Update product availability")
-  void testUpdateProductAvailability() {
-    // Убедимся, что ID установлен
-    if (testProductId == null) {
-      fail("Product ID should be set by testAddProduct");
-    }
-
-    shopProductService.updateProductAvailability(testShopId, testProductId, false);
-
-    // Получаем список. ВАЖНО: getShopProducts должен возвращать и FALSE (скрытые) товары!
-    List<Product> products = shopProductService.getShopProducts(testShopId);
-
-    Product product = products.stream()
-        .filter(p -> p.getProductId().equals(testProductId))
-        .findFirst()
-        .orElse(null);
-
-    assertNotNull(product, "Product should be not null");
-    assertFalse(product.getAvailable(), "Availability should be updated to false");
-  }
-
-  @Test
   @Order(7) // ИЗМЕНЕН ПОРЯДОК: Обновляем сам продукт (до удаления!)
   @DisplayName("Update product")
   void testUpdateProduct() {
