@@ -37,6 +37,12 @@ public class ShopServlet extends HttpServlet {
             handleDashboard(request, response);
         } else if ("/list-api".equals(pathInfo)) {
             handleShopListApi(request, response);
+        } else if ("/login".equals(pathInfo)) {
+            handleLoginPage(request, response);
+        } else if ("/register".equals(pathInfo)) {
+            handleRegisterPage(request, response);
+        } else if ("/orders".equals(pathInfo)) {
+            handleOrders(request, response);
         } else {
             response.sendError(404);
         }
@@ -171,6 +177,7 @@ public class ShopServlet extends HttpServlet {
             Optional<Shop> shop = shopService.getShopById(shopId);
             if (shop.isPresent()) {
                 request.setAttribute("shop", shop.get());
+                request.setAttribute("shopTypes", ShopType.values());
                 request.getRequestDispatcher("/WEB-INF/jsp/shop/dashboard.jsp").forward(request, response);
             } else {
                 response.sendError(404);
@@ -247,6 +254,36 @@ public class ShopServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/shop/dashboard?updated=true");
         } catch (Exception e) {
             log.error("Error updating status", e);
+            response.sendError(500);
+        }
+    }
+
+    private void handleLoginPage(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        request.getRequestDispatcher("/WEB-INF/jsp/shop/login.jsp").forward(request, response);
+    }
+
+    private void handleRegisterPage(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        request.getRequestDispatcher("/WEB-INF/jsp/shop/register.jsp").forward(request, response);
+    }
+
+    private void handleOrders(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        Long shopId = (Long) request.getSession().getAttribute("shopId");
+        if (shopId == null) {
+            response.sendRedirect(request.getContextPath() + "/shop/login");
+            return;
+        }
+
+        try {
+            // TODO: Реализовать получение заказов магазина
+            // List<Order> orders = orderService.getOrdersByShopId(shopId);
+            // request.setAttribute("orders", orders);
+            request.setAttribute("orders", new java.util.ArrayList<>()); // Временная заглушка
+            request.getRequestDispatcher("/WEB-INF/jsp/shop/orders.jsp").forward(request, response);
+        } catch (Exception e) {
+            log.error("Error loading shop orders", e);
             response.sendError(500);
         }
     }

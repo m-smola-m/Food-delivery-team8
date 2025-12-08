@@ -4,21 +4,12 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Товары - Food Delivery</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/style.css">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="container">
-            <h1>Food Delivery - Магазин</h1>
-            <ul>
-                <li><a href="${pageContext.request.contextPath}/shop/dashboard">Панель</a></li>
-                <li><a href="${pageContext.request.contextPath}/products/list">Товары</a></li>
-                <li><a href="${pageContext.request.contextPath}/shop/orders">Заказы</a></li>
-                <li><a href="${pageContext.request.contextPath}/auth/logout">Выход</a></li>
-            </ul>
-        </div>
-    </nav>
+    <%@ include file="/WEB-INF/jsp/layout/navbar.jsp" %>
 
     <main class="container">
         <div class="section-header">
@@ -83,5 +74,6 @@
             </tbody>
         </table>
     </main>
+    <%@ include file="/WEB-INF/jsp/layout/footer.jsp" %>
 </body>
 </html>

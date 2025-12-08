@@ -4,48 +4,51 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Кабинет магазина - Food Delivery</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/style.css">
 </head>
 <body>
-<nav class="navbar">
-    <div class="container">
-        <h1>Food Delivery - Магазин</h1>
-        <ul>
-            <li><a href="${pageContext.request.contextPath}/shop/dashboard">Панель</a></li>
-            <li><a href="${pageContext.request.contextPath}/products/list">Товары</a></li>
-            <li><a href="${pageContext.request.contextPath}/shop/orders">Заказы</a></li>
-            <li><a href="${pageContext.request.contextPath}/auth/logout">Выход</a></li>
-        </ul>
-    </div>
-</nav>
+<%@ include file="/WEB-INF/jsp/layout/navbar.jsp" %>
 
-<main class="container grid-2">
+<main class="container">
+    <h1>Панель управления магазином</h1>
+    
+    <c:if test="${not empty param.updated}">
+        <div class="alert alert-success">Данные успешно обновлены!</div>
+    </c:if>
+    
+    <div class="grid-2">
     <section class="card">
         <div class="section-header">
             <div>
                 <h2>Статус магазина</h2>
-                <p class="muted">ACTIVE, SUSPENDED, CLOSED</p>
+                <p class="muted">Текущий статус: ${shop.status}</p>
             </div>
-            <span class="status-badge">${shop.status}</span>
+            <span class="status-badge status-${shop.status}">${shop.status}</span>
         </div>
-        <form method="POST" action="${pageContext.request.contextPath}/shop/status" class="stacked-form">
-            <label>Изменить статус</label>
-            <select name="status" required>
-                <option value="ACTIVE">ACTIVE</option>
-                <option value="SUSPENDED">SUSPENDED</option>
-                <option value="CLOSED">CLOSED</option>
-            </select>
-            <button type="submit" class="btn btn-primary">Сохранить</button>
-        </form>
+        <c:if test="${shop.status == 'ACTIVE'}">
+            <form method="POST" action="${pageContext.request.contextPath}/shop/update-status" class="stacked-form">
+                <label>Изменить статус</label>
+                <select name="status" required>
+                    <option value="ACTIVE" ${shop.status == 'ACTIVE' ? 'selected' : ''}>ACTIVE</option>
+                    <option value="SUSPENDED" ${shop.status == 'SUSPENDED' ? 'selected' : ''}>SUSPENDED</option>
+                    <option value="CLOSED" ${shop.status == 'CLOSED' ? 'selected' : ''}>CLOSED</option>
+                </select>
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+            </form>
+        </c:if>
+        <c:if test="${shop.status != 'ACTIVE'}">
+            <p class="muted">Для изменения статуса обратитесь к администратору.</p>
+        </c:if>
     </section>
 
     <section class="card">
         <h2>Активация аккаунта</h2>
-        <p class="muted">После модерации отправляем ссылку на emailForAU. Перейдите по ней, чтобы получить статус ACTIVE и shopId.</p>
+        <p class="muted">После модерации отправляем ссылку на emailForAuth. Перейдите по ней, чтобы получить статус ACTIVE и shopId.</p>
         <form method="POST" action="${pageContext.request.contextPath}/shop/resend-confirmation" class="stacked-form">
             <label>Email для подтверждения</label>
-            <input type="email" name="emailForAU" value="${shop.emailForAU}" required>
+            <input type="email" name="emailForAuth" value="${shop.emailForAuth}" required>
             <button type="submit" class="btn btn-secondary">Выслать ссылку повторно</button>
         </form>
     </section>
@@ -54,19 +57,23 @@
         <h2>Публичная информация</h2>
         <form method="POST" action="${pageContext.request.contextPath}/shop/update-public" class="stacked-form">
             <label>Публичный телефон</label>
-            <input type="tel" name="publicNumber" value="${shop.publicNumber}" required>
+            <input type="tel" name="publicPhone" value="${shop.publicPhone}" required>
 
             <label>Публичная почта</label>
-            <input type="email" name="publicEmail" value="${shop.contactEmail}" required>
+            <input type="email" name="publicEmail" value="${shop.publicEmail}" required>
 
             <label>Описание</label>
             <textarea name="description" rows="3">${shop.description}</textarea>
 
             <label>Тип/категория</label>
-            <input type="text" name="type" value="${shop.storeType}">
+            <select name="type" required>
+                <c:forEach var="shopType" items="${shopTypes}">
+                    <option value="${shopType}" ${shop.type == shopType ? 'selected' : ''}>${shopType.displayName}</option>
+                </c:forEach>
+            </select>
 
             <label>Витринное название</label>
-            <input type="text" name="naming" value="${shop.naming}">
+            <input type="text" name="naming" value="${shop.naming}" required>
 
             <button type="submit" class="btn btn-primary">Обновить данные</button>
         </form>
@@ -75,11 +82,11 @@
     <section class="card">
         <h2>Безопасность аккаунта</h2>
         <form method="POST" action="${pageContext.request.contextPath}/shop/update-contacts" class="stacked-form">
-            <p class="muted">Смена emailForAU / phoneForAU потребует подтверждения кода.</p>
+            <p class="muted">Смена emailForAuth / phoneForAuth потребует подтверждения кода.</p>
             <label>Новый email для входа</label>
-            <input type="email" name="emailForAU" placeholder="example@gmail.com">
+            <input type="email" name="emailForAuth" placeholder="example@gmail.com" value="${shop.emailForAuth}">
             <label>Новый телефон для входа</label>
-            <input type="tel" name="phoneForAU" placeholder="89XXXXXXXXX">
+            <input type="tel" name="phoneForAuth" placeholder="89XXXXXXXXX" value="${shop.phoneForAuth}">
             <label>Пароль для подтверждения</label>
             <input type="password" name="password" required>
             <label>Код из почты/телефона</label>
@@ -103,53 +110,56 @@
         <form method="POST" action="${pageContext.request.contextPath}/shop/update-address" class="form-grid">
             <div class="form-group">
                 <label>Страна</label>
-                <input type="text" name="country" value="${shop.country}" required>
+                <input type="text" name="country" value="${shop.address != null ? shop.address.country : ''}" required>
             </div>
             <div class="form-group">
                 <label>Город</label>
-                <input type="text" name="city" value="${shop.city}" required>
+                <input type="text" name="city" value="${shop.address != null ? shop.address.city : ''}" required>
             </div>
             <div class="form-group">
                 <label>Улица</label>
-                <input type="text" name="street" value="${shop.street}" required>
+                <input type="text" name="street" value="${shop.address != null ? shop.address.street : ''}" required>
             </div>
             <div class="form-group">
                 <label>Дом</label>
-                <input type="text" name="building" value="${shop.building}" required>
+                <input type="text" name="building" value="${shop.address != null ? shop.address.building : ''}" required>
             </div>
             <div class="form-group">
                 <label>Квартира/офис</label>
-                <input type="text" name="apartment" value="${shop.apartment}">
+                <input type="text" name="apartment" value="${shop.address != null ? shop.address.apartment : ''}">
             </div>
             <div class="form-group">
                 <label>Подъезд</label>
-                <input type="text" name="entrance" value="${shop.entrance}">
+                <input type="text" name="entrance" value="${shop.address != null ? shop.address.entrance : ''}">
             </div>
             <div class="form-group">
                 <label>Этаж</label>
-                <input type="text" name="floor" value="${shop.floor}">
+                <input type="number" name="floor" value="${shop.address != null ? shop.address.floor : ''}">
             </div>
             <div class="form-group">
                 <label>Район</label>
-                <input type="text" name="district" value="${shop.district}">
+                <input type="text" name="district" value="${shop.address != null ? shop.address.district : ''}">
             </div>
             <div class="form-group">
                 <label>Координаты (широта)</label>
-                <input type="text" name="latitude" value="${shop.latitude}">
+                <input type="number" step="0.000001" name="latitude" value="${shop.address != null ? shop.address.latitude : ''}">
             </div>
             <div class="form-group">
                 <label>Координаты (долгота)</label>
-                <input type="text" name="longitude" value="${shop.longitude}">
+                <input type="number" step="0.000001" name="longitude" value="${shop.address != null ? shop.address.longitude : ''}">
             </div>
             <div class="form-group full">
                 <label>Комментарий к адресу</label>
-                <textarea name="addressNote" rows="2">${shop.addressNote}</textarea>
+                <textarea name="addressNote" rows="2">${shop.address != null ? shop.address.addressNote : ''}</textarea>
             </div>
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">Сохранить адрес</button>
             </div>
         </form>
     </section>
+    </div>
 </main>
+
+<%@ include file="/WEB-INF/jsp/layout/footer.jsp" %>
 </body>
 </html>
