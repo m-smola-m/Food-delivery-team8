@@ -5,6 +5,7 @@ import com.team8.fooddelivery.model.shop.ShopStatus;
 import com.team8.fooddelivery.model.shop.ShopType;
 import com.team8.fooddelivery.repository.ShopRepository;
 import com.team8.fooddelivery.service.ShopInfoService;
+import com.team8.fooddelivery.util.PasswordUtils;
 import org.mindrot.jbcrypt.BCrypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +49,8 @@ public class ShopInfoServiceImpl implements ShopInfoService {
         throw new IllegalArgumentException("Телефон уже используется");
       }
 
-      infoAbout.setStatus(ShopStatus.PENDING);
+      // Автоматическое подтверждение магазина
+      infoAbout.setStatus(ShopStatus.APPROVED);
       infoAbout.setEmailForAuth(emailForAuth);
       infoAbout.setPhoneForAuth(phoneForAuth);
       infoAbout.setPassword(BCrypt.hashpw(password, BCrypt.gensalt()));
@@ -56,7 +58,7 @@ public class ShopInfoServiceImpl implements ShopInfoService {
       Long shopId = shopRepository.save(infoAbout);
       infoAbout.setShopId(shopId);
 
-      logger.info("Магазин зарегистрирован с ID: {}. Ожидает подтверждения.", shopId);
+      logger.info("Магазин зарегистрирован и автоматически подтвержден с ID: {}.", shopId);
       return infoAbout;
     } catch (SQLException e) {
       logger.error("Ошибка при регистрации магазина", e);
@@ -280,14 +282,34 @@ public class ShopInfoServiceImpl implements ShopInfoService {
       }
 
       Shop shop = shopOpt.get();
-      if (!BCrypt.checkpw(password, shop.getPassword())) {
+      
+      // Проверяем пароль с использованием PasswordUtils, который обрабатывает разные форматы
+      if (shop.getPassword() == null || shop.getPassword().trim().isEmpty()) {
+        throw new IllegalArgumentException("Пароль магазина не установлен");
+      }
+      
+      // Используем PasswordUtils.checkPassword, который обрабатывает случаи с незахешированными паролями
+      if (!PasswordUtils.checkPassword(password, shop.getPassword())) {
         throw new IllegalArgumentException("Неверный пароль");
+      }
+      
+      // Если пароль был в plain text, хешируем его для безопасности
+      if (!shop.getPassword().startsWith("$2")) {
+        logger.warn("Пароль магазина {} был в plain text, хешируем его", shop.getShopId());
+        shop.setPassword(PasswordUtils.hashPassword(password));
+        shopRepository.update(shop);
       }
 
       return shop;
     } catch (SQLException e) {
       logger.error("Ошибка при входе магазина", e);
       throw new RuntimeException("Не удалось выполнить вход", e);
+    } catch (IllegalArgumentException e) {
+      // Перебрасываем IllegalArgumentException как есть
+      throw e;
+    } catch (Exception e) {
+      logger.error("Неожиданная ошибка при входе магазина", e);
+      throw new RuntimeException("Не удалось выполнить вход: " + e.getMessage(), e);
     }
   }
 }

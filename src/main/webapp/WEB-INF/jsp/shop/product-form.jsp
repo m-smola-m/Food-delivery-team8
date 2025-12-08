@@ -43,11 +43,11 @@
                 </div>
                 <div class="form-group">
                     <label>Вес, г</label>
-                    <input type="number" name="weight" value="${product.weight}" min="0" step="1" placeholder="Например, 350" required>
+                    <input type="number" name="weight" value="${product.weight != null ? product.weight.intValue() : ''}" min="0" step="1" placeholder="Например, 350">
                 </div>
                 <div class="form-group">
                     <label>Время готовки (мин)</label>
-                    <input type="number" name="cookingTimeMinutes" value="${product.cookingTimeMinutes}" min="0" step="1">
+                    <input type="number" name="cookingTimeMinutes" value="${product.cookingTimeMinutes != null ? product.cookingTimeMinutes.toMinutes() : ''}" min="0" step="1" placeholder="Например, 30">
                 </div>
             </div>
 

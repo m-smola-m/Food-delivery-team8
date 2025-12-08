@@ -19,6 +19,7 @@
     </c:if>
     
     <div class="grid-2">
+    <!-- Первая колонка: Основная информация -->
     <section class="card">
         <div class="section-header">
             <div>
@@ -27,40 +28,28 @@
             </div>
             <span class="status-badge status-${shop.status}">${shop.status}</span>
         </div>
-        <c:if test="${shop.status == 'ACTIVE'}">
+        <c:if test="${shop.status == 'ACTIVE' || shop.status == 'APPROVED'}">
             <form method="POST" action="${pageContext.request.contextPath}/shop/update-status" class="stacked-form">
                 <label>Изменить статус</label>
                 <select name="status" required>
                     <option value="ACTIVE" ${shop.status == 'ACTIVE' ? 'selected' : ''}>ACTIVE</option>
+                    <option value="APPROVED" ${shop.status == 'APPROVED' ? 'selected' : ''}>APPROVED</option>
                     <option value="SUSPENDED" ${shop.status == 'SUSPENDED' ? 'selected' : ''}>SUSPENDED</option>
                     <option value="CLOSED" ${shop.status == 'CLOSED' ? 'selected' : ''}>CLOSED</option>
                 </select>
                 <button type="submit" class="btn btn-primary">Сохранить</button>
             </form>
         </c:if>
-        <c:if test="${shop.status != 'ACTIVE'}">
+        <c:if test="${shop.status != 'ACTIVE' && shop.status != 'APPROVED'}">
             <p class="muted">Для изменения статуса обратитесь к администратору.</p>
         </c:if>
     </section>
 
     <section class="card">
-        <h2>Активация аккаунта</h2>
-        <p class="muted">После модерации отправляем ссылку на emailForAuth. Перейдите по ней, чтобы получить статус ACTIVE и shopId.</p>
-        <form method="POST" action="${pageContext.request.contextPath}/shop/resend-confirmation" class="stacked-form">
-            <label>Email для подтверждения</label>
-            <input type="email" name="emailForAuth" value="${shop.emailForAuth}" required>
-            <button type="submit" class="btn btn-secondary">Выслать ссылку повторно</button>
-        </form>
-    </section>
-
-    <section class="card">
         <h2>Публичная информация</h2>
         <form method="POST" action="${pageContext.request.contextPath}/shop/update-public" class="stacked-form">
-            <label>Публичный телефон</label>
-            <input type="tel" name="publicPhone" value="${shop.publicPhone}" required>
-
-            <label>Публичная почта</label>
-            <input type="email" name="publicEmail" value="${shop.publicEmail}" required>
+            <label>Витринное название</label>
+            <input type="text" name="naming" value="${shop.naming}" required>
 
             <label>Описание</label>
             <textarea name="description" rows="3">${shop.description}</textarea>
@@ -72,8 +61,11 @@
                 </c:forEach>
             </select>
 
-            <label>Витринное название</label>
-            <input type="text" name="naming" value="${shop.naming}" required>
+            <label>Публичный телефон</label>
+            <input type="tel" name="publicPhone" value="${shop.publicPhone}" required>
+
+            <label>Публичная почта</label>
+            <input type="email" name="publicEmail" value="${shop.publicEmail}" required>
 
             <button type="submit" class="btn btn-primary">Обновить данные</button>
         </form>
@@ -94,7 +86,7 @@
             <button type="submit" class="btn btn-secondary">Сохранить контакты</button>
         </form>
 
-        <form method="POST" action="${pageContext.request.contextPath}/shop/update-password" class="stacked-form">
+        <form method="POST" action="${pageContext.request.contextPath}/shop/update-password" class="stacked-form" style="margin-top: 20px;">
             <label>Старый пароль</label>
             <input type="password" name="oldPassword" required>
             <label>Новый пароль</label>
@@ -105,7 +97,8 @@
         </form>
     </section>
 
-    <section class="card wide">
+    <!-- Вторая колонка: Адрес -->
+    <section class="card wide" style="grid-column: 1 / -1;">
         <h2>Адрес магазина</h2>
         <form method="POST" action="${pageContext.request.contextPath}/shop/update-address" class="form-grid">
             <div class="form-group">

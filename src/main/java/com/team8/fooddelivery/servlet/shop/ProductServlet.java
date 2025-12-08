@@ -2,8 +2,10 @@ package com.team8.fooddelivery.servlet.shop;
 
 import com.team8.fooddelivery.model.product.Product;
 import com.team8.fooddelivery.model.product.ProductCategory;
+import com.team8.fooddelivery.repository.ProductRepository;
 import com.team8.fooddelivery.service.ShopProductService;
 import com.team8.fooddelivery.service.impl.ShopProductServiceImpl;
+import com.team8.fooddelivery.util.SessionManager;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -13,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +24,7 @@ import java.util.Optional;
 public class ProductServlet extends HttpServlet {
     private static final Logger log = LoggerFactory.getLogger(ProductServlet.class);
     private final ShopProductService productService = new ShopProductServiceImpl();
+    private final ProductRepository productRepository = new ProductRepository();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -73,7 +77,7 @@ public class ProductServlet extends HttpServlet {
     private void handleProductList(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        Long shopId = (Long) request.getSession().getAttribute("shopId");
+        Long shopId = SessionManager.getUserId(request.getSession());
         if (shopId == null) {
             response.sendRedirect(request.getContextPath() + "/shop/login");
             return;
@@ -96,7 +100,7 @@ public class ProductServlet extends HttpServlet {
     private void handleAddForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        Long shopId = (Long) request.getSession().getAttribute("shopId");
+        Long shopId = SessionManager.getUserId(request.getSession());
         if (shopId == null) {
             response.sendRedirect(request.getContextPath() + "/shop/login");
             return;
@@ -112,7 +116,7 @@ public class ProductServlet extends HttpServlet {
     private void handleEditForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        Long shopId = (Long) request.getSession().getAttribute("shopId");
+        Long shopId = SessionManager.getUserId(request.getSession());
         if (shopId == null) {
             response.sendRedirect(request.getContextPath() + "/shop/login");
             return;
@@ -120,14 +124,39 @@ public class ProductServlet extends HttpServlet {
         
         try {
             Long productId = Long.parseLong(request.getParameter("id"));
-            // TODO: Получить товар по ID (не критично для текущей задачи)
+            
+            // Получаем товар по ID через репозиторий (включая недоступные)
+            Optional<Product> productOpt = productRepository.findById(productId);
+            
+            if (productOpt.isEmpty()) {
+                log.warn("Product {} not found", productId);
+                response.sendRedirect(request.getContextPath() + "/products/list?error=product_not_found");
+                return;
+            }
+            
+            Product product = productOpt.get();
+            
+            // Проверяем, что товар принадлежит магазину
+            List<Product> shopProducts = productRepository.findByShopId(shopId);
+            boolean belongsToShop = shopProducts.stream()
+                    .anyMatch(p -> p.getProductId().equals(productId));
+            
+            if (!belongsToShop) {
+                log.warn("Product {} does not belong to shop {}", productId, shopId);
+                response.sendRedirect(request.getContextPath() + "/products/list?error=access_denied");
+                return;
+            }
+            
             request.setAttribute("categories", ProductCategory.values());
-            request.setAttribute("product", null);
+            request.setAttribute("product", product);
             request.setAttribute("isEdit", true);
             request.getRequestDispatcher("/WEB-INF/jsp/shop/product-form.jsp").forward(request, response);
+        } catch (SQLException e) {
+            log.error("Database error loading product form", e);
+            response.sendRedirect(request.getContextPath() + "/products/list?error=database_error");
         } catch (Exception e) {
             log.error("Error loading product form", e);
-            response.sendError(500);
+            response.sendRedirect(request.getContextPath() + "/products/list?error=load_failed");
         }
     }
 
@@ -137,7 +166,7 @@ public class ProductServlet extends HttpServlet {
     private void handleAddProduct(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        Long shopId = (Long) request.getSession().getAttribute("shopId");
+        Long shopId = SessionManager.getUserId(request.getSession());
         if (shopId == null) {
             response.sendRedirect(request.getContextPath() + "/shop/login");
             return;
@@ -145,21 +174,59 @@ public class ProductServlet extends HttpServlet {
         
         try {
             String name = request.getParameter("name");
-            String description = request.getParameter("description");
-            double price = Double.parseDouble(request.getParameter("price"));
+            String descriptionOfProduct = request.getParameter("descriptionOfProduct");
+            String description = descriptionOfProduct; // Используем descriptionOfProduct как описание
+            
+            if (name == null || name.trim().isEmpty()) {
+                throw new IllegalArgumentException("Название товара обязательно");
+            }
+            
+            double price;
+            try {
+                price = Double.parseDouble(request.getParameter("price"));
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Некорректная цена");
+            }
+            
             String categoryStr = request.getParameter("category");
+            if (categoryStr == null || categoryStr.trim().isEmpty()) {
+                throw new IllegalArgumentException("Категория обязательна");
+            }
             ProductCategory category = ProductCategory.valueOf(categoryStr);
+            
             boolean isAvailable = request.getParameter("isAvailable") != null;
-            int cookingTime = Integer.parseInt(request.getParameter("cookingTime") != null ?
-                    request.getParameter("cookingTime") : "0");
+            
+            String cookingTimeStr = request.getParameter("cookingTimeMinutes");
+            Duration cookingTime = null;
+            if (cookingTimeStr != null && !cookingTimeStr.trim().isEmpty()) {
+                try {
+                    int minutes = Integer.parseInt(cookingTimeStr);
+                    if (minutes > 0) {
+                        cookingTime = Duration.ofMinutes(minutes);
+                    }
+                } catch (NumberFormatException e) {
+                    // Игнорируем ошибку парсинга
+                }
+            }
+            
+            String weightStr = request.getParameter("weight");
+            Double weight = null;
+            if (weightStr != null && !weightStr.trim().isEmpty()) {
+                try {
+                    weight = Double.parseDouble(weightStr);
+                } catch (NumberFormatException e) {
+                    // Игнорируем ошибку парсинга
+                }
+            }
 
             Product product = Product.builder()
                     .name(name)
-                    .description(description)
+                    .description(description != null ? description : "")
                     .price(price)
                     .category(category)
                     .available(isAvailable)
-                    .cookingTimeMinutes(Duration.ofMinutes(cookingTime))
+                    .cookingTimeMinutes(cookingTime)
+                    .weight(weight)
                     .build();
             
             Product savedProduct = productService.addProduct(shopId, product);
@@ -179,7 +246,7 @@ public class ProductServlet extends HttpServlet {
     private void handleUpdateProduct(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        Long shopId = (Long) request.getSession().getAttribute("shopId");
+        Long shopId = SessionManager.getUserId(request.getSession());
         if (shopId == null) {
             response.sendRedirect(request.getContextPath() + "/shop/login");
             return;
@@ -188,22 +255,60 @@ public class ProductServlet extends HttpServlet {
         try {
             Long productId = Long.parseLong(request.getParameter("productId"));
             String name = request.getParameter("name");
-            String description = request.getParameter("description");
-            double price = Double.parseDouble(request.getParameter("price"));
+            String descriptionOfProduct = request.getParameter("descriptionOfProduct");
+            String description = descriptionOfProduct;
+            
+            if (name == null || name.trim().isEmpty()) {
+                throw new IllegalArgumentException("Название товара обязательно");
+            }
+            
+            double price;
+            try {
+                price = Double.parseDouble(request.getParameter("price"));
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Некорректная цена");
+            }
+            
             String categoryStr = request.getParameter("category");
+            if (categoryStr == null || categoryStr.trim().isEmpty()) {
+                throw new IllegalArgumentException("Категория обязательна");
+            }
             ProductCategory category = ProductCategory.valueOf(categoryStr);
+            
             boolean isAvailable = request.getParameter("isAvailable") != null;
-            int cookingTime = Integer.parseInt(request.getParameter("cookingTime") != null ?
-                    request.getParameter("cookingTime") : "0");
+            
+            String cookingTimeStr = request.getParameter("cookingTimeMinutes");
+            Duration cookingTime = null;
+            if (cookingTimeStr != null && !cookingTimeStr.trim().isEmpty()) {
+                try {
+                    int minutes = Integer.parseInt(cookingTimeStr);
+                    if (minutes > 0) {
+                        cookingTime = Duration.ofMinutes(minutes);
+                    }
+                } catch (NumberFormatException e) {
+                    // Игнорируем ошибку парсинга
+                }
+            }
+            
+            String weightStr = request.getParameter("weight");
+            Double weight = null;
+            if (weightStr != null && !weightStr.trim().isEmpty()) {
+                try {
+                    weight = Double.parseDouble(weightStr);
+                } catch (NumberFormatException e) {
+                    // Игнорируем ошибку парсинга
+                }
+            }
 
             Product product = Product.builder()
                     .productId(productId)
                     .name(name)
-                    .description(description)
+                    .description(description != null ? description : "")
                     .price(price)
                     .category(category)
                     .available(isAvailable)
-                    .cookingTimeMinutes(Duration.ofMinutes(cookingTime))
+                    .cookingTimeMinutes(cookingTime)
+                    .weight(weight)
                     .build();
             
             Product updatedProduct = productService.updateProduct(shopId, productId, product);
@@ -223,7 +328,7 @@ public class ProductServlet extends HttpServlet {
     private void handleDeleteProduct(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        Long shopId = (Long) request.getSession().getAttribute("shopId");
+        Long shopId = SessionManager.getUserId(request.getSession());
         if (shopId == null) {
             response.sendRedirect(request.getContextPath() + "/shop/login");
             return;
@@ -247,7 +352,7 @@ public class ProductServlet extends HttpServlet {
     private void handleToggleAvailability(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        Long shopId = (Long) request.getSession().getAttribute("shopId");
+        Long shopId = SessionManager.getUserId(request.getSession());
         if (shopId == null) {
             response.sendRedirect(request.getContextPath() + "/shop/login");
             return;

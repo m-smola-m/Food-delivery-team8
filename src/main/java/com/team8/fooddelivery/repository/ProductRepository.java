@@ -29,7 +29,7 @@ public class ProductRepository {
       stmt.setDouble(5, product.getPrice());
       stmt.setString(6, product.getCategory() != null ? product.getCategory().name() : null);
       stmt.setBoolean(7, product.getAvailable());
-      stmt.setLong(8, product.getCookingTimeMinutes() != null ? product.getCookingTimeMinutes().getSeconds() : 0);
+      stmt.setObject(8, product.getCookingTimeMinutes() != null ? product.getCookingTimeMinutes().toMinutes() : null, Types.BIGINT);
 
       ResultSet rs = stmt.executeQuery();
       if (rs.next()) {
@@ -55,7 +55,7 @@ public class ProductRepository {
       stmt.setDouble(5, product.getPrice());
       stmt.setString(6, product.getCategory() != null ? product.getCategory().name() : null);
       stmt.setBoolean(7, product.getAvailable());
-      stmt.setLong(8, product.getCookingTimeMinutes() != null ? product.getCookingTimeMinutes().getSeconds() : 0);
+      stmt.setObject(8, product.getCookingTimeMinutes() != null ? product.getCookingTimeMinutes().toMinutes() : null, Types.BIGINT);
 
       ResultSet rs = stmt.executeQuery();
       if (rs.next()) {
@@ -150,7 +150,7 @@ public class ProductRepository {
       stmt.setDouble(4, product.getPrice());
       stmt.setString(5, product.getCategory() != null ? product.getCategory().name() : null);
       stmt.setBoolean(6, product.getAvailable());
-      stmt.setLong(7, product.getCookingTimeMinutes() != null ? product.getCookingTimeMinutes().getSeconds() : 0);
+      stmt.setObject(7, product.getCookingTimeMinutes() != null ? product.getCookingTimeMinutes().toMinutes() : null, Types.BIGINT);
       stmt.setLong(8, product.getProductId());
 
       stmt.executeUpdate();
@@ -186,8 +186,11 @@ public class ProductRepository {
 
     boolean isAvailable = rs.getBoolean("is_available");
 
-    Long cookingTimeSeconds = rs.getLong("cooking_time_minutes");
-    Duration cookingTimeMinutes = Duration.ofSeconds(cookingTimeSeconds);
+    Long cookingTimeMinutes = rs.getObject("cooking_time_minutes", Long.class);
+    Duration cookingTime = null;
+    if (cookingTimeMinutes != null && cookingTimeMinutes > 0) {
+      cookingTime = Duration.ofMinutes(cookingTimeMinutes);
+    }
 
     return Product.builder()
         .productId(productId)
@@ -198,7 +201,7 @@ public class ProductRepository {
         .price(price)
         .category(category)
         .available(isAvailable)
-        .cookingTimeMinutes(cookingTimeMinutes)
+        .cookingTimeMinutes(cookingTime)
         .build();
   }
 }

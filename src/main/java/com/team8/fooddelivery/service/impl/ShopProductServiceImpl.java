@@ -122,9 +122,8 @@ public class ShopProductServiceImpl implements ShopProductService {
   @Override
   public List<Product> getShopProducts(Long shopId) {
     try {
-      return productRepository.findByShopId(shopId).stream()
-          .filter(Product::getAvailable)
-          .toList();
+      // Возвращаем все товары магазина (включая недоступные) для управления
+      return productRepository.findByShopId(shopId);
     } catch (SQLException e) {
       logger.error("Ошибка при получении продуктов магазина", e);
       return new ArrayList<>();
