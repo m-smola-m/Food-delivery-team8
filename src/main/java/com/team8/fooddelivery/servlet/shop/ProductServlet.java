@@ -11,14 +11,17 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @WebServlet("/products/*")
 public class ProductServlet extends HttpServlet {
@@ -31,6 +34,13 @@ public class ProductServlet extends HttpServlet {
             throws ServletException, IOException {
         
         String pathInfo = request.getPathInfo();
+        log.debug("ProductServlet doGet: pathInfo={}, requestURI={}", pathInfo, request.getRequestURI());
+        
+        if (pathInfo == null || pathInfo.isEmpty() || "/".equals(pathInfo)) {
+            // Если нет pathInfo, редиректим на список товаров
+            response.sendRedirect(request.getContextPath() + "/products/list");
+            return;
+        }
         
         if ("/list".equals(pathInfo)) {
             handleProductList(request, response);
@@ -43,6 +53,7 @@ public class ProductServlet extends HttpServlet {
         } else if ("/categories".equals(pathInfo)) {
             handleShopCategories(request, response);
         } else {
+            log.warn("ProductServlet: unknown pathInfo={}", pathInfo);
             response.sendError(404);
         }
     }
@@ -77,20 +88,27 @@ public class ProductServlet extends HttpServlet {
     private void handleProductList(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        Long shopId = SessionManager.getUserId(request.getSession());
+        HttpSession session = request.getSession(false);
+        Long shopId = SessionManager.getUserId(session);
+        
+        log.debug("handleProductList: shopId={}, session={}", shopId, session != null);
+        
         if (shopId == null) {
+            log.warn("handleProductList: shopId is null, redirecting to login");
             response.sendRedirect(request.getContextPath() + "/shop/login");
             return;
         }
         
         try {
             List<Product> products = productService.getShopProducts(shopId);
+            log.debug("handleProductList: loaded {} products for shop {}", products.size(), shopId);
             request.setAttribute("products", products);
             request.setAttribute("shopId", shopId);
             request.getRequestDispatcher("/WEB-INF/jsp/shop/products-list.jsp").forward(request, response);
         } catch (Exception e) {
-            log.error("Error loading products", e);
-            response.sendError(500);
+            log.error("Error loading products for shop {}", shopId, e);
+            request.setAttribute("error", "Ошибка загрузки товаров: " + e.getMessage());
+            request.getRequestDispatcher("/WEB-INF/jsp/shop/products-list.jsp").forward(request, response);
         }
     }
 
@@ -192,7 +210,13 @@ public class ProductServlet extends HttpServlet {
             if (categoryStr == null || categoryStr.trim().isEmpty()) {
                 throw new IllegalArgumentException("Категория обязательна");
             }
-            ProductCategory category = ProductCategory.valueOf(categoryStr);
+            ProductCategory category;
+            try {
+                category = ProductCategory.valueOf(categoryStr);
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid category '{}', using OTHER", categoryStr);
+                category = ProductCategory.OTHER;
+            }
             
             boolean isAvailable = request.getParameter("isAvailable") != null;
             
@@ -273,7 +297,13 @@ public class ProductServlet extends HttpServlet {
             if (categoryStr == null || categoryStr.trim().isEmpty()) {
                 throw new IllegalArgumentException("Категория обязательна");
             }
-            ProductCategory category = ProductCategory.valueOf(categoryStr);
+            ProductCategory category;
+            try {
+                category = ProductCategory.valueOf(categoryStr);
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid category '{}', using OTHER", categoryStr);
+                category = ProductCategory.OTHER;
+            }
             
             boolean isAvailable = request.getParameter("isAvailable") != null;
             
@@ -379,11 +409,24 @@ public class ProductServlet extends HttpServlet {
 
             List<Product> products;
             if (categoryParam != null && !categoryParam.isEmpty()) {
-                ProductCategory category = ProductCategory.valueOf(categoryParam);
+                ProductCategory category;
+                try {
+                    category = ProductCategory.valueOf(categoryParam);
+                } catch (IllegalArgumentException e) {
+                    log.warn("Invalid category '{}' in request, returning empty list", categoryParam);
+                    products = new ArrayList<>();
+                    sendJson(response, productsToJson(products));
+                    return;
+                }
+                // Для клиентов возвращаем только доступные товары
                 products = productService.getProductsByCategory(shopId, category);
             } else {
-                products = productService.getShopProducts(shopId);
+                // Для клиентов возвращаем только доступные товары
+                products = productService.getShopProducts(shopId).stream()
+                    .filter(Product::getAvailable)
+                    .toList();
             }
+            log.debug("handleProductsByShop: shopId={}, category={}, products count={}", shopId, categoryParam, products.size());
             sendJson(response, productsToJson(products));
         } catch (Exception e) {
             log.error("Error loading products by shop", e);

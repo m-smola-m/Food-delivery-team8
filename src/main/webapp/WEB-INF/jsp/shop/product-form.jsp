@@ -53,19 +53,15 @@
 
             <div class="form-group">
                 <label>Краткое описание</label>
-                <textarea name="descriptionOfProduct" rows="3" placeholder="Состав, вкус и особенности">${product.descriptionOfProduct}${product.description}</textarea>
+                <textarea name="descriptionOfProduct" rows="3" placeholder="Состав, вкус и особенности">${product.description != null ? product.description : ''}</textarea>
             </div>
             <div class="form-group">
                 <label>Ингредиенты (consistsOf)</label>
-                <textarea name="consistsOf" rows="2" placeholder="Тесто, сыр моцарелла, томатный соус">${product.consistsOf}</textarea>
+                <textarea name="consistsOf" rows="2" placeholder="Тесто, сыр моцарелла, томатный соус"></textarea>
             </div>
             <div class="form-group">
                 <label>Аллергены</label>
-                <input type="text" name="allergens" value="${product.allergens}" placeholder="Молоко, глютен">
-            </div>
-            <div class="form-group">
-                <label>Ссылка на изображение</label>
-                <input type="url" name="imageUrl" value="${product.imageUrl}" placeholder="https://...">
+                <input type="text" name="allergens" placeholder="Молоко, глютен">
             </div>
 
             <div class="form-group">

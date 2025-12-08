@@ -29,6 +29,12 @@
         <c:if test="${not empty param.deleted}">
             <div class="alert alert-success">Товар удалён!</div>
         </c:if>
+        <c:if test="${not empty error}">
+            <div class="alert alert-danger">${error}</div>
+        </c:if>
+        <c:if test="${not empty param.error}">
+            <div class="alert alert-danger">Ошибка: ${param.error}</div>
+        </c:if>
 
         <table class="products-table">
             <thead>

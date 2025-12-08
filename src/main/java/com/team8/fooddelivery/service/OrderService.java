@@ -30,4 +30,6 @@ public interface OrderService {
     List<Order> getOrdersByClient(Long clientId);
 
     Order repeatOrder(Long clientId, Long orderId);
+
+    List<Order> getOrdersByShopId(Long shopId);
 }

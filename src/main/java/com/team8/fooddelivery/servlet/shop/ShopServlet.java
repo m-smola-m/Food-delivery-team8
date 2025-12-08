@@ -371,13 +371,36 @@ public class ShopServlet extends HttpServlet {
         }
 
         try {
-            String newStatus = request.getParameter("status");
-            // TODO: Реализовать обновление статуса
-            log.info("Shop status update: {} -> {}", shopId, newStatus);
+            String newStatusStr = request.getParameter("status");
+            if (newStatusStr == null || newStatusStr.isEmpty()) {
+                response.sendRedirect(request.getContextPath() + "/shop/dashboard?error=empty_status");
+                return;
+            }
+
+            ShopStatus newStatus;
+            try {
+                newStatus = ShopStatus.valueOf(newStatusStr.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid shop status: {}", newStatusStr);
+                response.sendRedirect(request.getContextPath() + "/shop/dashboard?error=invalid_status");
+                return;
+            }
+
+            // Проверяем, что магазин может менять статус только на определенные значения
+            // Магазин может менять статус на ACTIVE, SUSPENDED, CLOSED, OPEN
+            if (newStatus != ShopStatus.ACTIVE && newStatus != ShopStatus.SUSPENDED && 
+                newStatus != ShopStatus.CLOSED && newStatus != ShopStatus.OPEN) {
+                log.warn("Shop {} attempted to set unauthorized status: {}", shopId, newStatus);
+                response.sendRedirect(request.getContextPath() + "/shop/dashboard?error=unauthorized_status");
+                return;
+            }
+
+            shopService.updateShopStatus(shopId, newStatus);
+            log.info("Shop status updated: shopId={}, newStatus={}", shopId, newStatus);
             response.sendRedirect(request.getContextPath() + "/shop/dashboard?updated=true");
         } catch (Exception e) {
-            log.error("Error updating status", e);
-            response.sendError(500);
+            log.error("Error updating shop status", e);
+            response.sendRedirect(request.getContextPath() + "/shop/dashboard?error=update_failed");
         }
     }
 
@@ -400,10 +423,11 @@ public class ShopServlet extends HttpServlet {
         }
 
         try {
-            // TODO: Реализовать получение заказов магазина
-            // List<Order> orders = orderService.getOrdersByShopId(shopId);
-            // request.setAttribute("orders", orders);
-            request.setAttribute("orders", new java.util.ArrayList<>()); // Временная заглушка
+            com.team8.fooddelivery.service.OrderService orderService = 
+                new com.team8.fooddelivery.service.impl.OrderServiceImpl(new com.team8.fooddelivery.service.impl.CartServiceImpl());
+            List<com.team8.fooddelivery.model.order.Order> orders = orderService.getOrdersByShopId(shopId);
+            log.info("Loaded {} orders for shop {}", orders.size(), shopId);
+            request.setAttribute("orders", orders);
             request.getRequestDispatcher("/WEB-INF/jsp/shop/orders.jsp").forward(request, response);
         } catch (Exception e) {
             log.error("Error loading shop orders", e);

@@ -16,29 +16,8 @@ public class ProductRepository {
   private static final Logger logger = LoggerFactory.getLogger(ProductRepository.class);
 
   public Long save(Product product) throws SQLException {
-    String sql = "INSERT INTO products (shop_id, name, description, weight, price, category, is_available, cooking_time_minutes) " +
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING product_id";
-
-    try (Connection conn = DatabaseConnectionService.getConnection();
-         PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-      stmt.setObject(1, product.getProductId() != null ? null : null, Types.BIGINT); // shop_id будет установлен отдельно
-      stmt.setString(2, product.getName());
-      stmt.setString(3, product.getDescription());
-      stmt.setObject(4, product.getWeight(), Types.DOUBLE);
-      stmt.setDouble(5, product.getPrice());
-      stmt.setString(6, product.getCategory() != null ? product.getCategory().name() : null);
-      stmt.setBoolean(7, product.getAvailable());
-      stmt.setObject(8, product.getCookingTimeMinutes() != null ? product.getCookingTimeMinutes().toMinutes() : null, Types.BIGINT);
-
-      ResultSet rs = stmt.executeQuery();
-      if (rs.next()) {
-        Long id = rs.getLong("product_id");
-        logger.debug("Продукт сохранен с id={}", id);
-        return id;
-      }
-      throw new SQLException("Не удалось сохранить продукт");
-    }
+    // Этот метод не должен использоваться напрямую, используйте saveForShop
+    throw new SQLException("Используйте saveForShop для сохранения продукта с shop_id");
   }
 
   public Long saveForShop(Long shopId, Product product) throws SQLException {
@@ -113,7 +92,12 @@ public class ProductRepository {
       while (rs.next()) {
         String categoryStr = rs.getString("category");
         if (categoryStr != null) {
-          categories.add(ProductCategory.valueOf(categoryStr));
+          try {
+            categories.add(ProductCategory.valueOf(categoryStr));
+          } catch (IllegalArgumentException e) {
+            logger.warn("Unknown category '{}' for shop {}, skipping", categoryStr, shopId);
+            // Пропускаем неизвестные категории
+          }
         }
       }
       return categories;
@@ -181,7 +165,12 @@ public class ProductRepository {
     ProductCategory category = null;
     String categoryStr = rs.getString("category");
     if (categoryStr != null) {
-      category = ProductCategory.valueOf(categoryStr);
+      try {
+        category = ProductCategory.valueOf(categoryStr);
+      } catch (IllegalArgumentException e) {
+        logger.warn("Unknown category '{}' for product {}, setting to OTHER", categoryStr, productId);
+        category = ProductCategory.OTHER;
+      }
     }
 
     boolean isAvailable = rs.getBoolean("is_available");

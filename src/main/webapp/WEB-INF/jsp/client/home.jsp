@@ -372,11 +372,15 @@
             body: 'productId=' + productId + '&quantity=1'
         })
             .then(r => r.json())
-            .then(() => {
-                alert('✅ ' + productName + ' добавлен в корзину');
-                loadCart();
+            .then(data => {
+                if (data.success) {
+                    alert('✅ ' + productName + ' добавлен в корзину');
+                    loadCart();
+                } else {
+                    alert('❌ ' + (data.message || 'Не удалось добавить товар в корзину'));
+                }
             })
-            .catch(() => alert('Не удалось добавить товар в корзину'));
+            .catch(() => alert('❌ Не удалось добавить товар в корзину'));
     }
 
     function clearCart() {

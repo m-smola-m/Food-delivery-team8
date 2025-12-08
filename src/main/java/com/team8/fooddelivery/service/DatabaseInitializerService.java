@@ -39,8 +39,9 @@ public class DatabaseInitializerService {
       "sql/004_create_order_tables/014_add_delivery_address_columns.sql",
       "sql/004_create_order_tables/015_add_payment_columns.sql",
       "sql/004_create_order_tables/016_add_estimated_delivery_time_column.sql",
-      // Нотификации и индексы
+      // Нотификации, дополнительные колонки и индексы
       "sql/004_create_order_tables/017_create_notifications.sql",
+      "sql/004_create_order_tables/018_add_status_column.sql",
       "sql/005_create_indexes/013_create_indexes.sql",
       // Вспомогательные тестовые скрипты (если есть в classpath)
       "sql/test/testsData.sql"

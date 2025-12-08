@@ -29,27 +29,43 @@
             <c:when test="${orders != null and not empty orders}">
                 <c:forEach var="order" items="${orders}">
                     <div class="order-card">
-                        <h3>Заказ #${order.orderId != null ? order.orderId : 'N/A'}</h3>
-                        <p><strong>Клиент:</strong> ${order.clientName != null ? order.clientName : 'Не указан'} (${order.clientPhone != null ? order.clientPhone : 'Не указан'})</p>
-                        <p><strong>Адрес:</strong> ${order.toStreet != null ? order.toStreet : ''}, ${order.toHouse != null ? order.toHouse : ''}</p>
-                        <p><strong>Состав:</strong> ${order.summary != null ? order.summary : 'Не указан'}</p>
+                        <h3>Заказ #${order.id != null ? order.id : 'N/A'}</h3>
+                        <p><strong>ID клиента:</strong> ${order.customerId != null ? order.customerId : 'Не указан'}</p>
+                        <c:if test="${order.deliveryAddress != null}">
+                            <p><strong>Адрес доставки:</strong> 
+                                ${order.deliveryAddress.city != null ? order.deliveryAddress.city : ''}
+                                ${order.deliveryAddress.street != null ? ', ' : ''}${order.deliveryAddress.street != null ? order.deliveryAddress.street : ''}
+                                ${order.deliveryAddress.building != null ? ', ' : ''}${order.deliveryAddress.building != null ? order.deliveryAddress.building : ''}
+                            </p>
+                        </c:if>
+                        <c:if test="${order.items != null and not empty order.items}">
+                            <p><strong>Состав заказа:</strong></p>
+                            <ul>
+                                <c:forEach var="item" items="${order.items}">
+                                    <li>${item.productName != null ? item.productName : 'Товар'} × ${item.quantity != null ? item.quantity : 0} — ${item.price != null ? item.price : 0} ₽</li>
+                                </c:forEach>
+                            </ul>
+                        </c:if>
                         <p><strong>Сумма:</strong> ${order.totalPrice != null ? order.totalPrice : '0'} ₽</p>
-                        <p><strong>Текущий статус:</strong> ${order.status != null ? order.status : 'Неизвестно'}</p>
+                        <p><strong>Статус:</strong> ${order.status != null ? order.status.name() : 'Неизвестно'}</p>
+                        <p><strong>Способ оплаты:</strong> ${order.paymentMethod != null ? order.paymentMethod.name() : 'Не указан'}</p>
+                        <p><strong>Статус оплаты:</strong> ${order.paymentStatus != null ? order.paymentStatus.name() : 'Неизвестно'}</p>
+                        <c:if test="${order.createdAt != null}">
+                            <p><strong>Дата создания:</strong> ${order.createdAt}</p>
+                        </c:if>
 
                         <form method="POST" action="${pageContext.request.contextPath}/orders/update-status" class="inline-form">
-                            <input type="hidden" name="orderId" value="${order.orderId}">
+                            <input type="hidden" name="orderId" value="${order.id}">
                             <select name="status" required>
-                                <option value="PREPARING">PREPARING</option>
-                                <option value="READY">READY</option>
-                                <option value="PICKED_UP">PICKED_UP</option>
-                                <option value="REJECTED">REJECTED</option>
+                                <option value="PREPARING" ${order.status != null && order.status.name() == 'PREPARING' ? 'selected' : ''}>PREPARING</option>
+                                <option value="READY_FOR_PICKUP" ${order.status != null && order.status.name() == 'READY_FOR_PICKUP' ? 'selected' : ''}>READY_FOR_PICKUP</option>
+                                <option value="PICKED_UP" ${order.status != null && order.status.name() == 'PICKED_UP' ? 'selected' : ''}>PICKED_UP</option>
+                                <option value="DELIVERING" ${order.status != null && order.status.name() == 'DELIVERING' ? 'selected' : ''}>DELIVERING</option>
+                                <option value="DELIVERED" ${order.status != null && order.status.name() == 'DELIVERED' ? 'selected' : ''}>DELIVERED</option>
+                                <option value="COMPLETED" ${order.status != null && order.status.name() == 'COMPLETED' ? 'selected' : ''}>COMPLETED</option>
+                                <option value="CANCELLED" ${order.status != null && order.status.name() == 'CANCELLED' ? 'selected' : ''}>CANCELLED</option>
                             </select>
                             <button type="submit" class="btn btn-primary btn-small">Сохранить</button>
-                        </form>
-
-                        <form method="POST" action="${pageContext.request.contextPath}/orders/cancel" class="inline-form">
-                            <input type="hidden" name="orderId" value="${order.orderId}">
-                            <button type="submit" class="btn btn-danger btn-small">Отменить (нет ингредиентов)</button>
                         </form>
                     </div>
                 </c:forEach>

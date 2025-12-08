@@ -63,22 +63,22 @@
                                     return div.innerHTML;
                                 }
                                 
-                                shopItem.innerHTML = `
-                                    <h3 style="margin-top: 0; color: #2c3e50;">${escapeHtml(shop.naming || 'Без названия')}</h3>
-                                    <p style="color: #666; margin: 10px 0;">${escapeHtml(shop.description || 'Описание отсутствует')}</p>
-                                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
-                                        <p style="font-size: 14px; color: #888; margin: 5px 0;">
-                                            ${shop.publicEmail ? '📧 ' + escapeHtml(shop.publicEmail) : ''}
-                                        </p>
-                                        <p style="font-size: 14px; color: #888; margin: 5px 0;">
-                                            ${shop.publicPhone ? '☎ ' + escapeHtml(shop.publicPhone) : ''}
-                                        </p>
-                                        ${shop.type ? '<p style="font-size: 12px; color: #999; margin-top: 10px;">Тип: ' + escapeHtml(shop.type) + '</p>' : ''}
-                                    </div>
-                                    <a href="${pageContext.request.contextPath}/shop/details?id=${shop.shopId}" class="btn btn-primary" style="margin-top: 15px; display: inline-block; text-decoration: none;">
-                                        Подробнее →
-                                    </a>
-                                `;
+                                const naming = escapeHtml(shop.naming || 'Без названия');
+                                const desc = escapeHtml(shop.description || 'Описание отсутствует');
+                                const email = shop.publicEmail ? '📧 ' + escapeHtml(shop.publicEmail) : '';
+                                const phone = shop.publicPhone ? '☎ ' + escapeHtml(shop.publicPhone) : '';
+                                const type = shop.type ? '<p style="font-size: 12px; color: #999; margin-top: 10px;">Тип: ' + escapeHtml(shop.type) + '</p>' : '';
+                                const detailsUrl = '${pageContext.request.contextPath}/shop/details?id=' + shop.shopId;
+                                
+                                shopItem.innerHTML = 
+                                    '<h3 style="margin-top: 0; color: #2c3e50;">' + naming + '</h3>' +
+                                    '<p style="color: #666; margin: 10px 0;">' + desc + '</p>' +
+                                    '<div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">' +
+                                        (email ? '<p style="font-size: 14px; color: #888; margin: 5px 0;">' + email + '</p>' : '') +
+                                        (phone ? '<p style="font-size: 14px; color: #888; margin: 5px 0;">' + phone + '</p>' : '') +
+                                        type +
+                                    '</div>' +
+                                    '<a href="' + detailsUrl + '" class="btn btn-primary" style="margin-top: 15px; display: inline-block; text-decoration: none;">Подробнее →</a>';
                                 shopsList.appendChild(shopItem);
                             });
                         } else {

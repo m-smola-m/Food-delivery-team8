@@ -266,6 +266,25 @@ public class ShopInfoServiceImpl implements ShopInfoService {
     }
   }
 
+  @Override
+  public void updateShopStatus(Long shopId, ShopStatus status) {
+    try {
+      Optional<Shop> shopOpt = shopRepository.findById(shopId);
+      if (shopOpt.isEmpty()) {
+        logger.warn("Магазин с ID {} не найден", shopId);
+        throw new IllegalArgumentException("Магазин не найден");
+      }
+
+      Shop shop = shopOpt.get();
+      shop.setStatus(status);
+      shopRepository.update(shop);
+      logger.info("Статус магазина {} изменен на {}", shopId, status);
+    } catch (SQLException e) {
+      logger.error("Ошибка при изменении статуса магазина {}", shopId, e);
+      throw new RuntimeException("Не удалось изменить статус магазина", e);
+    }
+  }
+
   public Shop login(String login, String password) {
     if (login == null || password == null) {
       throw new IllegalArgumentException("Логин и пароль обязательны");
