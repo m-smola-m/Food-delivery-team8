@@ -30,37 +30,56 @@
         </form>
 
         <c:if test="${empty deliveryHistory}">
-            <div class="alert alert-info">Нет доставок на <fmt:formatDate value="${selectedDate}" pattern="dd.MM.yyyy"/></div>
+            <div class="alert alert-info">Нет доставок на выбранную дату</div>
         </c:if>
 
         <c:if test="${not empty deliveryHistory}">
             <div class="history-section">
-                <h2><fmt:formatDate value="${selectedDate}" pattern="dd MMMM yyyy"/></h2>
+                <h2>История за ${selectedDate}</h2>
 
-                <table class="delivery-table">
-                    <thead>
-                        <tr>
-                            <th>Номер заказа</th>
-                            <th>Время</th>
-                            <th>Адреса (из -> в)</th>
-                            <th>Сумма</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <c:forEach var="order" items="${deliveryHistory}">
-                            <tr>
-                                <td>#${order.id}</td>
-                                <td>
-                                    <fmt:formatDate value="${order.completedAt}" pattern="HH:mm"/>
-                                </td>
-                                <td>
-                                    ${order.shopAddress} → ${order.deliveryAddress}
-                                </td>
-                                <td>${order.totalPrice} ₽</td>
-                            </tr>
-                        </c:forEach>
-                    </tbody>
-                </table>
+                <div class="orders-list">
+                    <c:forEach var="order" items="${deliveryHistory}">
+                        <div class="order-card">
+                            <h3>Заказ #${order.id}</h3>
+                            
+                            <c:set var="shop" value="${shopsMap[order.restaurantId]}"/>
+                            <c:if test="${not empty shop}">
+                                <p><strong>Магазин:</strong> ${shop.naming}</p>
+                                <c:if test="${not empty shop.address}">
+                                    <p><strong>Откуда:</strong> 
+                                        ${shop.address.city}, ${shop.address.street}, д. ${shop.address.building}
+                                        <c:if test="${not empty shop.address.apartment}">, кв. ${shop.address.apartment}</c:if>
+                                    </p>
+                                </c:if>
+                            </c:if>
+                            
+                            <c:if test="${not empty order.deliveryAddress}">
+                                <p><strong>Куда:</strong> 
+                                    ${order.deliveryAddress.city}, ${order.deliveryAddress.street}, д. ${order.deliveryAddress.building}
+                                    <c:if test="${not empty order.deliveryAddress.apartment}">, кв. ${order.deliveryAddress.apartment}</c:if>
+                                </p>
+                            </c:if>
+                            
+                            <c:if test="${not empty order.items}">
+                                <p><strong>Состав:</strong>
+                                    <c:forEach var="item" items="${order.items}" varStatus="status">
+                                        ${item.productName} x${item.quantity}<c:if test="${!status.last}">, </c:if>
+                                    </c:forEach>
+                                </p>
+                            </c:if>
+                            
+                            <p><strong>Сумма:</strong> ${order.totalPrice} ₽</p>
+                            <p><strong>Статус:</strong> ${order.status}</p>
+                            
+                            <c:if test="${not empty order.updatedAt}">
+                                <p><strong>Завершен:</strong> ${order.updatedAt}</p>
+                            </c:if>
+                            <c:if test="${empty order.updatedAt && not empty order.createdAt}">
+                                <p><strong>Создан:</strong> ${order.createdAt}</p>
+                            </c:if>
+                        </div>
+                    </c:forEach>
+                </div>
 
                 <div class="summary">
                     <h3>Итого за день:</h3>
@@ -69,7 +88,7 @@
                         <c:set var="total" value="${total + order.totalPrice}"/>
                     </c:forEach>
                     <p><strong>Заказов:</strong> ${deliveryHistory.size()}</p>
-                    <p><strong>Сумма:</strong> ${total} ₽</p>
+                    <p><strong>Общая сумма:</strong> ${total} ₽</p>
                 </div>
             </div>
         </c:if>

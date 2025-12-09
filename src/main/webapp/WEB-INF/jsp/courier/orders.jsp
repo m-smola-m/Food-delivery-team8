@@ -33,14 +33,39 @@
                 <c:forEach var="order" items="${availableOrders}">
                     <div class="order-card">
                         <h3>Заказ #${order.id}</h3>
-                        <p><strong>Откуда:</strong> ${order.fromStreet} ${order.fromHouse}</p>
-                        <p><strong>Куда:</strong> ${order.toStreet} ${order.toHouse}</p>
-                        <c:if test="${not empty order.comment}">
-                            <p><strong>Комментарий:</strong> ${order.comment}</p>
+                        
+                        <c:set var="shop" value="${shopsMap[order.restaurantId]}"/>
+                        <c:if test="${not empty shop}">
+                            <p><strong>Магазин:</strong> ${shop.naming}</p>
+                            <c:if test="${not empty shop.address}">
+                                <p><strong>Откуда (адрес магазина):</strong> 
+                                    ${shop.address.city}, ${shop.address.street}, д. ${shop.address.building}
+                                    <c:if test="${not empty shop.address.apartment}">, кв. ${shop.address.apartment}</c:if>
+                                </p>
+                            </c:if>
                         </c:if>
+                        
+                        <c:if test="${not empty order.deliveryAddress}">
+                            <p><strong>Куда (адрес доставки):</strong> 
+                                ${order.deliveryAddress.city}, ${order.deliveryAddress.street}, д. ${order.deliveryAddress.building}
+                                <c:if test="${not empty order.deliveryAddress.apartment}">, кв. ${order.deliveryAddress.apartment}</c:if>
+                                <c:if test="${not empty order.deliveryAddress.addressNote}"> (${order.deliveryAddress.addressNote})</c:if>
+                            </p>
+                        </c:if>
+                        
+                        <c:if test="${not empty order.items}">
+                            <p><strong>Состав заказа:</strong></p>
+                            <ul>
+                                <c:forEach var="item" items="${order.items}">
+                                    <li>${item.productName} x${item.quantity} - ${item.price} ₽</li>
+                                </c:forEach>
+                            </ul>
+                        </c:if>
+                        
                         <p><strong>Сумма:</strong> ${order.totalPrice} ₽</p>
+                        <p><strong>Статус:</strong> ${order.status}</p>
 
-                        <form method="POST" action="${pageContext.request.contextPath}/courier/accept-order">
+                        <form method="POST" action="${pageContext.request.contextPath}/courier/accept">
                             <input type="hidden" name="orderId" value="${order.id}">
                             <button type="submit" class="btn btn-success btn-large">ПРИНЯТЬ ЗАКАЗ</button>
                         </form>

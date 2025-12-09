@@ -48,8 +48,15 @@ class ShopProductServiceImplErrorHandlingTest {
     }
 
     private Product buildTestProduct(String label) {
-        return new Product(null, "Test Product " + label, "Description " + label,
-                100.0, 10.0, ProductCategory.MAIN_DISH, true, Duration.ofMinutes(10));
+        return Product.builder()
+                .name("Test Product " + label)
+                .description("Description " + label)
+                .weight(100.0)
+                .price(10.0)
+                .category(ProductCategory.MAIN_DISH)
+                .available(true)
+                .cookingTimeMinutes(Duration.ofMinutes(10))
+                .build();
     }
 
     @BeforeEach
@@ -183,8 +190,16 @@ class ShopProductServiceImplErrorHandlingTest {
         Product savedProduct = shopProductService.addProduct(testShopId, product);
         testProductId = savedProduct.getProductId();
 
-        Product updatedProduct = new Product(testProductId, "Updated Product", "Updated Description",
-                150.0, 15.0, ProductCategory.DESSERT, false, Duration.ofMinutes(15));
+        Product updatedProduct = Product.builder()
+                .productId(testProductId)
+                .name("Updated Product")
+                .description("Updated Description")
+                .weight(150.0)
+                .price(15.0)
+                .category(ProductCategory.DESSERT)
+                .available(false)
+                .cookingTimeMinutes(Duration.ofMinutes(15))
+                .build();
 
         Product result = shopProductService.updateProduct(testShopId, testProductId, updatedProduct);
         assertNotNull(result);

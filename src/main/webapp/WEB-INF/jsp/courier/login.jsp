@@ -19,12 +19,15 @@
             <c:if test="${not empty error}">
                 <div class="alert alert-error">${error}</div>
             </c:if>
+            
+            <c:if test="${param.registered == 'true'}">
+                <div class="alert alert-success">Регистрация успешна! Теперь вы можете войти.</div>
+            </c:if>
 
-            <form method="POST" action="${pageContext.request.contextPath}/login">
-                <input type="hidden" name="role" value="COURIER"/>
+            <form method="POST" action="${pageContext.request.contextPath}/courier/login">
                 <div class="form-group">
                     <label>Телефон:</label>
-                    <input type="tel" name="phone" placeholder="89XXXXXXXXX" required>
+                    <input type="tel" name="phone" placeholder="+79991234567" required>
                 </div>
 
                 <div class="form-group">
@@ -34,6 +37,10 @@
 
                 <button type="submit" class="btn btn-primary btn-block">Войти</button>
             </form>
+
+            <p class="auth-link">
+                Нет аккаунта? <a href="${pageContext.request.contextPath}/courier/register">Зарегистрироваться</a>
+            </p>
         </div>
     </div>
 </body>

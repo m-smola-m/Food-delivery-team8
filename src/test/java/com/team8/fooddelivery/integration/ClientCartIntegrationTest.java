@@ -119,16 +119,26 @@ public class ClientCartIntegrationTest {
         testShop.setPassword("password");
         Long shopId = shopRepository.save(testShop);
 
-        Product product1 = new Product(
-                null, "Пицца Маргарита", "Описание", 500.0, 600.0,
-                ProductCategory.MAIN_DISH, true, Duration.ofMinutes(20)
-        );
+        Product product1 = Product.builder()
+                .name("Пицца Маргарита")
+                .description("Описание")
+                .weight(500.0)
+                .price(600.0)
+                .category(ProductCategory.MAIN_DISH)
+                .available(true)
+                .cookingTimeMinutes(Duration.ofMinutes(20))
+                .build();
         Long product1Id = productRepository.saveForShop(shopId, product1);
 
-        Product product2 = new Product(
-                null, "Кола", "Описание", 100.0, 150.0,
-                ProductCategory.DRINK, true, Duration.ofMinutes(5)
-        );
+        Product product2 = Product.builder()
+                .name("Кола")
+                .description("Описание")
+                .weight(100.0)
+                .price(150.0)
+                .category(ProductCategory.DRINK)
+                .available(true)
+                .cookingTimeMinutes(Duration.ofMinutes(5))
+                .build();
         Long product2Id = productRepository.saveForShop(shopId, product2);
 
         // 5. Добавление товаров в корзину

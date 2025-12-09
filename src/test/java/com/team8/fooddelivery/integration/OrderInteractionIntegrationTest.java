@@ -123,7 +123,15 @@ class OrderInteractionIntegrationTest {
   }
 
   private Long createTestProduct(Long shopId, String name, Double price) throws SQLException {
-      Product product = new Product(null, name, "Description", 100.0, price, com.team8.fooddelivery.model.product.ProductCategory.OTHER, true, java.time.Duration.ofMinutes(10));
+      Product product = Product.builder()
+          .name(name)
+          .description("Description")
+          .weight(100.0)
+          .price(price)
+          .category(com.team8.fooddelivery.model.product.ProductCategory.OTHER)
+          .available(true)
+          .cookingTimeMinutes(java.time.Duration.ofMinutes(10))
+          .build();
       return productRepository.saveForShop(shopId, product);
   }
 
