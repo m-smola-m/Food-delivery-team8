@@ -117,3 +117,6 @@ target/
 
 # Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
 !gradle-wrapper.jar
+
+# Local Tomcat working dir (IDE / local deployment)
+tomcat.8080/
