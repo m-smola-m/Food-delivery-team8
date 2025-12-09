@@ -1,5 +1,6 @@
 package com.team8.fooddelivery.servlet.shop;
 
+import com.team8.fooddelivery.model.Address;
 import com.team8.fooddelivery.model.shop.Shop;
 import com.team8.fooddelivery.model.shop.ShopStatus;
 import com.team8.fooddelivery.model.shop.ShopType;
@@ -11,6 +12,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +39,12 @@ public class ShopServlet extends HttpServlet {
             handleDashboard(request, response);
         } else if ("/list-api".equals(pathInfo)) {
             handleShopListApi(request, response);
+        } else if ("/login".equals(pathInfo)) {
+            handleLoginPage(request, response);
+        } else if ("/register".equals(pathInfo)) {
+            handleRegisterPage(request, response);
+        } else if ("/orders".equals(pathInfo)) {
+            handleOrders(request, response);
         } else {
             response.sendError(404);
         }
@@ -111,9 +119,14 @@ public class ShopServlet extends HttpServlet {
             } else {
                 shops = shopService.getAllShops();
             }
+            // Показываем все магазины со статусом APPROVED, ACTIVE или OPEN (все активные магазины)
             shops = shops.stream()
-                    .filter(shop -> shop.getStatus() == ShopStatus.APPROVED)
+                    .filter(shop -> shop.getStatus() == ShopStatus.APPROVED || 
+                                   shop.getStatus() == ShopStatus.ACTIVE || 
+                                   shop.getStatus() == ShopStatus.OPEN)
                     .toList();
+            
+            log.debug("Filtered shops for API: {} shops with status APPROVED, ACTIVE or OPEN", shops.size());
 
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
@@ -161,8 +174,19 @@ public class ShopServlet extends HttpServlet {
     private void handleDashboard(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        Long shopId = (Long) request.getSession().getAttribute("shopId");
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            log.warn("No session found for dashboard request");
+            response.sendRedirect(request.getContextPath() + "/shop/login");
+            return;
+        }
+
+        Long shopId = SessionManager.getUserId(session);
+        String userRole = SessionManager.getUserRole(session);
+        log.debug("Dashboard request - shopId: {}, role: {}", shopId, userRole);
+        
         if (shopId == null) {
+            log.warn("No shopId in session for dashboard request");
             response.sendRedirect(request.getContextPath() + "/shop/login");
             return;
         }
@@ -170,9 +194,12 @@ public class ShopServlet extends HttpServlet {
         try {
             Optional<Shop> shop = shopService.getShopById(shopId);
             if (shop.isPresent()) {
+                log.debug("Loading dashboard for shop: {}", shopId);
                 request.setAttribute("shop", shop.get());
+                request.setAttribute("shopTypes", ShopType.values());
                 request.getRequestDispatcher("/WEB-INF/jsp/shop/dashboard.jsp").forward(request, response);
             } else {
+                log.warn("Shop not found for shopId: {}", shopId);
                 response.sendError(404);
             }
         } catch (Exception e) {
@@ -184,28 +211,131 @@ public class ShopServlet extends HttpServlet {
     private void handleRegister(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String naming = request.getParameter("naming");
-        String email = request.getParameter("emailForAuth");
-        String phone = request.getParameter("phoneForAuth");
-        String password = request.getParameter("password");
-
         try {
-            if (naming == null || naming.isEmpty() || email == null || email.isEmpty()) {
+            // Основная информация
+            String naming = request.getParameter("naming");
+            String description = request.getParameter("description");
+            String storeType = request.getParameter("storeType");
+            
+            // Контакты для аутентификации
+            String emailForAuth = request.getParameter("emailForAU");
+            String phoneForAuth = request.getParameter("privateNumber");
+            String password = request.getParameter("password");
+            
+            // Публичные контакты
+            String publicPhone = request.getParameter("publicNumber");
+            String publicEmail = request.getParameter("contactEmail");
+            
+            // Данные владельца
+            String ownerLastName = request.getParameter("ownerLastName");
+            String ownerFirstName = request.getParameter("ownerFirstName");
+            String ownerMiddleName = request.getParameter("ownerMiddleName");
+            String ownerPhone = request.getParameter("ownerPhoneNumber");
+            String ownerEmail = request.getParameter("ownerEmail");
+            
+            // Валидация обязательных полей
+            if (naming == null || naming.trim().isEmpty() || 
+                emailForAuth == null || emailForAuth.trim().isEmpty() ||
+                phoneForAuth == null || phoneForAuth.trim().isEmpty() ||
+                password == null || password.trim().isEmpty()) {
                 request.setAttribute("error", "Обязательные поля не заполнены");
                 request.getRequestDispatcher("/WEB-INF/jsp/shop/register.jsp").forward(request, response);
                 return;
             }
-
-            // TODO: Реализовать регистрацию магазина
-            log.info("Shop registration requested: {}", email);
-
-            request.setAttribute("success", "Регистрация успешна. Ожидайте проверки администратора.");
+            
+            // Создание адреса
+            Address address = Address.builder()
+                    .country(request.getParameter("country"))
+                    .city(request.getParameter("city"))
+                    .street(request.getParameter("street"))
+                    .building(request.getParameter("building"))
+                    .apartment(request.getParameter("apartment"))
+                    .entrance(request.getParameter("entrance"))
+                    .floor(parseInt(request.getParameter("floor")))
+                    .latitude(parseDouble(request.getParameter("latitude")))
+                    .longitude(parseDouble(request.getParameter("longitude")))
+                    .addressNote(request.getParameter("addressNote"))
+                    .district(request.getParameter("district"))
+                    .build();
+            
+            // Создание магазина
+            Shop shop = new Shop();
+            shop.setNaming(naming);
+            shop.setDescription(description);
+            shop.setPublicEmail(publicEmail);
+            shop.setPublicPhone(publicPhone);
+            shop.setAddress(address);
+            
+            // Определение типа магазина
+            if (storeType != null && !storeType.trim().isEmpty()) {
+                try {
+                    // Пытаемся найти подходящий тип по названию
+                    ShopType type = findShopTypeByName(storeType);
+                    shop.setType(type);
+                } catch (Exception e) {
+                    shop.setType(ShopType.OTHER);
+                }
+            } else {
+                shop.setType(ShopType.OTHER);
+            }
+            
+            // Данные владельца
+            String ownerName = (ownerFirstName != null ? ownerFirstName : "") + 
+                              (ownerMiddleName != null ? " " + ownerMiddleName : "") + 
+                              (ownerLastName != null ? " " + ownerLastName : "");
+            shop.setOwnerName(ownerName.trim());
+            shop.setOwnerContactPhone(ownerPhone);
+            
+            // Регистрация магазина (автоматически подтверждается)
+            Shop registeredShop = shopService.registerShop(shop, emailForAuth, password, phoneForAuth);
+            
+            log.info("Shop registered successfully with ID: {}", registeredShop.getShopId());
+            
+            request.setAttribute("success", "Регистрация успешна! Магазин автоматически подтвержден. Вы можете войти в систему.");
+            request.getRequestDispatcher("/WEB-INF/jsp/shop/register.jsp").forward(request, response);
+        } catch (IllegalArgumentException e) {
+            log.warn("Registration validation error: {}", e.getMessage());
+            request.setAttribute("error", e.getMessage());
             request.getRequestDispatcher("/WEB-INF/jsp/shop/register.jsp").forward(request, response);
         } catch (Exception e) {
             log.error("Registration error", e);
-            request.setAttribute("error", "Ошибка при регистрации");
+            request.setAttribute("error", "Ошибка при регистрации: " + e.getMessage());
             request.getRequestDispatcher("/WEB-INF/jsp/shop/register.jsp").forward(request, response);
         }
+    }
+    
+    private Integer parseInt(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+    
+    private Double parseDouble(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            return Double.parseDouble(value.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+    
+    private ShopType findShopTypeByName(String name) {
+        String lowerName = name.toLowerCase();
+        for (ShopType type : ShopType.values()) {
+            if (type.name().equalsIgnoreCase(name) || 
+                type.getDisplayName().toLowerCase().contains(lowerName) ||
+                lowerName.contains(type.getDisplayName().toLowerCase())) {
+                return type;
+            }
+        }
+        return ShopType.OTHER;
     }
 
     private void handleLogin(HttpServletRequest request, HttpServletResponse response)
@@ -234,19 +364,73 @@ public class ShopServlet extends HttpServlet {
     private void handleUpdateStatus(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        Long shopId = (Long) request.getSession().getAttribute("shopId");
+        Long shopId = SessionManager.getUserId(request.getSession());
         if (shopId == null) {
             response.sendRedirect(request.getContextPath() + "/shop/login");
             return;
         }
 
         try {
-            String newStatus = request.getParameter("status");
-            // TODO: Реализовать обновление статуса
-            log.info("Shop status update: {} -> {}", shopId, newStatus);
+            String newStatusStr = request.getParameter("status");
+            if (newStatusStr == null || newStatusStr.isEmpty()) {
+                response.sendRedirect(request.getContextPath() + "/shop/dashboard?error=empty_status");
+                return;
+            }
+
+            ShopStatus newStatus;
+            try {
+                newStatus = ShopStatus.valueOf(newStatusStr.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid shop status: {}", newStatusStr);
+                response.sendRedirect(request.getContextPath() + "/shop/dashboard?error=invalid_status");
+                return;
+            }
+
+            // Проверяем, что магазин может менять статус только на определенные значения
+            // Магазин может менять статус на ACTIVE, SUSPENDED, CLOSED, OPEN
+            if (newStatus != ShopStatus.ACTIVE && newStatus != ShopStatus.SUSPENDED && 
+                newStatus != ShopStatus.CLOSED && newStatus != ShopStatus.OPEN) {
+                log.warn("Shop {} attempted to set unauthorized status: {}", shopId, newStatus);
+                response.sendRedirect(request.getContextPath() + "/shop/dashboard?error=unauthorized_status");
+                return;
+            }
+
+            shopService.updateShopStatus(shopId, newStatus);
+            log.info("Shop status updated: shopId={}, newStatus={}", shopId, newStatus);
             response.sendRedirect(request.getContextPath() + "/shop/dashboard?updated=true");
         } catch (Exception e) {
-            log.error("Error updating status", e);
+            log.error("Error updating shop status", e);
+            response.sendRedirect(request.getContextPath() + "/shop/dashboard?error=update_failed");
+        }
+    }
+
+    private void handleLoginPage(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        request.getRequestDispatcher("/WEB-INF/jsp/shop/login.jsp").forward(request, response);
+    }
+
+    private void handleRegisterPage(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        request.getRequestDispatcher("/WEB-INF/jsp/shop/register.jsp").forward(request, response);
+    }
+
+    private void handleOrders(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        Long shopId = SessionManager.getUserId(request.getSession());
+        if (shopId == null) {
+            response.sendRedirect(request.getContextPath() + "/shop/login");
+            return;
+        }
+
+        try {
+            com.team8.fooddelivery.service.OrderService orderService = 
+                new com.team8.fooddelivery.service.impl.OrderServiceImpl(new com.team8.fooddelivery.service.impl.CartServiceImpl());
+            List<com.team8.fooddelivery.model.order.Order> orders = orderService.getOrdersByShopId(shopId);
+            log.info("Loaded {} orders for shop {}", orders.size(), shopId);
+            request.setAttribute("orders", orders);
+            request.getRequestDispatcher("/WEB-INF/jsp/shop/orders.jsp").forward(request, response);
+        } catch (Exception e) {
+            log.error("Error loading shop orders", e);
             response.sendError(500);
         }
     }

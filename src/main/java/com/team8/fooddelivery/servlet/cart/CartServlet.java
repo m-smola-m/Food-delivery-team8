@@ -114,12 +114,20 @@ public class CartServlet extends HttpServlet {
             return;
         }
 
-        Long productId = Long.parseLong(request.getParameter("productId"));
-        int quantity = Integer.parseInt(request.getParameter("quantity") != null ?
-                request.getParameter("quantity") : "1");
+        try {
+            Long productId = Long.parseLong(request.getParameter("productId"));
+            int quantity = Integer.parseInt(request.getParameter("quantity") != null ?
+                    request.getParameter("quantity") : "1");
 
-        cartService.addToCart(clientId, productId, quantity);
-        sendSuccess(response);
+            cartService.addToCart(clientId, productId, quantity);
+            sendSuccess(response);
+        } catch (IllegalStateException e) {
+            log.warn("Cannot add item to cart: {}", e.getMessage());
+            sendError(response, e.getMessage());
+        } catch (Exception e) {
+            log.error("Error adding item to cart", e);
+            sendError(response, "Не удалось добавить товар в корзину");
+        }
     }
 
     private void handleRemoveFromCart(HttpServletRequest request, HttpServletResponse response) throws IOException {

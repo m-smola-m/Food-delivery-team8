@@ -16,6 +16,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -129,12 +130,27 @@ public class AuthServlet extends HttpServlet {
 
     private void handleShopLogin(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            Shop shop = shopInfoService.login(req.getParameter("login"), req.getParameter("password"));
-            SessionManager.createSession(req.getSession(), shop);
-            resp.sendRedirect(req.getContextPath() + "/shop/dashboard");
+            String login = req.getParameter("login");
+            String password = req.getParameter("password");
+            log.info("Shop login attempt for: {}", login);
+            
+            Shop shop = shopInfoService.login(login, password);
+            log.info("Shop login successful, shopId: {}, naming: {}", shop.getShopId(), shop.getNaming());
+            
+            HttpSession session = req.getSession(true);
+            SessionManager.createSession(session, shop);
+            
+            // Проверяем, что сессия создана
+            Long userId = SessionManager.getUserId(session);
+            String userRole = SessionManager.getUserRole(session);
+            log.info("Session created - userId: {}, role: {}", userId, userRole);
+            
+            String redirectUrl = req.getContextPath() + "/shop/dashboard";
+            log.info("Redirecting to: {}", redirectUrl);
+            resp.sendRedirect(redirectUrl);
         } catch (Exception e) {
-            log.warn("Shop login failed", e);
-            req.setAttribute("error", e.getMessage());
+            log.error("Shop login failed", e);
+            req.setAttribute("error", e.getMessage() != null ? e.getMessage() : "Ошибка при входе");
             forwardShopLoginPage(req, resp);
         }
     }

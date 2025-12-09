@@ -3,6 +3,7 @@ package com.team8.fooddelivery.service.impl;
 import com.team8.fooddelivery.model.Address;
 import com.team8.fooddelivery.model.product.Cart;
 import com.team8.fooddelivery.model.product.CartItem;
+import com.team8.fooddelivery.model.product.Product;
 import com.team8.fooddelivery.model.order.Order;
 import com.team8.fooddelivery.model.order.OrderStatus;
 import com.team8.fooddelivery.model.client.Payment;
@@ -13,7 +14,6 @@ import com.team8.fooddelivery.repository.ClientRepository;
 import com.team8.fooddelivery.repository.OrderRepository;
 import com.team8.fooddelivery.repository.PaymentRepository;
 import com.team8.fooddelivery.repository.ProductRepository;
-import com.team8.fooddelivery.model.product.Product;
 import com.team8.fooddelivery.service.OrderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,23 +66,16 @@ public class OrderServiceImpl implements OrderService {
 
             validateCartItems(cart.getItems());
 
-            // Получаем restaurantId из первого товара корзины
-            Long restaurantId = null;
-            if (!cart.getItems().isEmpty() && cart.getItems().get(0).getProductId() != null) {
-                try {
-                    Optional<Product> firstProduct = productRepository.findById(cart.getItems().get(0).getProductId());
-                    if (firstProduct.isPresent()) {
-                        restaurantId = firstProduct.get().getShopId();
-                    }
-                } catch (SQLException e) {
-                    logger.warn("Не удалось получить shopId из товара", e);
-                }
+            // Получаем shopId (restaurantId) из первого товара в корзине
+            Long restaurantId = extractShopIdFromCart(cart.getItems());
+            if (restaurantId == null) {
+                throw new IllegalStateException("Не удалось определить магазин для заказа");
             }
 
             Order order = new Order();
             order.setCustomerId(clientId);
-            order.setStatus(OrderStatus.PENDING);
             order.setRestaurantId(restaurantId);
+            order.setStatus(OrderStatus.PENDING);
             order.setDeliveryAddress(deliveryAddress);
             order.setItems(cart.getItems());
             order.setTotalPrice(calculateTotal(cart.getItems()));
@@ -208,12 +201,63 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    @Override
+    public List<Order> getOrdersByShopId(Long shopId) {
+        try {
+            return orderRepository.findByRestaurantId(shopId);
+        } catch (SQLException e) {
+            logger.error("Ошибка при получении заказов магазина {}", shopId, e);
+            return List.of();
+        }
+    }
+
     private void validateCartItems(List<CartItem> items) {
         boolean invalid = items.stream()
                 .anyMatch(i -> i.getQuantity() <= 0 || i.getPrice() <= 0 || i.getProductName() == null || i.getProductName().isBlank());
         if (invalid) {
             throw new IllegalArgumentException("Некорректные товары в корзине");
         }
+    }
+
+    private Long extractShopIdFromCart(List<CartItem> items) {
+        if (items == null || items.isEmpty()) {
+            return null;
+        }
+        
+        // Получаем shopId из первого товара в корзине
+        CartItem firstItem = items.get(0);
+        if (firstItem.getProductId() == null) {
+            logger.warn("CartItem has no productId, cannot determine shopId");
+            return null;
+        }
+        
+        try {
+            Optional<Product> productOpt = productRepository.findById(firstItem.getProductId());
+            if (productOpt.isPresent()) {
+                // Нужно получить shopId из товара - но в Product нет shopId!
+                // Нужно получить через запрос к БД
+                // Временно используем другой подход - получаем shopId из CartItem через запрос к БД
+                return getShopIdByProductId(firstItem.getProductId());
+            }
+        } catch (SQLException e) {
+            logger.error("Error extracting shopId from cart", e);
+        }
+        
+        return null;
+    }
+    
+    private Long getShopIdByProductId(Long productId) throws SQLException {
+        // Получаем shop_id напрямую из БД
+        String sql = "SELECT shop_id FROM products WHERE product_id = ?";
+        try (var conn = com.team8.fooddelivery.service.DatabaseConnectionService.getConnection();
+             var stmt = conn.prepareStatement(sql)) {
+            stmt.setLong(1, productId);
+            var rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getObject("shop_id", Long.class);
+            }
+        }
+        return null;
     }
 
     private double calculateTotal(List<CartItem> items) {

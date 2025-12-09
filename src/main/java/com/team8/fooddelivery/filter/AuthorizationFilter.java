@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Set;
 
-@WebFilter({"/client/*", "/courier/*"})
+@WebFilter({"/client/*", "/courier/*", "/shop/*", "/products/*"})
 public class AuthorizationFilter implements Filter {
     private static final Logger log = LoggerFactory.getLogger(AuthorizationFilter.class);
     private static final Set<String> ROLELESS_PATHS = Set.of(
@@ -23,7 +23,9 @@ public class AuthorizationFilter implements Filter {
         "/shop/register",
         "/shop/list",
         "/shop/details",
-        "/shop/list-api"
+        "/shop/list-api",
+        "/products/by-shop",
+        "/products/categories"
     );
 
     @Override
@@ -35,44 +37,83 @@ public class AuthorizationFilter implements Filter {
 
         String requestURI = httpRequest.getRequestURI();
         String contextPath = httpRequest.getContextPath();
+        
+        // Убираем contextPath из URI для проверки
+        final String path;
+        if (contextPath != null && !contextPath.isEmpty() && requestURI.startsWith(contextPath)) {
+            path = requestURI.substring(contextPath.length());
+        } else {
+            path = requestURI;
+        }
 
-        if (ROLELESS_PATHS.stream().anyMatch(requestURI::endsWith)) {
+        // Проверяем публичные пути (точное совпадение или начинается с)
+        final String finalPath = path;
+        boolean isPublicPath = ROLELESS_PATHS.stream().anyMatch(p -> finalPath.equals(p) || finalPath.startsWith(p + "?"));
+        if (isPublicPath) {
+            log.debug("Public path allowed: {}", finalPath);
             chain.doFilter(request, response);
             return;
         }
 
-        HttpSession session = httpRequest.getSession();
+        HttpSession session = httpRequest.getSession(false);
         if (session == null || !SessionManager.isAuthenticated(session)) {
             log.warn("Unauthorized access attempt (no session) to {}", requestURI);
-            httpResponse.sendRedirect(contextPath + "/client/login");
+            // Определяем, куда редиректить в зависимости от пути
+            if (finalPath.contains("/shop/") || finalPath.startsWith("/shop/")) {
+                httpResponse.sendRedirect(contextPath + "/shop/login");
+            } else if (finalPath.contains("/courier/") || finalPath.startsWith("/courier/")) {
+                httpResponse.sendRedirect(contextPath + "/courier/login");
+            } else {
+                httpResponse.sendRedirect(contextPath + "/client/login");
+            }
             return;
         }
 
         String userRole = SessionManager.getUserRole(session);
         Long userId = SessionManager.getUserId(session);
-        log.debug("AuthorizationFilter session userId={}, role={} for URI {}", userId, userRole, requestURI);
+        log.debug("AuthorizationFilter session userId={}, role={} for URI {} (path: {})", userId, userRole, requestURI, finalPath);
 
         if (userRole == null) {
             log.warn("Session lost role information for user {}, forcing logout", userId);
             SessionManager.invalidateSession(session);
-            httpResponse.sendRedirect(contextPath + "/client/login");
+            // Определяем, куда редиректить в зависимости от пути
+            if (finalPath.contains("/shop/") || finalPath.startsWith("/shop/")) {
+                httpResponse.sendRedirect(contextPath + "/shop/login");
+            } else if (finalPath.contains("/courier/") || finalPath.startsWith("/courier/")) {
+                httpResponse.sendRedirect(contextPath + "/courier/login");
+            } else {
+                httpResponse.sendRedirect(contextPath + "/client/login");
+            }
             return;
         }
 
-        if (requestURI.contains("/client/") && !"CLIENT".equals(userRole)) {
+        // Проверяем доступ к ресурсам клиента
+        if ((path.contains("/client/") || path.startsWith("/client/")) && !"CLIENT".equals(userRole)) {
             log.warn("Forbidden: role {} trying to access client resource: {}", userRole, requestURI);
             httpResponse.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
 
-        if (requestURI.contains("/courier/") && !"COURIER".equals(userRole)) {
+        // Проверяем доступ к ресурсам курьера
+        if ((path.contains("/courier/") || path.startsWith("/courier/")) && !"COURIER".equals(userRole)) {
             log.warn("Forbidden: role {} trying to access courier resource: {}", userRole, requestURI);
             httpResponse.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
 
-        if (requestURI.contains("/shop/") && !"SHOP".equals(userRole)) {
+        // Проверяем доступ к ресурсам магазина
+        if ((path.contains("/shop/") || path.startsWith("/shop/")) && !"SHOP".equals(userRole)) {
             log.warn("Forbidden: role {} trying to access shop resource: {}", userRole, requestURI);
+            httpResponse.sendError(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
+
+        // Проверяем доступ к ресурсам товаров (только для магазинов, кроме публичных API)
+        if ((path.contains("/products/") || path.startsWith("/products/")) && 
+            !ROLELESS_PATHS.stream().anyMatch(path::endsWith) && 
+            !ROLELESS_PATHS.stream().anyMatch(path::equals) &&
+            !"SHOP".equals(userRole)) {
+            log.warn("Forbidden: role {} trying to access products resource: {}", userRole, requestURI);
             httpResponse.sendError(HttpServletResponse.SC_FORBIDDEN);
             return;
         }

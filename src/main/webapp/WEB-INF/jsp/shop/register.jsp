@@ -160,7 +160,7 @@
                     </div>
                 </div>
 
-                <div class="alert alert-info">После отправки анкеты магазин получает статус <strong>PENDING</strong>. Мы отправим ссылку для подтверждения на указанный email и телефон.</div>
+                <div class="alert alert-info">После отправки анкеты магазин автоматически подтверждается и получает статус <strong>APPROVED</strong>. Вы сможете сразу войти в систему.</div>
 
                 <button type="submit" class="btn btn-primary btn-block">Отправить заявку</button>
             </form>
