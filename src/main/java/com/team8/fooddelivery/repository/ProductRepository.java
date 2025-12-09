@@ -172,6 +172,7 @@ public class ProductRepository {
 
   private Product mapResultSetToProduct(ResultSet rs) throws SQLException {
     Long productId = rs.getLong("product_id");
+    Long shopId = rs.getObject("shop_id") != null ? rs.getLong("shop_id") : null;
     String name = rs.getString("name");
     String description = rs.getString("description");
     Double weight = rs.getObject("weight", Double.class);
@@ -188,6 +189,16 @@ public class ProductRepository {
     Long cookingTimeSeconds = rs.getLong("cooking_time_minutes");
     Duration cookingTimeMinutes = Duration.ofSeconds(cookingTimeSeconds);
 
-    return new Product(productId, name, description, weight, price, category, isAvailable, cookingTimeMinutes);
+    return Product.builder()
+        .productId(productId)
+        .shopId(shopId)
+        .name(name)
+        .description(description)
+        .weight(weight)
+        .price(price)
+        .category(category)
+        .available(isAvailable)
+        .cookingTimeMinutes(cookingTimeMinutes)
+        .build();
   }
 }

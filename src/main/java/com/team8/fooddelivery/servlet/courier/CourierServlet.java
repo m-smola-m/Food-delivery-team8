@@ -9,6 +9,8 @@ import com.team8.fooddelivery.service.OrderService;
 import com.team8.fooddelivery.service.impl.CourierServiceImpl;
 import com.team8.fooddelivery.service.impl.OrderServiceImpl;
 import com.team8.fooddelivery.service.impl.CartServiceImpl;
+import com.team8.fooddelivery.repository.ShopRepository;
+import com.team8.fooddelivery.model.shop.Shop;
 import com.team8.fooddelivery.util.SessionManager;
 import com.team8.fooddelivery.util.PasswordAndTokenUtil;
 import jakarta.servlet.ServletException;
@@ -21,8 +23,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +39,7 @@ public class CourierServlet extends HttpServlet {
     private final CourierManagementService cms = service;
     private final CourierWorkService cws = service;
     private final OrderService orderService = new OrderServiceImpl(new CartServiceImpl());
+    private final ShopRepository shopRepository = new ShopRepository();
 
 
     // ======================================================================
@@ -264,16 +269,28 @@ public class CourierServlet extends HttpServlet {
 
         Long courierId = SessionManager.getUserId(request.getSession());
         if (courierId == null) {
-            response.sendError(401);
+            response.sendRedirect(request.getContextPath() + "/courier/login");
             return;
         }
 
         List<Order> orders = orderService.getAvailableOrdersForCourier();
+        
+        // Получаем информацию о магазинах для каждого заказа
+        Map<Long, Shop> shopsMap = new HashMap<>();
+        for (Order order : orders) {
+            if (order.getRestaurantId() != null && !shopsMap.containsKey(order.getRestaurantId())) {
+                try {
+                    shopRepository.findById(order.getRestaurantId())
+                        .ifPresent(shop -> shopsMap.put(order.getRestaurantId(), shop));
+                } catch (SQLException e) {
+                    log.error("Ошибка при получении магазина {}", order.getRestaurantId(), e);
+                }
+            }
+        }
 
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValue(response.getWriter(), orders);
+        request.setAttribute("availableOrders", orders);
+        request.setAttribute("shopsMap", shopsMap);
+        request.getRequestDispatcher("/WEB-INF/jsp/courier/orders.jsp").forward(request, response);
     }
 
 
@@ -296,10 +313,38 @@ public class CourierServlet extends HttpServlet {
                 : LocalDate.parse(dateStr);
 
         List<Order> history = cws.getOrderHistory(courierId);
+        
+        // Фильтруем по выбранной дате
+        List<Order> filteredHistory = history.stream()
+            .filter(order -> {
+                if (order.getUpdatedAt() != null) {
+                    LocalDate orderDate = order.getUpdatedAt().atZone(ZoneId.systemDefault()).toLocalDate();
+                    return orderDate.equals(date);
+                } else if (order.getCreatedAt() != null) {
+                    LocalDate orderDate = order.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDate();
+                    return orderDate.equals(date);
+                }
+                return false;
+            })
+            .toList();
+        
+        // Получаем информацию о магазинах для каждого заказа
+        Map<Long, Shop> shopsMap = new HashMap<>();
+        for (Order order : filteredHistory) {
+            if (order.getRestaurantId() != null && !shopsMap.containsKey(order.getRestaurantId())) {
+                try {
+                    shopRepository.findById(order.getRestaurantId())
+                        .ifPresent(shop -> shopsMap.put(order.getRestaurantId(), shop));
+                } catch (SQLException e) {
+                    log.error("Ошибка при получении магазина {}", order.getRestaurantId(), e);
+                }
+            }
+        }
 
-        request.setAttribute("deliveryHistory", history);
+        request.setAttribute("deliveryHistory", filteredHistory);
         request.setAttribute("selectedDate", date);
-        request.getRequestDispatcher("/courier_history.jsp").forward(request, response);
+        request.setAttribute("shopsMap", shopsMap);
+        request.getRequestDispatcher("/WEB-INF/jsp/courier/history.jsp").forward(request, response);
     }
 
 

@@ -9,6 +9,7 @@ import java.time.Duration;
 @AllArgsConstructor
 public class Product {
   private Long productId;
+  private Long shopId;
   private String name;
   private String description;
   private Double weight;

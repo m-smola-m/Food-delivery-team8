@@ -12,6 +12,8 @@ import com.team8.fooddelivery.model.client.Client;
 import com.team8.fooddelivery.repository.ClientRepository;
 import com.team8.fooddelivery.repository.OrderRepository;
 import com.team8.fooddelivery.repository.PaymentRepository;
+import com.team8.fooddelivery.repository.ProductRepository;
+import com.team8.fooddelivery.model.product.Product;
 import com.team8.fooddelivery.service.OrderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +36,7 @@ public class OrderServiceImpl implements OrderService {
     private final PaymentRepository paymentRepository;
     private final NotificationServiceImpl notificationService;
     private final ClientRepository clientRepository;
+    private final ProductRepository productRepository;
 
     public OrderServiceImpl(CartServiceImpl cartService) {
         this.cartService = cartService;
@@ -41,6 +44,7 @@ public class OrderServiceImpl implements OrderService {
         this.paymentRepository = new PaymentRepository();
         this.notificationService = NotificationServiceImpl.getInstance();
         this.clientRepository = new ClientRepository();
+        this.productRepository = new ProductRepository();
     }
 
     @Override
@@ -62,9 +66,23 @@ public class OrderServiceImpl implements OrderService {
 
             validateCartItems(cart.getItems());
 
+            // Получаем restaurantId из первого товара корзины
+            Long restaurantId = null;
+            if (!cart.getItems().isEmpty() && cart.getItems().get(0).getProductId() != null) {
+                try {
+                    Optional<Product> firstProduct = productRepository.findById(cart.getItems().get(0).getProductId());
+                    if (firstProduct.isPresent()) {
+                        restaurantId = firstProduct.get().getShopId();
+                    }
+                } catch (SQLException e) {
+                    logger.warn("Не удалось получить shopId из товара", e);
+                }
+            }
+
             Order order = new Order();
             order.setCustomerId(clientId);
             order.setStatus(OrderStatus.PENDING);
+            order.setRestaurantId(restaurantId);
             order.setDeliveryAddress(deliveryAddress);
             order.setItems(cart.getItems());
             order.setTotalPrice(calculateTotal(cart.getItems()));
@@ -108,7 +126,13 @@ public class OrderServiceImpl implements OrderService {
         try {
             List<Order> allOrders = orderRepository.findAll();
             return allOrders.stream()
-                    .filter(order -> order.getStatus() == OrderStatus.PAID)
+                    .filter(order -> {
+                        // Курьер видит заказы, которые оплачены или подтверждены (для наличных) или готовы к доставке
+                        OrderStatus status = order.getStatus();
+                        return status == OrderStatus.PAID 
+                            || status == OrderStatus.CONFIRMED 
+                            || status == OrderStatus.READY_FOR_PICKUP;
+                    })
                     .filter(order -> order.getCourierId() == null || order.getCourierId() == 0)
                     .collect(Collectors.toList());
         } catch (SQLException e) {

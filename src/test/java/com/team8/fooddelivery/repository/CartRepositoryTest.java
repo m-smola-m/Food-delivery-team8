@@ -77,16 +77,15 @@ public class CartRepositoryTest {
         testShop.setPassword("password");
         testShopId = shopRepository.save(testShop);
 
-        Product testProduct = new Product(
-                null,
-                "Тестовый продукт",
-                "Описание",
-                100.0,
-                200.0,
-                ProductCategory.OTHER,
-                true,
-                java.time.Duration.ofMinutes(10)
-        );
+        Product testProduct = Product.builder()
+                .name("Тестовый продукт")
+                .description("Описание")
+                .weight(100.0)
+                .price(200.0)
+                .category(ProductCategory.OTHER)
+                .available(true)
+                .cookingTimeMinutes(java.time.Duration.ofMinutes(10))
+                .build();
         testProductId = productRepository.saveForShop(testShopId, testProduct);
     }
 
