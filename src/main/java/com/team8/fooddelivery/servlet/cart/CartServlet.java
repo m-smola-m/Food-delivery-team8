@@ -38,6 +38,10 @@ public class CartServlet extends HttpServlet {
 
         if ("/items-api".equals(pathInfo)) {
             handleItemsApi(request, response);
+        } else if ("/view".equals(pathInfo) || "/".equals(pathInfo)) {
+            // Redirect old cart page to client home with cart tab
+            String context = request.getContextPath();
+            response.sendRedirect(context + "/client/home?tab=cart");
         } else {
             response.sendError(404);
         }
@@ -92,11 +96,21 @@ public class CartServlet extends HttpServlet {
         for (int i = 0; i < items.size(); i++) {
             CartItem item = items.get(i);
             json.append("{")
-                .append("\"cartItemId\":").append(item.getId()).append(",")
-                .append("\"productId\":").append(item.getProductId()).append(",")
+                .append("\"cartItemId\":").append(item.getId() != null ? item.getId() : "null").append(",")
+                .append("\"productId\":").append(item.getProductId() != null ? item.getProductId() : "null").append(",")
                 .append("\"name\":\"").append(escape(item.getProductName())).append("\",")
                 .append("\"price\":").append(item.getPrice()).append(",")
-                .append("\"quantity\":").append(item.getQuantity()).append("}");
+                .append("\"quantity\":").append(item.getQuantity()).append(',');
+
+            // shop info (may be null)
+            if (item.getShopId() != null) {
+                json.append("\"shopId\":").append(item.getShopId()).append(',');
+            } else {
+                json.append("\"shopId\":null,");
+            }
+            json.append("\"shopName\":\"").append(escape(item.getShopName())).append("\"");
+
+            json.append("}");
             if (i < items.size() - 1) {
                 json.append(",");
             }

@@ -18,20 +18,34 @@
                 <div class="alert alert-error">${error}</div>
             </c:if>
 
+            <c:if test="${not empty fieldErrors}">
+                <div class="profile-alert" style="background:#fff0f0; border:1px solid #ff4d4d; color:#a70000; padding:10px; border-radius:8px; margin-bottom:12px;">
+                    <strong>Пожалуйста, исправьте поля:</strong>
+                    <ul style="margin-top:6px;">
+                        <c:forEach var="err" items="${fieldErrors}">
+                            <li><c:out value="${err.value}"/></li>
+                        </c:forEach>
+                    </ul>
+                </div>
+            </c:if>
+
             <form method="POST" action="${pageContext.request.contextPath}/client/register">
                 <div class="form-group">
                     <label>Имя:</label>
-                    <input type="text" name="name" value="${param.name}" required>
+                    <input type="text" name="name" value="${formData.name != null ? formData.name[0] : param.name}" required>
+                    <c:if test="${fieldErrors['name'] != null}"><div class="field-error">${fieldErrors['name']}</div></c:if>
                 </div>
 
                 <div class="form-group">
                     <label>Email:</label>
-                    <input type="email" name="email" value="${param.email}" required>
+                    <input type="email" name="email" value="${formData.email != null ? formData.email[0] : param.email}" required>
+                    <c:if test="${fieldErrors['email'] != null}"><div class="field-error">${fieldErrors['email']}</div></c:if>
                 </div>
 
                 <div class="form-group">
                     <label>Телефон:</label>
-                    <input type="tel" name="phone" placeholder="89XXXXXXXXX" pattern="89[0-9]{9}" value="${param.phone}" required>
+                    <input type="tel" name="phone" placeholder="89XXXXXXXXX" pattern="89[0-9]{9}" value="${formData.phone != null ? formData.phone[0] : param.phone}" required>
+                    <c:if test="${fieldErrors['phone'] != null}"><div class="field-error">${fieldErrors['phone']}</div></c:if>
                 </div>
 
                 <div class="form-group">
@@ -72,14 +86,6 @@
                             <label>Этаж:</label>
                             <input type="text" name="floor" value="${param.floor}">
                         </div>
-                        <div class="form-group">
-                            <label>Широта:</label>
-                            <input type="text" name="latitude" value="${param.latitude}">
-                        </div>
-                        <div class="form-group">
-                            <label>Долгота:</label>
-                            <input type="text" name="longitude" value="${param.longitude}">
-                        </div>
                         <div class="form-group" style="grid-column: 1 / -1;">
                             <label>Комментарий к адресу:</label>
                             <textarea name="addressNote" rows="2">${param.addressNote}</textarea>
@@ -93,7 +99,7 @@
                 <button type="submit" class="btn btn-primary btn-block">Зарегистрироваться</button>
             </form>
 
-            <p>Уже есть аккаунт? <a href="${pageContext.request.contextPath}/client/login">Войти</a></p>
+            <p>Уже есть аккаунт? <a href="${pageContext.request.contextPath}/client/login">Войти</a> — <a href="${pageContext.request.contextPath}/">На главную</a></p>
         </div>
     </div>
 </body>
