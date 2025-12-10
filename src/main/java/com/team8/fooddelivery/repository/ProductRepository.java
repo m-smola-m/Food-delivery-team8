@@ -18,11 +18,35 @@ public class ProductRepository {
   public Long save(Product product) throws SQLException {
     // Этот метод не должен использоваться напрямую, используйте saveForShop
     throw new SQLException("Используйте saveForShop для сохранения продукта с shop_id");
+    String sql = "INSERT INTO products (shop_id, name, description, weight, price, category, is_available, cooking_time_minutes, photo_url) " +
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING product_id";
+
+    try (Connection conn = DatabaseConnectionService.getConnection();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+      stmt.setObject(1, product.getProductId() != null ? null : null, Types.BIGINT); // shop_id будет установлен отдельно
+      stmt.setString(2, product.getName());
+      stmt.setString(3, product.getDescription());
+      stmt.setObject(4, product.getWeight(), Types.DOUBLE);
+      stmt.setDouble(5, product.getPrice());
+      stmt.setString(6, product.getCategory() != null ? product.getCategory().name() : null);
+      stmt.setBoolean(7, product.getAvailable());
+      stmt.setLong(8, product.getCookingTimeMinutes() != null ? product.getCookingTimeMinutes().getSeconds() : 0);
+      stmt.setString(9, product.getPhotoUrl());
+
+      ResultSet rs = stmt.executeQuery();
+      if (rs.next()) {
+        Long id = rs.getLong("product_id");
+        logger.debug("Продукт сохранен с id={}", id);
+        return id;
+      }
+      throw new SQLException("Не удалось сохранить продукт");
+    }
   }
 
   public Long saveForShop(Long shopId, Product product) throws SQLException {
-    String sql = "INSERT INTO products (shop_id, name, description, weight, price, category, is_available, cooking_time_minutes) " +
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING product_id";
+    String sql = "INSERT INTO products (shop_id, name, description, weight, price, category, is_available, cooking_time_minutes, photo_url) " +
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING product_id";
 
     try (Connection conn = DatabaseConnectionService.getConnection();
          PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -34,7 +58,8 @@ public class ProductRepository {
       stmt.setDouble(5, product.getPrice());
       stmt.setString(6, product.getCategory() != null ? product.getCategory().name() : null);
       stmt.setBoolean(7, product.getAvailable());
-      stmt.setObject(8, product.getCookingTimeMinutes() != null ? product.getCookingTimeMinutes().toMinutes() : null, Types.BIGINT);
+      stmt.setLong(8, product.getCookingTimeMinutes() != null ? product.getCookingTimeMinutes().getSeconds() : 0);
+      stmt.setString(9, product.getPhotoUrl());
 
       ResultSet rs = stmt.executeQuery();
       if (rs.next()) {
@@ -123,7 +148,7 @@ public class ProductRepository {
   }
 
   public void update(Product product) throws SQLException {
-    String sql = "UPDATE products SET name=?, description=?, weight=?, price=?, category=?, is_available=?, cooking_time_minutes=? WHERE product_id=?";
+    String sql = "UPDATE products SET name=?, description=?, weight=?, price=?, category=?, is_available=?, cooking_time_minutes=?, photo_url=? WHERE product_id=?";
 
     try (Connection conn = DatabaseConnectionService.getConnection();
          PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -134,8 +159,9 @@ public class ProductRepository {
       stmt.setDouble(4, product.getPrice());
       stmt.setString(5, product.getCategory() != null ? product.getCategory().name() : null);
       stmt.setBoolean(6, product.getAvailable());
-      stmt.setObject(7, product.getCookingTimeMinutes() != null ? product.getCookingTimeMinutes().toMinutes() : null, Types.BIGINT);
-      stmt.setLong(8, product.getProductId());
+      stmt.setLong(7, product.getCookingTimeMinutes() != null ? product.getCookingTimeMinutes().getSeconds() : 0);
+      stmt.setString(8, product.getPhotoUrl());
+      stmt.setLong(9, product.getProductId());
 
       stmt.executeUpdate();
       logger.debug("Продукт обновлен: id={}", product.getProductId());
@@ -192,5 +218,10 @@ public class ProductRepository {
         .available(isAvailable)
         .cookingTimeMinutes(cookingTime)
         .build();
+    Long cookingTimeSeconds = rs.getLong("cooking_time_minutes");
+    Duration cookingTimeMinutes = Duration.ofSeconds(cookingTimeSeconds);
+    String photoUrl = rs.getString("photo_url");
+
+    return new Product(productId, name, description, weight, price, category, isAvailable, cookingTimeMinutes, photoUrl);
   }
 }

@@ -67,7 +67,8 @@ CREATE TABLE IF NOT EXISTS products (
     price DOUBLE PRECISION NOT NULL,
     category VARCHAR(50),
     is_available BOOLEAN DEFAULT TRUE,
-    cooking_time_minutes BIGINT
+    cooking_time_minutes BIGINT,
+    photo_url VARCHAR(500)
 );
 
 CREATE TABLE IF NOT EXISTS couriers (
@@ -129,6 +130,15 @@ CREATE TABLE IF NOT EXISTS cart_items (
     product_name VARCHAR(200) NOT NULL,
     quantity INTEGER NOT NULL DEFAULT 1,
     price DOUBLE PRECISION NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS reviews (
+    id BIGSERIAL PRIMARY KEY,
+    product_id BIGINT REFERENCES products(product_id) ON DELETE CASCADE,
+    client_id BIGINT REFERENCES clients(id) ON DELETE CASCADE,
+    rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    comment TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_clients_phone ON clients(phone);

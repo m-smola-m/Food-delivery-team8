@@ -33,6 +33,11 @@
                 <button type="submit" class="btn btn-primary btn-block">Войти</button>
             </form>
 
+            <div class="auth-links">
+                <a href="${pageContext.request.contextPath}/client/forgot_password" class="btn btn-link">Забыл пароль?</a>
+                <a href="${pageContext.request.contextPath}/client/register" class="btn btn-register">Зарегистрироваться</a>
+            </div>
+
             <div class="demo-credentials">
                 <strong>Тестовые аккаунты (данные из БД)</strong>
                 <p class="demo-hint">Скрипт: ${clientTestDataSource}</p>
@@ -57,7 +62,6 @@
                 </c:choose>
             </div>
 
-            <p>Нет аккаунта? <a href="${pageContext.request.contextPath}/client/register">Зарегистрироваться</a></p>
         </div>
     </div>
 </body>

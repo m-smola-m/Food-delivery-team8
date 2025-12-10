@@ -79,3 +79,28 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </c:if>
 
+<div class="toast-container" id="globalToastContainer" aria-live="polite" aria-atomic="true"></div>
+<script>
+    // Глобальная функция для показа toast уведомления
+    function showToast(message, timeout = 3000) {
+        try {
+            const container = document.getElementById('globalToastContainer');
+            if (!container) return;
+            const t = document.createElement('div');
+            t.className = 'toast';
+            t.textContent = message;
+            container.appendChild(t);
+            // force reflow to allow transition
+            void t.offsetWidth;
+            t.classList.add('show');
+            setTimeout(() => {
+                t.classList.remove('show');
+                setTimeout(() => t.remove(), 250);
+            }, timeout);
+        } catch (e) {
+            console.error('Toast error', e);
+        }
+    }
+</script>
+<script src="${pageContext.request.contextPath}/resources/js/notifications.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">

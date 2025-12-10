@@ -133,14 +133,6 @@
                 <label>Район</label>
                 <input type="text" name="district" value="${shop.address != null ? shop.address.district : ''}">
             </div>
-            <div class="form-group">
-                <label>Координаты (широта)</label>
-                <input type="number" step="0.000001" name="latitude" value="${shop.address != null ? shop.address.latitude : ''}">
-            </div>
-            <div class="form-group">
-                <label>Координаты (долгота)</label>
-                <input type="number" step="0.000001" name="longitude" value="${shop.address != null ? shop.address.longitude : ''}">
-            </div>
             <div class="form-group full">
                 <label>Комментарий к адресу</label>
                 <textarea name="addressNote" rows="2">${shop.address != null ? shop.address.addressNote : ''}</textarea>
