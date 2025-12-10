@@ -18,30 +18,6 @@ public class ProductRepository {
   public Long save(Product product) throws SQLException {
     // Этот метод не должен использоваться напрямую, используйте saveForShop
     throw new SQLException("Используйте saveForShop для сохранения продукта с shop_id");
-    String sql = "INSERT INTO products (shop_id, name, description, weight, price, category, is_available, cooking_time_minutes, photo_url) " +
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING product_id";
-
-    try (Connection conn = DatabaseConnectionService.getConnection();
-         PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-      stmt.setObject(1, product.getProductId() != null ? null : null, Types.BIGINT); // shop_id будет установлен отдельно
-      stmt.setString(2, product.getName());
-      stmt.setString(3, product.getDescription());
-      stmt.setObject(4, product.getWeight(), Types.DOUBLE);
-      stmt.setDouble(5, product.getPrice());
-      stmt.setString(6, product.getCategory() != null ? product.getCategory().name() : null);
-      stmt.setBoolean(7, product.getAvailable());
-      stmt.setLong(8, product.getCookingTimeMinutes() != null ? product.getCookingTimeMinutes().getSeconds() : 0);
-      stmt.setString(9, product.getPhotoUrl());
-
-      ResultSet rs = stmt.executeQuery();
-      if (rs.next()) {
-        Long id = rs.getLong("product_id");
-        logger.debug("Продукт сохранен с id={}", id);
-        return id;
-      }
-      throw new SQLException("Не удалось сохранить продукт");
-    }
   }
 
   public Long saveForShop(Long shopId, Product product) throws SQLException {
@@ -186,7 +162,7 @@ public class ProductRepository {
     String name = rs.getString("name");
     String description = rs.getString("description");
     Double weight = rs.getObject("weight", Double.class);
-    Double price = rs.getDouble("price");
+    Double price = rs.getObject("price", Double.class);
 
     ProductCategory category = null;
     String categoryStr = rs.getString("category");
@@ -207,21 +183,9 @@ public class ProductRepository {
       cookingTime = Duration.ofMinutes(cookingTimeMinutes);
     }
 
-    return Product.builder()
-        .productId(productId)
-        .shopId(shopId)
-        .name(name)
-        .description(description)
-        .weight(weight)
-        .price(price)
-        .category(category)
-        .available(isAvailable)
-        .cookingTimeMinutes(cookingTime)
-        .build();
-    Long cookingTimeSeconds = rs.getLong("cooking_time_minutes");
-    Duration cookingTimeMinutes = Duration.ofSeconds(cookingTimeSeconds);
     String photoUrl = rs.getString("photo_url");
 
-    return new Product(productId, name, description, weight, price, category, isAvailable, cookingTimeMinutes, photoUrl);
+    // Use explicit constructor instead of Lombok builder to avoid relying on annotation processing in all environments
+    return new Product(productId, shopId, name, description, weight, price, category, isAvailable, cookingTime, photoUrl);
   }
 }
