@@ -104,29 +104,27 @@ public class ShopProductIntegrationTest {
     assertNotNull(shopId);
 
     // 4. Создание продуктов
-    Product product1 = new Product(
-        null,
-        "Пицца Пепперони",
-        "Острая пицца с пепперони",
-        500.0,
-        600.0,
-        ProductCategory.MAIN_DISH,
-        true,
-        Duration.ofMinutes(20)
-    );
+    Product product1 = Product.builder()
+        .name("Пицца Пепперони")
+        .description("Острая пицца с пепперони")
+        .weight(500.0)
+        .price(600.0)
+        .category(ProductCategory.MAIN_DISH)
+        .available(true)
+        .cookingTimeMinutes(Duration.ofMinutes(20))
+        .build();
     Long product1Id = productRepository.saveForShop(shopId, product1);
     assertNotNull(product1Id);
 
-    Product product2 = new Product(
-        null,
-        "Салат Цезарь",
-        "Классический салат Цезарь",
-        300.0,
-        350.0,
-        ProductCategory.MAIN_DISH,
-        true,
-        Duration.ofMinutes(10)
-    );
+    Product product2 = Product.builder()
+        .name("Салат Цезарь")
+        .description("Классический салат Цезарь")
+        .weight(300.0)
+        .price(350.0)
+        .category(ProductCategory.MAIN_DISH)
+        .available(true)
+        .cookingTimeMinutes(Duration.ofMinutes(10))
+        .build();
     Long product2Id = productRepository.saveForShop(shopId, product2);
     assertNotNull(product2Id);
 

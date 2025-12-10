@@ -1,4 +1,3 @@
--- Удаление таблиц если они существуют (для пересоздания)
 DROP TABLE IF EXISTS cart_items CASCADE;
 DROP TABLE IF EXISTS carts CASCADE;
 DROP TABLE IF EXISTS order_items CASCADE;

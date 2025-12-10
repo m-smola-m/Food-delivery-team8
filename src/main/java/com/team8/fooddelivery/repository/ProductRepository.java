@@ -16,6 +16,8 @@ public class ProductRepository {
   private static final Logger logger = LoggerFactory.getLogger(ProductRepository.class);
 
   public Long save(Product product) throws SQLException {
+    // Этот метод не должен использоваться напрямую, используйте saveForShop
+    throw new SQLException("Используйте saveForShop для сохранения продукта с shop_id");
     String sql = "INSERT INTO products (shop_id, name, description, weight, price, category, is_available, cooking_time_minutes, photo_url) " +
         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING product_id";
 
@@ -115,7 +117,12 @@ public class ProductRepository {
       while (rs.next()) {
         String categoryStr = rs.getString("category");
         if (categoryStr != null) {
-          categories.add(ProductCategory.valueOf(categoryStr));
+          try {
+            categories.add(ProductCategory.valueOf(categoryStr));
+          } catch (IllegalArgumentException e) {
+            logger.warn("Unknown category '{}' for shop {}, skipping", categoryStr, shopId);
+            // Пропускаем неизвестные категории
+          }
         }
       }
       return categories;
@@ -175,6 +182,7 @@ public class ProductRepository {
 
   private Product mapResultSetToProduct(ResultSet rs) throws SQLException {
     Long productId = rs.getLong("product_id");
+    Long shopId = rs.getObject("shop_id") != null ? rs.getLong("shop_id") : null;
     String name = rs.getString("name");
     String description = rs.getString("description");
     Double weight = rs.getObject("weight", Double.class);
@@ -183,11 +191,33 @@ public class ProductRepository {
     ProductCategory category = null;
     String categoryStr = rs.getString("category");
     if (categoryStr != null) {
-      category = ProductCategory.valueOf(categoryStr);
+      try {
+        category = ProductCategory.valueOf(categoryStr);
+      } catch (IllegalArgumentException e) {
+        logger.warn("Unknown category '{}' for product {}, setting to OTHER", categoryStr, productId);
+        category = ProductCategory.OTHER;
+      }
     }
 
     boolean isAvailable = rs.getBoolean("is_available");
 
+    Long cookingTimeMinutes = rs.getObject("cooking_time_minutes", Long.class);
+    Duration cookingTime = null;
+    if (cookingTimeMinutes != null && cookingTimeMinutes > 0) {
+      cookingTime = Duration.ofMinutes(cookingTimeMinutes);
+    }
+
+    return Product.builder()
+        .productId(productId)
+        .shopId(shopId)
+        .name(name)
+        .description(description)
+        .weight(weight)
+        .price(price)
+        .category(category)
+        .available(isAvailable)
+        .cookingTimeMinutes(cookingTime)
+        .build();
     Long cookingTimeSeconds = rs.getLong("cooking_time_minutes");
     Duration cookingTimeMinutes = Duration.ofSeconds(cookingTimeSeconds);
     String photoUrl = rs.getString("photo_url");

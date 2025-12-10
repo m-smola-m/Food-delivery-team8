@@ -22,7 +22,8 @@ public interface ShopInfoService {
   List<Shop> getAllShops();
 
   Optional<Shop> getShopById(Long shopId);
+
   List<Shop> getShopsByType(ShopType type);
 
-
+  void updateShopStatus(Long shopId, com.team8.fooddelivery.model.shop.ShopStatus status);
 }

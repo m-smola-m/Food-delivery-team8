@@ -120,8 +120,15 @@ class ShopProductServiceImplTest {
   @Order(3)
   @DisplayName("Add product to shop")
   void testAddProduct() {
-    Product product = new Product(null, "Test Product", "Description",
-        100.0, 10.0, ProductCategory.MAIN_DISH, true, Duration.ofMinutes(15));
+    Product product = Product.builder()
+        .name("Test Product")
+        .description("Description")
+        .weight(100.0)
+        .price(10.0)
+        .category(ProductCategory.MAIN_DISH)
+        .available(true)
+        .cookingTimeMinutes(Duration.ofMinutes(15))
+        .build();
     Product added = shopProductService.addProduct(testShopId, product);
     assertNotNull(added);
     assertNotNull(added.getProductId());
@@ -152,8 +159,16 @@ class ShopProductServiceImplTest {
   void testUpdateProduct() {
     if (testProductId == null) fail("Product ID is null");
 
-    Product product = new Product(testProductId, "Updated Product", "Updated Description",
-        150.0, 15.0, ProductCategory.MAIN_DISH, true, Duration.ofMinutes(20));
+    Product product = Product.builder()
+        .productId(testProductId)
+        .name("Updated Product")
+        .description("Updated Description")
+        .weight(150.0)
+        .price(15.0)
+        .category(ProductCategory.MAIN_DISH)
+        .available(true)
+        .cookingTimeMinutes(Duration.ofMinutes(20))
+        .build();
 
     Product updated = shopProductService.updateProduct(testShopId, testProductId, product);
     assertNotNull(updated);

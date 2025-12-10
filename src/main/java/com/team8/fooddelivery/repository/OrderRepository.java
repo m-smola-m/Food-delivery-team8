@@ -115,6 +115,23 @@ public class OrderRepository {
     }
   }
 
+  public List<Order> findByRestaurantId(Long restaurantId) throws SQLException {
+    String sql = "SELECT o.* FROM orders o WHERE o.restaurant_id = ? ORDER BY o.created_at DESC";
+
+    try (Connection conn = DatabaseConnectionService.getConnection();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+      stmt.setLong(1, restaurantId);
+      ResultSet rs = stmt.executeQuery();
+
+      List<Order> orders = new ArrayList<>();
+      while (rs.next()) {
+        orders.add(mapResultSetToOrder(rs, conn));
+      }
+      return orders;
+    }
+  }
+
   public List<Order> findByStatus(OrderStatus status) throws SQLException {
     String sql = "SELECT o.* FROM orders o WHERE o.status = ?";
 

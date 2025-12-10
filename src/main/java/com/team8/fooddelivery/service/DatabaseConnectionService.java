@@ -41,6 +41,7 @@ public class DatabaseConnectionService {
       return connection;
     } catch (SQLException e) {
       logger.error("Ошибка подключения к БД: {}", getSafeConnectionString(), e);
+      logger.error("Пароль - {}", dbPassword);
       throw e;
     }
   }

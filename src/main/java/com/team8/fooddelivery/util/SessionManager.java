@@ -31,6 +31,7 @@ public class SessionManager {
 
     public static void createSession(HttpSession session, Shop shop) {
         session.setAttribute("userId", shop.getShopId());
+        session.setAttribute("shopId", shop.getShopId()); // Для обратной совместимости
         session.setAttribute("userRole", "SHOP");
         session.setAttribute("userName", shop.getNaming());
         session.setMaxInactiveInterval((int) SESSION_TIMEOUT);

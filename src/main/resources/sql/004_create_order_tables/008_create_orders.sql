@@ -1,6 +1,6 @@
-CREATE TABLE orders (
+CREATE TABLE IF NOT EXISTS orders (
     id BIGSERIAL PRIMARY KEY,
-    status VARCHAR(50),
+    status VARCHAR(50) NOT NULL,
     customer_id BIGINT REFERENCES clients(id),
     restaurant_id BIGINT REFERENCES shops(shop_id),
     delivery_address_id BIGINT REFERENCES addresses(id),

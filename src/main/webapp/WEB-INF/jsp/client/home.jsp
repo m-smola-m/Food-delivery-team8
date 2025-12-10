@@ -524,7 +524,7 @@
                 try { showToast('✅ ' + productName + ' добавлен в корзину'); } catch (e) { alert('✅ ' + productName + ' добавлен в корзину'); }
                 loadCart();
             })
-            .catch(() => alert('Не удалось добавить товар в корзину'));
+            .catch(() => alert('❌ Не удалось добавить товар в корзину'));
     }
 
     function clearCart() {

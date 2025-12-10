@@ -41,6 +41,7 @@
         <url-pattern>/client/*</url-pattern>
         <url-pattern>/courier/*</url-pattern>
         <url-pattern>/shop/*</url-pattern>
+        <url-pattern>/products/*</url-pattern>
     </filter-mapping>
 
     <!-- Auth Servlet -->

@@ -150,8 +150,15 @@ public class ProductRepositoryTest { // Public class
   @DisplayName("1. Сохранение продукта для магазина (saveForShop)")
   public void saveForShop_shouldInsertProductAndReturnId() throws SQLException { // Public method
     // 1. Arrange (Подготовка)
-    Product burger = new Product(null, "Big Test Burger", "Классический тестовый бургер",
-        250.0, 15.99, ProductCategory.MAIN_DISH, true, Duration.ofMinutes(10));
+    Product burger = Product.builder()
+        .name("Big Test Burger")
+        .description("Классический тестовый бургер")
+        .weight(250.0)
+        .price(15.99)
+        .category(ProductCategory.MAIN_DISH)
+        .available(true)
+        .cookingTimeMinutes(Duration.ofMinutes(10))
+        .build();
 
     // 2. Act (Действие: Сохранение)
     Long id = productRepository.saveForShop(TEST_SHOP_ID, burger);
@@ -172,8 +179,15 @@ public class ProductRepositoryTest { // Public class
   @DisplayName("2. Добавление второго продукта для категории поиска")
   public void saveSecondProduct_shouldBeFindable() throws SQLException { // Public method
     // 1. Arrange (Подготовка)
-    Product fries = new Product(null, "Test Fries", "Тестовая картошка фри",
-        150.0, 5.00, ProductCategory.MAIN_DISH, true, Duration.ofMinutes(5));
+    Product fries = Product.builder()
+        .name("Test Fries")
+        .description("Тестовая картошка фри")
+        .weight(150.0)
+        .price(5.00)
+        .category(ProductCategory.MAIN_DISH)
+        .available(true)
+        .cookingTimeMinutes(Duration.ofMinutes(5))
+        .build();
 
     // 2. Act (Действие: Сохранение)
     Long id = productRepository.saveForShop(TEST_SHOP_ID, fries);

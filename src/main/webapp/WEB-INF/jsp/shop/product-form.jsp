@@ -4,21 +4,12 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${requestScope.isEdit ? 'Редактировать товар' : 'Добавить товар'} - Food Delivery</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/style.css">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="container">
-            <h1>Food Delivery - Магазин</h1>
-            <ul>
-                <li><a href="${pageContext.request.contextPath}/shop/dashboard">Панель</a></li>
-                <li><a href="${pageContext.request.contextPath}/products/list">Товары</a></li>
-                <li><a href="${pageContext.request.contextPath}/shop/orders">Заказы</a></li>
-                <li><a href="${pageContext.request.contextPath}/auth/logout">Выход</a></li>
-            </ul>
-        </div>
-    </nav>
+    <%@ include file="/WEB-INF/jsp/layout/navbar.jsp" %>
 
     <main class="container">
         <h1>${requestScope.isEdit ? 'Редактировать товар' : 'Добавить товар'}</h1>
@@ -52,29 +43,25 @@
                 </div>
                 <div class="form-group">
                     <label>Вес, г</label>
-                    <input type="number" name="weight" value="${product.weight}" min="0" step="1" placeholder="Например, 350" required>
+                    <input type="number" name="weight" value="${product.weight != null ? product.weight.intValue() : ''}" min="0" step="1" placeholder="Например, 350">
                 </div>
                 <div class="form-group">
                     <label>Время готовки (мин)</label>
-                    <input type="number" name="cookingTimeMinutes" value="${product.cookingTimeMinutes}" min="0" step="1">
+                    <input type="number" name="cookingTimeMinutes" value="${product.cookingTimeMinutes != null ? product.cookingTimeMinutes.toMinutes() : ''}" min="0" step="1" placeholder="Например, 30">
                 </div>
             </div>
 
             <div class="form-group">
                 <label>Краткое описание</label>
-                <textarea name="descriptionOfProduct" rows="3" placeholder="Состав, вкус и особенности">${product.descriptionOfProduct}${product.description}</textarea>
+                <textarea name="descriptionOfProduct" rows="3" placeholder="Состав, вкус и особенности">${product.description != null ? product.description : ''}</textarea>
             </div>
             <div class="form-group">
                 <label>Ингредиенты (consistsOf)</label>
-                <textarea name="consistsOf" rows="2" placeholder="Тесто, сыр моцарелла, томатный соус">${product.consistsOf}</textarea>
+                <textarea name="consistsOf" rows="2" placeholder="Тесто, сыр моцарелла, томатный соус"></textarea>
             </div>
             <div class="form-group">
                 <label>Аллергены</label>
-                <input type="text" name="allergens" value="${product.allergens}" placeholder="Молоко, глютен">
-            </div>
-            <div class="form-group">
-                <label>Ссылка на изображение</label>
-                <input type="url" name="imageUrl" value="${product.imageUrl}" placeholder="https://...">
+                <input type="text" name="allergens" placeholder="Молоко, глютен">
             </div>
 
             <div class="form-group">
@@ -90,5 +77,6 @@
             </div>
         </form>
     </main>
+    <%@ include file="/WEB-INF/jsp/layout/footer.jsp" %>
 </body>
 </html>

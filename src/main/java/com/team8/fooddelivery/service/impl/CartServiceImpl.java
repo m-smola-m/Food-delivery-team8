@@ -78,6 +78,21 @@ public class CartServiceImpl implements CartService {
         try {
             Cart cart = getOrCreate(clientId);
 
+            // Проверяем, что все товары в корзине из одного ресторана
+            if (!cart.getItems().isEmpty() && item.getProductId() != null) {
+                Long newProductShopId = getShopIdByProductId(item.getProductId());
+                if (newProductShopId != null) {
+                    // Проверяем shopId первого товара в корзине
+                    Long firstProductId = cart.getItems().get(0).getProductId();
+                    if (firstProductId != null) {
+                        Long firstProductShopId = getShopIdByProductId(firstProductId);
+                        if (firstProductShopId != null && !firstProductShopId.equals(newProductShopId)) {
+                            throw new IllegalStateException("Нельзя добавлять товары из разных ресторанов в одну корзину. Очистите корзину перед добавлением товаров из другого ресторана.");
+                        }
+                    }
+                }
+            }
+
             // Если товар уже есть — увеличиваем количество
             Optional<CartItem> existing = cart.getItems().stream()
                     .filter(i -> i.getProductId().equals(item.getProductId()))
@@ -100,6 +115,23 @@ public class CartServiceImpl implements CartService {
             logger.error("Ошибка при добавлении товара в корзину", e);
             throw new RuntimeException("Не удалось добавить товар в корзину", e);
         }
+    }
+
+    private Long getShopIdByProductId(Long productId) {
+        try {
+            String sql = "SELECT shop_id FROM products WHERE product_id = ?";
+            try (var conn = com.team8.fooddelivery.service.DatabaseConnectionService.getConnection();
+                 var stmt = conn.prepareStatement(sql)) {
+                stmt.setLong(1, productId);
+                var rs = stmt.executeQuery();
+                if (rs.next()) {
+                    return rs.getObject("shop_id", Long.class);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error getting shopId for product {}", productId, e);
+        }
+        return null;
     }
 
     @Override
