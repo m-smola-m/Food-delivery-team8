@@ -19,6 +19,4 @@ public class Product {
   private Boolean available = true;
   private Duration cookingTimeMinutes;
   private String photoUrl;
-
-  // NOTE: explicit constructors were removed in favor of Lombok-generated ones
 }

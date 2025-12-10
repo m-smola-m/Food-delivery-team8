@@ -150,7 +150,7 @@ public class CartServlet extends HttpServlet {
             return;
         }
 
-        Long cartItemId = Long.parseLong(request.getParameter("cartItemId"));
+        Long cartItemId = Long.parseLong(request.getParameter("itemId"));
         cartService.removeFromCart(clientId, cartItemId);
         sendSuccess(response);
     }
@@ -161,7 +161,7 @@ public class CartServlet extends HttpServlet {
             return;
         }
 
-        Long cartItemId = Long.parseLong(request.getParameter("cartItemId"));
+        Long cartItemId = Long.parseLong(request.getParameter("itemId"));
         int quantity = Integer.parseInt(request.getParameter("quantity"));
         cartService.updateQuantity(clientId, cartItemId, quantity);
         sendSuccess(response);

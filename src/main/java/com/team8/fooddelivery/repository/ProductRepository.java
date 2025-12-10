@@ -34,7 +34,7 @@ public class ProductRepository {
       stmt.setDouble(5, product.getPrice());
       stmt.setString(6, product.getCategory() != null ? product.getCategory().name() : null);
       stmt.setBoolean(7, product.getAvailable());
-      stmt.setLong(8, product.getCookingTimeMinutes() != null ? product.getCookingTimeMinutes().getSeconds() : 0);
+      stmt.setLong(8, product.getCookingTimeMinutes() != null ? product.getCookingTimeMinutes().toMinutes() : 0);
       stmt.setString(9, product.getPhotoUrl());
 
       ResultSet rs = stmt.executeQuery();
@@ -135,7 +135,7 @@ public class ProductRepository {
       stmt.setDouble(4, product.getPrice());
       stmt.setString(5, product.getCategory() != null ? product.getCategory().name() : null);
       stmt.setBoolean(6, product.getAvailable());
-      stmt.setLong(7, product.getCookingTimeMinutes() != null ? product.getCookingTimeMinutes().getSeconds() : 0);
+      stmt.setLong(7, product.getCookingTimeMinutes() != null ? product.getCookingTimeMinutes().toMinutes() : 0);
       stmt.setString(8, product.getPhotoUrl());
       stmt.setLong(9, product.getProductId());
 
@@ -183,7 +183,22 @@ public class ProductRepository {
       cookingTime = Duration.ofMinutes(cookingTimeMinutes);
     }
 
-    String photoUrl = rs.getString("photo_url");
+    String photoUrl = null;
+    // Безопасно читаем photo_url: проверяем, что колонка присутствует в ResultSet
+    ResultSetMetaData meta = rs.getMetaData();
+    int columnCount = meta.getColumnCount();
+    boolean hasPhotoUrl = false;
+    for (int i = 1; i <= columnCount; i++) {
+      if ("photo_url".equalsIgnoreCase(meta.getColumnLabel(i)) || "photo_url".equalsIgnoreCase(meta.getColumnName(i))) {
+        hasPhotoUrl = true;
+        break;
+      }
+    }
+    if (hasPhotoUrl) {
+      photoUrl = rs.getString("photo_url");
+    } else {
+      logger.debug("Колонка photo_url отсутствует в ResultSet для product_id={}", productId);
+    }
 
     // Use explicit constructor instead of Lombok builder to avoid relying on annotation processing in all environments
     return new Product(productId, shopId, name, description, weight, price, category, isAvailable, cookingTime, photoUrl);
