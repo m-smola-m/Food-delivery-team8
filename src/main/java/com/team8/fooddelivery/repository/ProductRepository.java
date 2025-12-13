@@ -167,40 +167,14 @@ public class ProductRepository {
   }
 
   public void delete(Long productId) throws SQLException {
-    try (Connection conn = DatabaseConnectionService.getConnection()) {
-      // Проверяем, не используется ли продукт в таблице order_items
-      if (isReferencedInOrderItems(conn, productId)) {
-        logger.warn("Попытка удалить продукт {}: имеются связанные записи в order_items", productId);
-        throw new SQLException("Cannot delete product: referenced by order_items");
-      }
+    String sql = "DELETE FROM products WHERE product_id = ?";
 
-      String sql = "DELETE FROM products WHERE product_id = ?";
-      try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-        stmt.setLong(1, productId);
-        int affected = stmt.executeUpdate();
-        if (affected > 0) {
-          logger.debug("Продукт удален: id={}", productId);
-        } else {
-          logger.debug("Продукт не найден для удаления: id={}", productId);
-        }
-      }
-    }
-  }
+    try (Connection conn = DatabaseConnectionService.getConnection();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-  /**
-   * Проверяет, есть ли записи в order_items, ссылающиеся на данный product_id
-   */
-  private boolean isReferencedInOrderItems(Connection conn, Long productId) {
-    String sql = "SELECT 1 FROM order_items WHERE product_id = ? LIMIT 1";
-    try (PreparedStatement stmt = conn.prepareStatement(sql)) {
       stmt.setLong(1, productId);
-      try (ResultSet rs = stmt.executeQuery()) {
-        return rs.next();
-      }
-    } catch (SQLException e) {
-      logger.warn("Ошибка при проверке ссылок order_items для product_id={}: {}", productId, e.getMessage());
-      // В случае ошибки безопасности допускаем отказ удаления
-      return true;
+      stmt.executeUpdate();
+      logger.debug("Продукт удален: id={}", productId);
     }
   }
 

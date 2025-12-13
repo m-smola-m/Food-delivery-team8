@@ -13,7 +13,9 @@
         <div class="container">
             <a href="${pageContext.request.contextPath}/" class="btn-back" aria-label="Назад на главную">← Назад</a>
         </div>
-        <!-- Локальный логотип удалён: оставлена только кнопка назад в navbar -->
+        <div class="container">
+            <h1><a href="${pageContext.request.contextPath}/">Food Delivery</a></h1>
+        </div>
     </nav>
 <div class="auth-container">
     <div class="auth-box">
