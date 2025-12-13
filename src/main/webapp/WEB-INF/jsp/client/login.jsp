@@ -44,30 +44,6 @@
                 <a href="${pageContext.request.contextPath}/client/register" class="btn btn-register">Зарегистрироваться</a>
             </div>
 
-            <div class="demo-credentials">
-                <strong>Тестовые аккаунты (данные из БД)</strong>
-                <p class="demo-hint">Скрипт: ${clientTestDataSource}</p>
-                <c:choose>
-                    <c:when test="${not empty demoClients}">
-                        <ul>
-                            <c:forEach var="client" items="${demoClients}">
-                                <li>
-                                    <span class="label">Email</span>
-                                    <span>${client.email} / ${client.passwordHash}</span>
-                                </li>
-                                <li>
-                                    <span class="label">Телефон</span>
-                                    <span>${client.phone} / ${client.passwordHash}</span>
-                                </li>
-                            </c:forEach>
-                        </ul>
-                    </c:when>
-                    <c:otherwise>
-                        <p>Нет данных. Заполните ${clientTestDataSource}.</p>
-                    </c:otherwise>
-                </c:choose>
-            </div>
-
         </div>
     </div>
 </body>

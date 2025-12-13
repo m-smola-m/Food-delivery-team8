@@ -14,14 +14,6 @@
             <h1>Food Delivery</h1>
             <h2>Выберите свою роль</h2>
 
-            <div class="demo-credentials">
-                <strong>Тестовые данные для быстрой проверки</strong>
-                <div class="quick-hints">
-                    <p>Клиент: <code>anna.sergeeva@test.local</code> / <code>hash01</code></p>
-                    <p>Магазин: <code>auth@drovyana.ru</code> / <code>pwd01</code></p>
-                </div>
-            </div>
-
             <div class="role-grid">
                 <div class="role-card">
                     <div class="role-icon">👤</div>

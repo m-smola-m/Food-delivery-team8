@@ -39,30 +39,6 @@
                 <button type="submit" class="btn btn-primary btn-block">Войти</button>
             </form>
 
-            <div class="demo-credentials">
-                <strong>Тестовые магазины (данные из БД)</strong>
-                <p class="demo-hint">Скрипт: ${shopTestDataSource}</p>
-                <c:choose>
-                    <c:when test="${not empty demoShops}">
-                        <ul>
-                            <c:forEach var="shop" items="${demoShops}">
-                                <li>
-                                    <span class="label">Email</span>
-                                    <span>${shop.emailForAuth} / ${shop.password}</span>
-                                </li>
-                                <li>
-                                    <span class="label">Телефон</span>
-                                    <span>${shop.phoneForAuth} / ${shop.password}</span>
-                                </li>
-                            </c:forEach>
-                        </ul>
-                    </c:when>
-                    <c:otherwise>
-                        <p>Нет данных. Заполните ${shopTestDataSource}.</p>
-                    </c:otherwise>
-                </c:choose>
-            </div>
-
             <div class="auth-hint">
                 <p>Только активированные магазины получают доступ к панели. После модерации мы отправим ссылку на email/телефон из анкеты.</p>
             </div>
