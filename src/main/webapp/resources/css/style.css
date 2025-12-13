@@ -184,6 +184,56 @@ body {
     color: #3498db;
 }
 
+/* Back button in navbar for auth pages */
+.btn-back {
+    display: inline-block;
+    color: white;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    padding: 6px 10px;
+    border-radius: 6px;
+    text-decoration: none;
+    margin-right: 12px;
+    font-size: 14px;
+}
+.btn-back:hover {
+    background: rgba(255,255,255,0.09);
+    border-color: rgba(255,255,255,0.18);
+}
+
+/* На страницах авторизации убираем серую плашку navbar и показываем только фиксированную кнопку назад слева сверху */
+.auth-page .navbar {
+    background: transparent !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+.auth-page .navbar .container {
+    justify-content: flex-start;
+}
+.auth-page .navbar .navbar-brand {
+    display: none !important; /* скрываем логотип в полоске на auth-страницах */
+}
+.auth-page .btn-back {
+    position: fixed !important;
+    top: 12px !important;
+    left: 12px !important;
+    z-index: 1300 !important;
+    /* белая кнопка */
+    background: #ffffff !important;
+    color: #2c3e50 !important; /* тёмный текст */
+    border: 1px solid rgba(0,0,0,0.08) !important;
+    padding: 8px 10px !important;
+    border-radius: 6px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+}
+.auth-page .btn-back:hover {
+    background: #f2f2f4 !important;
+}
+@media (max-width: 480px) {
+    .auth-page .btn-back { top: 8px !important; left: 8px !important; font-size: 13px !important; padding: 6px 8px !important; }
+}
+
 /* Auth Page */
 .auth-page {
     display: flex;

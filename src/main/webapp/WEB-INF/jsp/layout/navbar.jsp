@@ -2,6 +2,9 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <nav class="navbar">
     <div class="container">
+        <c:if test="${empty sessionScope.userRole}">
+            <a href="${pageContext.request.contextPath}/" class="btn-back" aria-label="Назад на главную">← Назад</a>
+        </c:if>
         <div class="navbar-brand">
             <c:choose>
                 <c:when test="${sessionScope.userRole == 'SHOP'}">

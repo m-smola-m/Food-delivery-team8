@@ -66,6 +66,71 @@
         .success-banner { display:none; background:#f0fff4; border:1px solid #2ecc71; color:#1f7a3a; padding:10px 12px; border-radius:6px; margin-bottom:12px; }
         .error-banner { display:none; background:#fff0f0; border:1px solid #ff4d4d; color:#a70000; padding:10px 12px; border-radius:6px; margin-bottom:12px; }
         @media(max-width:800px){ .profile-form { grid-template-columns: 1fr; } }
+
+        /* Overlay и позиционирование */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.45);
+            z-index: 9999;
+            padding: 20px;
+        }
+
+        /* Контейнер модального окна: ограничиваем высоту и делаем внутреннюю область скроллимой */
+        .modal-content {
+            max-width: 720px;
+            width: 95%;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            padding: 20px 22px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            max-height: 85vh; /* важно для внутренней прокрутки */
+            overflow: hidden;
+        }
+
+        .modal-close { position:absolute; top:10px; right:12px; background:transparent; border:none; font-size:18px; cursor:pointer; color:#666; }
+        .muted { color:#666; font-size:14px; margin-top:6px; }
+
+        /* Тело модального окна, в котором находятся summary и форма — оно скроллится при переполнении */
+        .modal-body {
+            overflow: auto;
+            padding-right: 6px; /* чтобы текст не прилипал к скроллу */
+            margin-top: 8px;
+        }
+
+        #modalOrderSummary {
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 8px;
+            background: #fafafa;
+            max-height: 240px;
+            overflow: auto;
+        }
+
+        /* Сетка адресных полей */
+        .checkout-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap:10px; }
+        .form-group { display:flex; flex-direction:column; }
+        .form-group.full-width { grid-column: 1 / -1; }
+        .form-group label { font-weight:600; margin-bottom:6px; font-size:13px; color:#333; }
+        .form-group input,
+        .form-group textarea { width:100%; padding:8px 10px; border:1px solid #ddd; border-radius:6px; font-size:14px; box-sizing:border-box; }
+        .form-group input:focus, .form-group textarea:focus { outline:none; border-color:#7dbb4a; box-shadow:0 0 0 3px rgba(125,187,74,0.08); }
+
+        /* Мобильная адаптация */
+        @media(max-width:720px){
+            .checkout-grid { grid-template-columns: 1fr; }
+            .modal-content { padding: 16px; }
+            #modalOrderSummary { max-height: 180px; }
+        }
+
+        /* Немного стилей для видимости действий модального окна */
+        .modal-actions { flex-shrink:0; }
     </style>
 </head>
 <body>
@@ -234,48 +299,53 @@
         <p class="muted">Проверьте корзину и заполните адрес доставки. Вы сможете выбрать способ оплаты ниже.</p>
         <div id="modalError" class="error-banner" style="display:none;margin-bottom:8px;"></div>
         <div id="modalOrderSummary" style="margin:10px 0 16px;"></div>
-        <form id="checkoutForm">
-            <div class="checkout-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                <div class="form-group">
-                    <label>Страна</label>
-                    <input type="text" name="country" required>
-                </div>
-                <div class="form-group">
-                    <label>Город</label>
-                    <input type="text" name="city" required>
-                </div>
-                <div class="form-group">
-                    <label>Улица</label>
-                    <input type="text" name="street" required>
-                </div>
-                <div class="form-group">
-                    <label>Здание</label>
-                    <input type="text" name="building" required>
-                </div>
-                <div class="form-group">
-                    <label>Квартира</label>
-                    <input type="text" name="apartment">
-                </div>
-                <div class="form-group">
-                    <label>Подъезд</label>
-                    <input type="text" name="entrance">
-                </div>
-                <div class="form-group">
-                    <label>Этаж</label>
-                    <input type="text" name="floor">
-                </div>
-                <div class="form-group">
-                    <label>Комментарий</label>
-                    <input type="text" name="addressNote">
-                </div>
-            </div>
 
-            <div style="margin-top:12px;font-weight:600;">Оплата</div>
-            <select name="paymentMethod" style="width:100%; margin:10px 0; padding:8px;">
-                <option value="CASH">Оплата при получении</option>
-                <option value="CARD">Карта онлайн</option>
-            </select>
-        </form>
+        <!-- Обёртка с прокруткой: если контента много, появится скролл внутри модального окна -->
+        <div class="modal-body">
+            <form id="checkoutForm">
+                <div class="checkout-grid">
+                    <div class="form-group">
+                        <label for="country">Страна</label>
+                        <input id="country" type="text" name="country" required placeholder="Россия">
+                    </div>
+                    <div class="form-group">
+                        <label for="city">Город</label>
+                        <input id="city" type="text" name="city" required placeholder="Москва">
+                    </div>
+                    <div class="form-group">
+                        <label for="street">Улица</label>
+                        <input id="street" type="text" name="street" required placeholder="ул. Ленина">
+                    </div>
+                    <div class="form-group">
+                        <label for="building">Здание</label>
+                        <input id="building" type="text" name="building" required placeholder="д. 10">
+                    </div>
+                    <div class="form-group">
+                        <label for="apartment">Квартира</label>
+                        <input id="apartment" type="text" name="apartment" placeholder="кв. 5">
+                    </div>
+                    <div class="form-group">
+                        <label for="entrance">Подъезд</label>
+                        <input id="entrance" type="text" name="entrance" placeholder="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="floor">Этаж</label>
+                        <input id="floor" type="number" min="0" name="floor" placeholder="3">
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="addressNote">Комментарий</label>
+                        <textarea id="addressNote" name="addressNote" rows="2" placeholder="Домофон, подъезд, пожелания курьеру..."></textarea>
+                    </div>
+                </div>
+
+                <div style="margin-top:12px;font-weight:600;">Оплата</div>
+                <select name="paymentMethod" style="width:100%; margin:10px 0; padding:8px;">
+                    <option value="CASH">Оплата при получении</option>
+                    <option value="CARD">Карта онлайн</option>
+                </select>
+            </form>
+        </div>
+
         <div class="modal-actions" style="margin-top:12px; display:flex; gap:8px; justify-content:flex-end;">
             <button class="btn btn-secondary" onclick="hideCheckoutModal()">Отмена</button>
             <button class="btn btn-success" onclick="confirmCheckout()">Подтвердить и заказать</button>
@@ -283,12 +353,6 @@
     </div>
 </div>
 
-<style>
-    .modal-content { max-width:720px; width:95%; padding:20px 22px; position:relative; }
-    .modal-close { position:absolute; top:10px; right:12px; background:transparent; border:none; font-size:18px; cursor:pointer; color:#666; }
-    .muted { color:#666; font-size:14px; margin-top:6px; }
-    @media(max-width:720px){ .checkout-grid { grid-template-columns: 1fr; } }
-</style>
 
 <script>
     let currentShopId = null;
