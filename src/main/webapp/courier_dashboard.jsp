@@ -173,13 +173,18 @@ function acceptOrder(orderId) {
 }
 
 function showActiveOrder() {
-    // Mock active order details
-    document.getElementById('activeOrderDetails').textContent = `Заказ ${currentOrderId}: ул. Ленина 10 -> пр. Мира 25`;
-    document.getElementById('activeOrderSection').style.display = 'block';
+    fetch('/courier/active-order')
+    .then(response => response.json())
+    .then(order => {
+        if (order) {
+            document.getElementById('activeOrderDetails').textContent = `Заказ #${order.id}: ${order.restaurantAddress ? order.restaurantAddress.street + ' ' + order.restaurantAddress.building : 'Адрес ресторана'} -> ${order.deliveryAddress ? order.deliveryAddress.street + ' ' + order.deliveryAddress.building : 'Адрес доставки'}`;
+            document.getElementById('activeOrderSection').style.display = 'block';
+        }
+    });
 }
 
 function pickupOrder() {
-    fetch('/order/pickup', {
+    fetch('/courier/pickup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderId: currentOrderId })
@@ -191,7 +196,7 @@ function pickupOrder() {
 }
 
 function deliverOrder() {
-    fetch('/order/complete', {
+    fetch('/courier/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderId: currentOrderId })
@@ -203,6 +208,7 @@ function deliverOrder() {
             document.getElementById('activeOrderSection').style.display = 'none';
             document.getElementById('endShiftBtn').style.display = 'inline';
             loadAvailableOrders();
+            loadTodayHistory();
         }
     });
 }
