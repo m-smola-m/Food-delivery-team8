@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -27,7 +28,30 @@
             <div class="alert alert-success">Товар обновлён!</div>
         </c:if>
         <c:if test="${not empty param.deleted}">
-            <div class="alert alert-success">Товар удалён!</div>
+            <script>
+                (function(){ try { if(typeof showToast === 'function') showToast('Товар успешно удалён', 4000, 'success'); else console.log('Товар успешно удалён'); } catch(e){console.warn(e);} })();
+            </script>
+        </c:if>
+        <!-- Показываем подробную причину ошибки удаления как toast внизу справа -->
+        <c:if test="${not empty param.error_reason}">
+            <!-- Скрытый контейнер с текстом причины: безопасно читается JS через textContent -->
+            <div id="deleteReasonData" style="display:none">${fn:escapeXml(param.error_reason)}</div>
+            <script>
+                (function(){
+                    try {
+                        var el = document.getElementById('deleteReasonData');
+                        if (!el) return;
+                        var reason = el.textContent || el.innerText || '';
+                        if (reason && typeof showToast === 'function') {
+                            // Показываем краткое заголовок + причину в стиле error
+                            showToast('Нельзя удалить товар: ' + reason, 8000, 'error');
+                        } else if (reason) {
+                            // fallback: вставим обычный alert
+                            alert('Нельзя удалить товар: ' + reason);
+                        }
+                    } catch(e) { console.warn('toast error', e); }
+                })();
+            </script>
         </c:if>
         <c:if test="${not empty error}">
             <div class="alert alert-danger">${error}</div>

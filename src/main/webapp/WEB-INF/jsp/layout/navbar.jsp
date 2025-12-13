@@ -85,12 +85,15 @@
 <div class="toast-container" id="globalToastContainer" aria-live="polite" aria-atomic="true"></div>
 <script>
     // Глобальная функция для показа toast уведомления
-    function showToast(message, timeout = 3000) {
+    function showToast(message, timeout = 3000, type = 'info') {
         try {
             const container = document.getElementById('globalToastContainer');
             if (!container) return;
             const t = document.createElement('div');
             t.className = 'toast';
+            // Добавляем модификатор для типа
+            if (type === 'success') t.classList.add('toast--success');
+            if (type === 'error') t.classList.add('toast--error');
             t.textContent = message;
             container.appendChild(t);
             // force reflow to allow transition

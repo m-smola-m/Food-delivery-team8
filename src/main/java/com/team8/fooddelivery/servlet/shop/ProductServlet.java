@@ -18,6 +18,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.Duration;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -372,7 +374,10 @@ public class ProductServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/products/list?deleted=true");
         } catch (Exception e) {
             log.error("Error deleting product", e);
-            response.sendRedirect(request.getContextPath() + "/products/list?error=delete_failed");
+            // Передаём понятное сообщение об ошибке на страницу списка
+            String reason = e.getMessage() != null ? e.getMessage() : "delete_failed";
+            String encoded = URLEncoder.encode(reason, StandardCharsets.UTF_8);
+            response.sendRedirect(request.getContextPath() + "/products/list?error=delete_failed&error_reason=" + encoded);
         }
     }
 
