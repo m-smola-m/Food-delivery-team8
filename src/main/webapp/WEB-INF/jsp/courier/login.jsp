@@ -19,7 +19,6 @@
         <div class="auth-box">
             <h2>Вход курьера</h2>
             <p class="role-hint">Телефон и пароль выдает менеджер. После входа вы сможете начать смену.</p>
-            <p class="role-hint">Тестовый курьер: телефон +79991000001 / пароль pwd01</p>
 
             <c:if test="${not empty error}">
                 <div class="alert alert-error">${error}</div>

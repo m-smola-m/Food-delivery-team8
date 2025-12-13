@@ -477,22 +477,31 @@ public class ClientServlet extends HttpServlet {
         String orderIdStr = request.getParameter("orderId");
         if (orderIdStr == null || orderIdStr.trim().isEmpty() || "undefined".equalsIgnoreCase(orderIdStr)) {
             log.error("Не удалось повторить заказ: orderId is " + orderIdStr);
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Order ID is missing or invalid.");
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write("{\"error\":\"Order ID is missing or invalid.\"}");
             return;
         }
         try {
             Long orderId = Long.parseLong(orderIdStr);
             orderService.repeatOrder(userId, orderId);
             response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
             response.getWriter().write("{\"status\":\"ok\"}");
         } catch (NumberFormatException e) {
             log.error("Не удалось повторить заказ: неверный формат orderId", e);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write("{\"error\":\"" + escape("Invalid Order ID format.") + "\"}");
+            response.getWriter().write("{\"error\":\"Invalid Order ID format.\"}");
         } catch (Exception e) {
             log.error("Не удалось повторить заказ", e);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write("{\"error\":\"" + escape(e.getMessage()) + "\"}");
+            String msg = e.getMessage() == null ? "Не удалось повторить заказ" : escape(e.getMessage());
+            response.getWriter().write("{\"error\":\"" + msg + "\"}");
         }
     }
 

@@ -150,7 +150,11 @@ public class CartServlet extends HttpServlet {
             return;
         }
 
-        Long cartItemId = Long.parseLong(request.getParameter("itemId"));
+        Long cartItemId = parseLongParam(request, "itemId", "cartItemId");
+        if (cartItemId == null) {
+            sendError(response, "Не указан id элемента корзины");
+            return;
+        }
         cartService.removeFromCart(clientId, cartItemId);
         sendSuccess(response);
     }
@@ -161,8 +165,24 @@ public class CartServlet extends HttpServlet {
             return;
         }
 
-        Long cartItemId = Long.parseLong(request.getParameter("itemId"));
-        int quantity = Integer.parseInt(request.getParameter("quantity"));
+        Long cartItemId = parseLongParam(request, "itemId", "cartItemId");
+        if (cartItemId == null) {
+            sendError(response, "Не указан id элемента корзины");
+            return;
+        }
+
+        Integer quantity = parseIntParam(request, "quantity", null);
+        if (quantity == null) {
+            sendError(response, "Не указано количество или оно некорректно");
+            return;
+        }
+        if (quantity < 1) {
+            // удаляем элемент, если количество стало меньше единицы
+            cartService.removeFromCart(clientId, cartItemId);
+            sendSuccess(response);
+            return;
+        }
+
         cartService.updateQuantity(clientId, cartItemId, quantity);
         sendSuccess(response);
     }
@@ -270,5 +290,39 @@ public class CartServlet extends HttpServlet {
                 .replace("\"", "\\\"")
                 .replace("\n", "\\n")
                 .replace("\r", "\\r");
+    }
+
+    /**
+     * Попытка распарсить long из нескольких имен параметров (берёт первое непустое значение).
+     */
+    private Long parseLongParam(HttpServletRequest request, String... names) {
+        for (String n : names) {
+            String v = request.getParameter(n);
+            if (v != null && !v.isBlank()) {
+                try {
+                    return Long.parseLong(v);
+                } catch (NumberFormatException e) {
+                    log.debug("Не удалось распарсить параметр {}=" + v, n);
+                    return null;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Попытка распарсить int, возвращает defaultValue, если нет или некорректно
+     */
+    private Integer parseIntParam(HttpServletRequest request, String name, Integer defaultValue) {
+        String v = request.getParameter(name);
+        if (v == null || v.isBlank()) {
+            return defaultValue;
+        }
+        try {
+            return Integer.parseInt(v);
+        } catch (NumberFormatException e) {
+            log.debug("Не удалось распарсить int-параметр {}=" + v, name);
+            return defaultValue;
+        }
     }
 }

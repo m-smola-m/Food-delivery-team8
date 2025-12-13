@@ -791,6 +791,44 @@
             });
     }
 
+    // Добавлена функция для повторного добавления заказа в корзину
+    function repeatOrder(orderId) {
+        if (!orderId) {
+            try { showToast('Неверный идентификатор заказа', true); } catch (e) { alert('Неверный идентификатор заказа'); }
+            return;
+        }
+        fetch('${pageContext.request.contextPath}/client/orders/repeat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'orderId=' + encodeURIComponent(orderId)
+        })
+        .then(async r => {
+            if (r.status === 401) { window.location = '${pageContext.request.contextPath}/client/login'; return Promise.reject(new Error('Не авторизован')); }
+            const text = await r.text();
+            let body = {};
+            try { body = text ? JSON.parse(text) : {}; } catch (e) { body = { error: text }; }
+            if (!r.ok) {
+                const msg = body.error || body.message || text || 'Сервер вернул ошибку при повторении заказа';
+                return Promise.reject(new Error(msg));
+            }
+            return body;
+        })
+        .then(data => {
+            if (data && data.error) {
+                showToast('Ошибка: ' + data.error, true);
+                return;
+            }
+            // Успешно — обновляем корзину и список заказов
+            loadCart();
+            loadOrders();
+            showToast('Заказ добавлен в корзину');
+        })
+        .catch(err => {
+            console.error('Repeat order failed:', err);
+            try { showToast('Не удалось повторить заказ: ' + (err.message || 'ошибка'), true); } catch (e) { alert('Не удалось повторить заказ: ' + (err.message || 'ошибка')); }
+        });
+    }
+
     function loadNotifications() {
         fetch('${pageContext.request.contextPath}/client/notifications-api')
             .then(r => r.json())
