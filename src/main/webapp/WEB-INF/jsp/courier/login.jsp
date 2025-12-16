@@ -9,12 +9,16 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/style.css">
 </head>
 <body class="auth-page">
+    <nav class="navbar">
+        <div class="container">
+            <a href="${pageContext.request.contextPath}/" class="btn-back" aria-label="Назад на главную">← Назад</a>
+        </div>
+        <!-- Локальный логотип убран для страниц входа -->
+    </nav>
     <div class="auth-container">
         <div class="auth-box">
-            <h1>Food Delivery</h1>
             <h2>Вход курьера</h2>
             <p class="role-hint">Телефон и пароль выдает менеджер. После входа вы сможете начать смену.</p>
-            <p class="role-hint">Тестовый курьер: телефон +79991000001 / пароль pwd01</p>
 
             <c:if test="${not empty error}">
                 <div class="alert alert-error">${error}</div>

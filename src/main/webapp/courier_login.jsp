@@ -9,9 +9,14 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/style.css">
 </head>
 <body class="auth-page">
+<nav class="navbar">
+        <div class="container">
+            <a href="${pageContext.request.contextPath}/" class="btn-back" aria-label="Назад на главную">← Назад</a>
+        </div>
+        <!-- Локальный логотип удалён: оставлена только кнопка назад в navbar -->
+    </nav>
 <div class="auth-container">
     <div class="auth-box">
-        <h1>Food Delivery</h1>
         <h2>Вход для курьера</h2>
 
         <c:if test="${not empty error}">

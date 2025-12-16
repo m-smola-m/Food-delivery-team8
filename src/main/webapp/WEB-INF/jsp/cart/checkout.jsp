@@ -78,14 +78,7 @@
                             <label>Этаж:</label>
                             <input type="text" name="floor" value="${client.address.floor}">
                         </div>
-                        <div class="form-group">
-                            <label>Широта:</label>
-                            <input type="text" name="latitude" value="${client.address.latitude}">
-                        </div>
-                        <div class="form-group">
-                            <label>Долгота:</label>
-                            <input type="text" name="longitude" value="${client.address.longitude}">
-                        </div>
+                        <!-- latitude/longitude removed from UI; optional fields handled on the server -->
                         <div class="form-group" style="grid-column: 1 / -1;">
                             <label>Комментарий к адресу:</label>
                             <textarea name="addressNote" rows="2">${client.address.addressNote}</textarea>

@@ -78,20 +78,8 @@ public class CartServiceImpl implements CartService {
         try {
             Cart cart = getOrCreate(clientId);
 
-            // Проверяем, что все товары в корзине из одного ресторана
-            if (!cart.getItems().isEmpty() && item.getProductId() != null) {
-                Long newProductShopId = getShopIdByProductId(item.getProductId());
-                if (newProductShopId != null) {
-                    // Проверяем shopId первого товара в корзине
-                    Long firstProductId = cart.getItems().get(0).getProductId();
-                    if (firstProductId != null) {
-                        Long firstProductShopId = getShopIdByProductId(firstProductId);
-                        if (firstProductShopId != null && !firstProductShopId.equals(newProductShopId)) {
-                            throw new IllegalStateException("Нельзя добавлять товары из разных ресторанов в одну корзину. Очистите корзину перед добавлением товаров из другого ресторана.");
-                        }
-                    }
-                }
-            }
+            // Ранее здесь была проверка, запрещающая добавлять товары из разных магазинов.
+            // Убрано: теперь корзина может содержать товары из разных магазинов.
 
             // Если товар уже есть — увеличиваем количество
             Optional<CartItem> existing = cart.getItems().stream()

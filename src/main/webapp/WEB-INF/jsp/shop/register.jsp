@@ -118,14 +118,6 @@
                         <label>Этаж</label>
                         <input type="text" name="floor">
                     </div>
-                    <div class="form-group">
-                        <label>Координаты (широта)</label>
-                        <input type="text" name="latitude" placeholder="55.751244">
-                    </div>
-                    <div class="form-group">
-                        <label>Координаты (долгота)</label>
-                        <input type="text" name="longitude" placeholder="37.618423">
-                    </div>
                 </div>
                 <div class="form-group">
                     <label>Комментарий к адресу</label>

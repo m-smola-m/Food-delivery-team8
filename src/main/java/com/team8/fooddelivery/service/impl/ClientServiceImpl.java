@@ -66,12 +66,12 @@ public class ClientServiceImpl implements ClientService {
             throw new IllegalArgumentException("Слабый пароль");
         }
 
-        if (!ValidationUtils.isValidAddress(address)) {
-            logger.warn("Неверный адрес для {}", email);
-            throw new IllegalArgumentException("Неверный формат адреса");
+        // address validation -> use validateAddress to get structured errors
+        java.util.Map<String, String> addressErrors = ValidationUtils.validateAddress(address);
+        if (!addressErrors.isEmpty()) {
+            logger.warn("Неверный адрес для {}: {}", email, addressErrors);
+            throw new com.team8.fooddelivery.util.ValidationException(addressErrors);
         }
-
-
 
         String hashedPassword = PasswordUtils.hashPassword(password);
 
@@ -198,32 +198,39 @@ public class ClientServiceImpl implements ClientService {
                 throw new IllegalArgumentException("Изменений нет");
             }
 
+            java.util.Map<String, String> fieldErrors = new java.util.HashMap<>();
             // Email можно менять
             if (email != null && !email.equals(client.getEmail())) {
                 if (!ValidationUtils.isValidEmail(email)) {
                     logger.warn("Некорректный email {}", email);
-                    throw new IllegalArgumentException("Неверный email");
-                }
-                if (isEmailExists(email)) {
+                    fieldErrors.put("email", "Неверный формат email");
+                } else if (isEmailExists(email)) {
                     logger.warn("Email {} уже используется", email);
-                    throw new IllegalArgumentException("Email уже используется другим пользователем");
+                    fieldErrors.put("email", "Email уже используется другим пользователем");
+                } else {
+                    client.setEmail(email);
+                    logger.info("Email обновлен для id={} → {}", clientId, email);
                 }
-                client.setEmail(email);
-                logger.info("Email обновлен для id={} → {}", clientId, email);
             }
 
             if (address != null && !address.equals(client.getAddress())) {
-                if (!ValidationUtils.isValidAddress(address)) {
-                    logger.warn("Некорректный адрес для id={}", clientId);
-                    throw new IllegalArgumentException("Неверный адрес");
+                java.util.Map<String, String> addressErrors = ValidationUtils.validateAddress(address);
+                if (!addressErrors.isEmpty()) {
+                    logger.warn("Некорректный адрес для id={}: {}", clientId, addressErrors);
+                    fieldErrors.putAll(addressErrors);
+                } else {
+                    client.setAddress(address);
+                    logger.info("Адрес обновлён для id={}", clientId);
                 }
-                client.setAddress(address);
-                logger.info("Адрес обновлён для id={}", clientId);
             }
 
             if (name != null && !name.equals(client.getName())) {
                 client.setName(name);
                 logger.info("Имя обновлено id={} → {}", clientId, name);
+            }
+
+            if (!fieldErrors.isEmpty()) {
+                throw new com.team8.fooddelivery.util.ValidationException(fieldErrors);
             }
 
             client.setStatus(ClientStatus.UPDATED);

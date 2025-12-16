@@ -8,6 +8,7 @@ public interface CourierWorkService {
   void pickupOrder(Long courierId, Long orderId);
   void completeOrder(Long courierId, Long orderId);
   List<Order> getOrderHistory(Long courierId);
+  Order getActiveOrderForCourier(Long courierId);
   void startShift(Long courierId);
   void endShift(Long courierId);
   void withdraw(Long courierId);

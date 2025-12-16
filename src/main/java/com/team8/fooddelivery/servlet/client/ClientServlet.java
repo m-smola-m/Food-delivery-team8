@@ -69,7 +69,9 @@ public class ClientServlet extends HttpServlet {
             case "/profile" -> showProfile(request, response);
             case "/login" -> showLogin(request, response);
             case "/register" -> showRegister(request, response);
+            case "/forgot_password" -> showForgotPassword(request, response);
             case "/home" -> showHome(request, response);
+            case "/orders" -> response.sendRedirect(request.getContextPath() + "/client/home?tab=orders");
             case "/orders-api" -> sendOrderHistory(request, response);
             case "/notifications-api" -> sendNotifications(request, response);
             case "/profile-api" -> sendProfileData(request, response); // <-- Новый эндпоинт
@@ -102,6 +104,11 @@ public class ClientServlet extends HttpServlet {
     private void showRegister(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
         request.getRequestDispatcher("/WEB-INF/jsp/client/register.jsp").forward(request, response);
+    }
+
+    private void showForgotPassword(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+        request.getRequestDispatcher("/WEB-INF/jsp/client/forgot_password.jsp").forward(request, response);
     }
 
 
@@ -150,16 +157,20 @@ public class ClientServlet extends HttpServlet {
                 .apartment(request.getParameter("apartment"))
                 .entrance(request.getParameter("entrance"))
                 .floor(parseInt(request.getParameter("floor")))
-                .latitude(parseDouble(request.getParameter("latitude")))
-                .longitude(parseDouble(request.getParameter("longitude")))
                 .addressNote(request.getParameter("addressNote"))
                 .district(request.getParameter("district"))
                 .build();
     }
 
     private Integer parseInt(String v) {
-        try { return v == null ? null : Integer.parseInt(v); }
-        catch (Exception e) { return null; }
+        if (v == null) return null;
+        String s = v.trim();
+        if (s.isEmpty()) return null;
+        try { return Integer.parseInt(s); }
+        catch (Exception e) {
+            // Возвращаем маркер неверного целочисленного значения — это позволит валидации поймать ошибку
+            return Integer.MIN_VALUE;
+        }
     }
 
     private Double parseDouble(String v) {
@@ -189,6 +200,12 @@ public class ClientServlet extends HttpServlet {
 
             response.sendRedirect(request.getContextPath() + "/client/home?registered=true");
 
+        } catch (com.team8.fooddelivery.util.ValidationException ve) {
+            log.warn("Registration validation failed: {}", ve.getFieldErrors());
+            request.setAttribute("fieldErrors", ve.getFieldErrors());
+            // keep submitted values
+            request.setAttribute("formData", request.getParameterMap());
+            request.getRequestDispatcher("/WEB-INF/jsp/client/register.jsp").forward(request, response);
         } catch (Exception e) {
             log.error("Registration failed", e);
             request.setAttribute("error", e.getMessage());
@@ -253,14 +270,8 @@ public class ClientServlet extends HttpServlet {
             return;
         }
 
-        Client client = clientService.getById(userId);
-        if (client == null) {
-            response.sendError(404);
-            return;
-        }
-
-        request.setAttribute("client", client);
-        request.getRequestDispatcher("/WEB-INF/jsp/client/profile.jsp").forward(request, response);
+        // Redirect to home with profile tab instead of separate profile page
+        response.sendRedirect(request.getContextPath() + "/client/home?tab=profile");
     }
 
 
@@ -280,17 +291,68 @@ public class ClientServlet extends HttpServlet {
         try {
             clientService.update(
                     userId,
-                    request.getParameter("name"),
+                    null, // name is immutable from UI — ignore any client-provided value
                     request.getParameter("email"),
                     extractAddress(request)
             );
 
-            response.sendRedirect(request.getContextPath() + "/client/profile?updated=true");
+            // Если это AJAX-запрос — вернуть JSON успеха
+            boolean isAjax = "XMLHttpRequest".equals(request.getHeader("X-Requested-With"))
+                    || "application/json".equals(request.getHeader("Accept"))
+                    || "1".equals(request.getParameter("ajax"));
 
+            if (isAjax) {
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                java.util.Map<String, Object> out = new java.util.HashMap<>();
+                out.put("success", true);
+                out.put("message", "Профиль успешно обновлён");
+                objectMapper.writeValue(response.getWriter(), out);
+                return;
+            }
+
+            // Redirect to home profile tab with success flag
+            response.sendRedirect(request.getContextPath() + "/client/home?tab=profile&updated=true");
+
+        } catch (com.team8.fooddelivery.util.ValidationException ve) {
+            log.warn("Update profile validation failed: {}", ve.getFieldErrors());
+            // AJAX -> вернуть JSON с ошибками
+            boolean isAjax = "XMLHttpRequest".equals(request.getHeader("X-Requested-With"))
+                    || "application/json".equals(request.getHeader("Accept"))
+                    || "1".equals(request.getParameter("ajax"));
+            if (isAjax) {
+                response.setStatus(400);
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                java.util.Map<String, Object> out = new java.util.HashMap<>();
+                out.put("success", false);
+                out.put("fieldErrors", ve.getFieldErrors());
+                objectMapper.writeValue(response.getWriter(), out);
+                return;
+            }
+
+            // forward back to home with errors and keep values
+            request.setAttribute("fieldErrors", ve.getFieldErrors());
+            request.setAttribute("formData", request.getParameterMap());
+            request.getRequestDispatcher("/WEB-INF/jsp/client/home.jsp").forward(request, response);
         } catch (Exception e) {
             log.error("Update failed", e);
-            request.setAttribute("error", e.getMessage());
-            request.getRequestDispatcher("/WEB-INF/jsp/client/profile.jsp").forward(request, response);
+            boolean isAjax = "XMLHttpRequest".equals(request.getHeader("X-Requested-With"))
+                    || "application/json".equals(request.getHeader("Accept"))
+                    || "1".equals(request.getParameter("ajax"));
+            if (isAjax) {
+                response.setStatus(500);
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                java.util.Map<String, Object> out = new java.util.HashMap<>();
+                out.put("success", false);
+                out.put("message", e.getMessage() == null ? "Ошибка обновления" : e.getMessage());
+                objectMapper.writeValue(response.getWriter(), out);
+                return;
+            }
+            // Redirect back to home profile tab with error message (url-encoded)
+            String msg = e.getMessage() == null ? "Ошибка обновления" : e.getMessage();
+            response.sendRedirect(request.getContextPath() + "/client/home?tab=profile&error=" + java.net.URLEncoder.encode(msg, java.nio.charset.StandardCharsets.UTF_8));
         }
     }
 
@@ -415,22 +477,31 @@ public class ClientServlet extends HttpServlet {
         String orderIdStr = request.getParameter("orderId");
         if (orderIdStr == null || orderIdStr.trim().isEmpty() || "undefined".equalsIgnoreCase(orderIdStr)) {
             log.error("Не удалось повторить заказ: orderId is " + orderIdStr);
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Order ID is missing or invalid.");
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write("{\"error\":\"Order ID is missing or invalid.\"}");
             return;
         }
         try {
             Long orderId = Long.parseLong(orderIdStr);
             orderService.repeatOrder(userId, orderId);
             response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
             response.getWriter().write("{\"status\":\"ok\"}");
         } catch (NumberFormatException e) {
             log.error("Не удалось повторить заказ: неверный формат orderId", e);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write("{\"error\":\"" + escape("Invalid Order ID format.") + "\"}");
+            response.getWriter().write("{\"error\":\"Invalid Order ID format.\"}");
         } catch (Exception e) {
             log.error("Не удалось повторить заказ", e);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write("{\"error\":\"" + escape(e.getMessage()) + "\"}");
+            String msg = e.getMessage() == null ? "Не удалось повторить заказ" : escape(e.getMessage());
+            response.getWriter().write("{\"error\":\"" + msg + "\"}");
         }
     }
 

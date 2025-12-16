@@ -225,6 +225,29 @@ public class CourierServiceImpl implements CourierService, CourierManagementServ
     }
 
     @Override
+    public Order getActiveOrderForCourier(Long courierId) {
+        try {
+            Optional<Courier> courierOpt = courierRepository.findById(courierId);
+            if (courierOpt.isPresent()) {
+                Courier c = courierOpt.get();
+                if (c.getCurrentOrderId() != null) {
+                    Optional<Order> orderOpt = orderRepository.findById(c.getCurrentOrderId());
+                    if (orderOpt.isPresent()) {
+                        Order o = orderOpt.get();
+                        if (o.getStatus() == OrderStatus.DELIVERING) {
+                            return o;
+                        }
+                    }
+                }
+            }
+            return null;
+        } catch (SQLException e) {
+            logger.error("Ошибка при получении активного заказа", e);
+            return null;
+        }
+    }
+
+    @Override
     public Courier getCourierById(Long courierId) {
         try {
             return courierRepository.findById(courierId).orElse(null);
@@ -247,5 +270,10 @@ public class CourierServiceImpl implements CourierService, CourierManagementServ
         } catch (SQLException e) {
             logger.error("Ошибка при выводе средств", e);
         }
+    }
+
+    @Override
+    public void rateOrder(Long courierId, Long orderId, int rating) {
+        // TODO: Implement rating logic if needed
     }
 }

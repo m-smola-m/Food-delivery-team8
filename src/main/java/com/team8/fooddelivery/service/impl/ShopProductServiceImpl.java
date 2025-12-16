@@ -129,6 +129,12 @@ public class ShopProductServiceImpl implements ShopProductService {
     try {
       productRepository.delete(productId);
     } catch (SQLException e) {
+      // Если ошибка связана с внешними ключами (используется в заказах) - сообщаем понятное сообщение
+      String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
+      if (msg.contains("referenced by order_items") || msg.contains("fk_order_items_product") || msg.contains("referenced by") ) {
+        logger.warn("Нельзя удалить продукт {} для магазина {}: он используется в заказах", productId, shopId);
+        throw new RuntimeException("Продукт нельзя удалить — он используется в заказах");
+      }
       logger.error("Ошибка при удалении продукта", e);
       throw new RuntimeException("Не удалось удалить продукт", e);
     }

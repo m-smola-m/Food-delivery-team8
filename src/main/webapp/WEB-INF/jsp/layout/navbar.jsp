@@ -2,6 +2,9 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <nav class="navbar">
     <div class="container">
+        <c:if test="${empty sessionScope.userRole}">
+            <a href="${pageContext.request.contextPath}/" class="btn-back" aria-label="Назад на главную">← Назад</a>
+        </c:if>
         <div class="navbar-brand">
             <c:choose>
                 <c:when test="${sessionScope.userRole == 'SHOP'}">
@@ -79,3 +82,31 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </c:if>
 
+<div class="toast-container" id="globalToastContainer" aria-live="polite" aria-atomic="true"></div>
+<script>
+    // Глобальная функция для показа toast уведомления
+    function showToast(message, timeout = 3000, type = 'info') {
+        try {
+            const container = document.getElementById('globalToastContainer');
+            if (!container) return;
+            const t = document.createElement('div');
+            t.className = 'toast';
+            // Добавляем модификатор для типа
+            if (type === 'success') t.classList.add('toast--success');
+            if (type === 'error') t.classList.add('toast--error');
+            t.textContent = message;
+            container.appendChild(t);
+            // force reflow to allow transition
+            void t.offsetWidth;
+            t.classList.add('show');
+            setTimeout(() => {
+                t.classList.remove('show');
+                setTimeout(() => t.remove(), 250);
+            }, timeout);
+        } catch (e) {
+            console.error('Toast error', e);
+        }
+    }
+</script>
+<script src="${pageContext.request.contextPath}/resources/js/notifications.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">

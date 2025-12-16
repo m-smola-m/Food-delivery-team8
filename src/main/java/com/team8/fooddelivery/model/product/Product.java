@@ -18,4 +18,5 @@ public class Product {
   @Builder.Default
   private Boolean available = true;
   private Duration cookingTimeMinutes;
+  private String photoUrl;
 }

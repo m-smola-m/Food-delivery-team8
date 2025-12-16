@@ -20,12 +20,11 @@
     </nav>
 
     <main class="container">
-        <section class="hero">
+        <section class="hero" style="padding:80px 20px; text-align:center;">
             <h2>Добро пожаловать на Food Delivery</h2>
             <p>Быстрая доставка еды и продуктов</p>
-            <div class="buttons">
-                <a href="${pageContext.request.contextPath}/client/login" class="btn btn-primary">Заказать еду</a>
-                <a href="${pageContext.request.contextPath}/shop/list" class="btn btn-secondary">Посмотреть магазины</a>
+            <div class="buttons" style="justify-content:center; margin-top:30px;">
+                <a href="${pageContext.request.contextPath}/auth/logout" class="btn btn-primary" style="padding:16px 28px; font-size:18px;">Войти</a>
             </div>
         </section>
     </main>
@@ -35,4 +34,3 @@
     </footer>
 </body>
 </html>
-

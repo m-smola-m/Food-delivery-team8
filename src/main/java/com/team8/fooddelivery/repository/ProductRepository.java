@@ -21,28 +21,40 @@ public class ProductRepository {
   }
 
   public Long saveForShop(Long shopId, Product product) throws SQLException {
-    String sql = "INSERT INTO products (shop_id, name, description, weight, price, category, is_available, cooking_time_minutes) " +
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING product_id";
-
-    try (Connection conn = DatabaseConnectionService.getConnection();
-         PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-      stmt.setLong(1, shopId);
-      stmt.setString(2, product.getName());
-      stmt.setString(3, product.getDescription());
-      stmt.setObject(4, product.getWeight(), Types.DOUBLE);
-      stmt.setDouble(5, product.getPrice());
-      stmt.setString(6, product.getCategory() != null ? product.getCategory().name() : null);
-      stmt.setBoolean(7, product.getAvailable());
-      stmt.setObject(8, product.getCookingTimeMinutes() != null ? product.getCookingTimeMinutes().toMinutes() : null, Types.BIGINT);
-
-      ResultSet rs = stmt.executeQuery();
-      if (rs.next()) {
-        Long id = rs.getLong("product_id");
-        logger.debug("Продукт сохранен с id={} для магазина shopId={}", id, shopId);
-        return id;
+    // Выбираем SQL в зависимости от наличия колонки photo_url в таблице products
+    try (Connection conn = DatabaseConnectionService.getConnection()) {
+      boolean hasPhoto = hasColumn(conn, "products", "photo_url");
+      String sql;
+      if (hasPhoto) {
+        sql = "INSERT INTO products (shop_id, name, description, weight, price, category, is_available, cooking_time_minutes, photo_url) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING product_id";
+      } else {
+        sql = "INSERT INTO products (shop_id, name, description, weight, price, category, is_available, cooking_time_minutes) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING product_id";
       }
-      throw new SQLException("Не удалось сохранить продукт");
+
+      try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+        stmt.setLong(1, shopId);
+        stmt.setString(2, product.getName());
+        stmt.setString(3, product.getDescription());
+        stmt.setObject(4, product.getWeight(), Types.DOUBLE);
+        stmt.setDouble(5, product.getPrice());
+        stmt.setString(6, product.getCategory() != null ? product.getCategory().name() : null);
+        stmt.setBoolean(7, product.getAvailable());
+        stmt.setLong(8, product.getCookingTimeMinutes() != null ? product.getCookingTimeMinutes().toMinutes() : 0);
+        if (hasPhoto) {
+          stmt.setString(9, product.getPhotoUrl());
+        }
+
+        ResultSet rs = stmt.executeQuery();
+        if (rs.next()) {
+          Long id = rs.getLong("product_id");
+          logger.debug("Продукт сохранен с id={} для магазина shopId={}", id, shopId);
+          return id;
+        }
+        throw new SQLException("Не удалось сохранить продукт");
+      }
     }
   }
 
@@ -123,22 +135,34 @@ public class ProductRepository {
   }
 
   public void update(Product product) throws SQLException {
-    String sql = "UPDATE products SET name=?, description=?, weight=?, price=?, category=?, is_available=?, cooking_time_minutes=? WHERE product_id=?";
+    // Формируем SQL в зависимости от наличия колонки photo_url
+    try (Connection conn = DatabaseConnectionService.getConnection()) {
+      boolean hasPhoto = hasColumn(conn, "products", "photo_url");
+      String sql;
+      if (hasPhoto) {
+        sql = "UPDATE products SET name=?, description=?, weight=?, price=?, category=?, is_available=?, cooking_time_minutes=?, photo_url=? WHERE product_id=?";
+      } else {
+        sql = "UPDATE products SET name=?, description=?, weight=?, price=?, category=?, is_available=?, cooking_time_minutes=? WHERE product_id=?";
+      }
 
-    try (Connection conn = DatabaseConnectionService.getConnection();
-         PreparedStatement stmt = conn.prepareStatement(sql)) {
+      try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+        stmt.setString(1, product.getName());
+        stmt.setString(2, product.getDescription());
+        stmt.setObject(3, product.getWeight(), Types.DOUBLE);
+        stmt.setDouble(4, product.getPrice());
+        stmt.setString(5, product.getCategory() != null ? product.getCategory().name() : null);
+        stmt.setBoolean(6, product.getAvailable());
+        stmt.setLong(7, product.getCookingTimeMinutes() != null ? product.getCookingTimeMinutes().toMinutes() : 0);
+        if (hasPhoto) {
+          stmt.setString(8, product.getPhotoUrl());
+          stmt.setLong(9, product.getProductId());
+        } else {
+          stmt.setLong(8, product.getProductId());
+        }
 
-      stmt.setString(1, product.getName());
-      stmt.setString(2, product.getDescription());
-      stmt.setObject(3, product.getWeight(), Types.DOUBLE);
-      stmt.setDouble(4, product.getPrice());
-      stmt.setString(5, product.getCategory() != null ? product.getCategory().name() : null);
-      stmt.setBoolean(6, product.getAvailable());
-      stmt.setObject(7, product.getCookingTimeMinutes() != null ? product.getCookingTimeMinutes().toMinutes() : null, Types.BIGINT);
-      stmt.setLong(8, product.getProductId());
-
-      stmt.executeUpdate();
-      logger.debug("Продукт обновлен: id={}", product.getProductId());
+        stmt.executeUpdate();
+        logger.debug("Продукт обновлен: id={}", product.getProductId());
+      }
     }
   }
 
@@ -154,13 +178,28 @@ public class ProductRepository {
     }
   }
 
+  /**
+   * Проверяет наличие колонки в таблице через DatabaseMetaData.
+   */
+  private boolean hasColumn(Connection conn, String tableName, String columnName) {
+    try {
+      DatabaseMetaData meta = conn.getMetaData();
+      try (ResultSet cols = meta.getColumns(null, null, tableName, columnName)) {
+        return cols.next();
+      }
+    } catch (SQLException e) {
+      logger.warn("Не удалось проверить наличие колонки {} в таблице {}: {}", columnName, tableName, e.getMessage());
+      return false;
+    }
+  }
+
   private Product mapResultSetToProduct(ResultSet rs) throws SQLException {
     Long productId = rs.getLong("product_id");
     Long shopId = rs.getObject("shop_id") != null ? rs.getLong("shop_id") : null;
     String name = rs.getString("name");
     String description = rs.getString("description");
     Double weight = rs.getObject("weight", Double.class);
-    Double price = rs.getDouble("price");
+    Double price = rs.getObject("price", Double.class);
 
     ProductCategory category = null;
     String categoryStr = rs.getString("category");
@@ -181,16 +220,24 @@ public class ProductRepository {
       cookingTime = Duration.ofMinutes(cookingTimeMinutes);
     }
 
-    return Product.builder()
-        .productId(productId)
-        .shopId(shopId)
-        .name(name)
-        .description(description)
-        .weight(weight)
-        .price(price)
-        .category(category)
-        .available(isAvailable)
-        .cookingTimeMinutes(cookingTime)
-        .build();
+    String photoUrl = null;
+    // Безопасно читаем photo_url: проверяем, что колонка присутствует в ResultSet
+    ResultSetMetaData meta = rs.getMetaData();
+    int columnCount = meta.getColumnCount();
+    boolean hasPhotoUrl = false;
+    for (int i = 1; i <= columnCount; i++) {
+      if ("photo_url".equalsIgnoreCase(meta.getColumnLabel(i)) || "photo_url".equalsIgnoreCase(meta.getColumnName(i))) {
+        hasPhotoUrl = true;
+        break;
+      }
+    }
+    if (hasPhotoUrl) {
+      photoUrl = rs.getString("photo_url");
+    } else {
+      logger.debug("Колонка photo_url отсутствует в ResultSet для product_id={}", productId);
+    }
+
+    // Use explicit constructor instead of Lombok builder to avoid relying on annotation processing in all environments
+    return new Product(productId, shopId, name, description, weight, price, category, isAvailable, cookingTime, photoUrl);
   }
 }

@@ -118,7 +118,12 @@ public class CartRepository {
     }
 
     public List<CartItem> findCartItemsByCartId(Long cartId, Connection conn) throws SQLException {
-        String sql = "SELECT * FROM cart_items WHERE cart_id = ?";
+        // join with products and shops to fetch shop info for each cart item
+        String sql = "SELECT ci.*, p.shop_id, s.naming as shop_name " +
+                     "FROM cart_items ci " +
+                     "LEFT JOIN products p ON ci.product_id = p.product_id " +
+                     "LEFT JOIN shops s ON p.shop_id = s.shop_id " +
+                     "WHERE ci.cart_id = ?";
 
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, cartId);
@@ -206,13 +211,24 @@ public class CartRepository {
     }
 
     private CartItem mapResultSetToCartItem(ResultSet rs) throws SQLException {
-        return CartItem.builder()
+        CartItem.CartItemBuilder builder = CartItem.builder()
                 .id(rs.getLong("id"))
                 .cartId(rs.getLong("cart_id"))
                 .productId(rs.getLong("product_id"))
                 .productName(rs.getString("product_name"))
                 .quantity(rs.getInt("quantity"))
-                .price(rs.getDouble("price"))
-                .build();
+                .price(rs.getDouble("price"));
+
+        // attempt to read shop info (may be null)
+        try {
+            long shopId = rs.getLong("shop_id");
+            if (!rs.wasNull()) builder.shopId(shopId);
+        } catch (SQLException ignored) { }
+        try {
+            String shopName = rs.getString("shop_name");
+            if (shopName != null) builder.shopName(shopName);
+        } catch (SQLException ignored) { }
+
+        return builder.build();
     }
 }

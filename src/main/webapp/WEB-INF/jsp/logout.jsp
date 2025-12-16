@@ -66,26 +66,25 @@
         .btn-home:hover {
             background: #545b62;
         }
+        .logout-actions a { color: #fff !important; }
     </style>
 </head>
 <body>
     <div class="logout-container">
-        <div class="logout-icon">✓</div>
-        <h1 class="logout-title">Вы успешно вышли из системы</h1>
+        <div class="logout-icon">🍽️</div>
+        <h1 class="logout-title">Welcome to Food Delivery</h1>
         <p class="logout-message">
-            Ваша сессия завершена. Спасибо за использование Food Delivery!<br>
-            Мы будем рады видеть вас снова.
+            Нажмите кнопку ниже, чтобы перейти на страницу входа и продолжить.
         </p>
 
         <div class="logout-actions">
             <a href="<%= request.getContextPath() %>/client/login" class="btn-login">
-                Войти снова
+                Войти
             </a>
-            <a href="<%= request.getContextPath() %>/" class="btn-home">
-                На главную
+            <a href="<%= request.getContextPath() %>/client/register" class="btn-home">
+                Зарегистрироваться
             </a>
         </div>
     </div>
 </body>
 </html>
-

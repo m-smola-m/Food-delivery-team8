@@ -38,6 +38,10 @@ public class CartServlet extends HttpServlet {
 
         if ("/items-api".equals(pathInfo)) {
             handleItemsApi(request, response);
+        } else if ("/view".equals(pathInfo) || "/".equals(pathInfo)) {
+            // Redirect old cart page to client home with cart tab
+            String context = request.getContextPath();
+            response.sendRedirect(context + "/client/home?tab=cart");
         } else {
             response.sendError(404);
         }
@@ -92,11 +96,21 @@ public class CartServlet extends HttpServlet {
         for (int i = 0; i < items.size(); i++) {
             CartItem item = items.get(i);
             json.append("{")
-                .append("\"cartItemId\":").append(item.getId()).append(",")
-                .append("\"productId\":").append(item.getProductId()).append(",")
+                .append("\"cartItemId\":").append(item.getId() != null ? item.getId() : "null").append(",")
+                .append("\"productId\":").append(item.getProductId() != null ? item.getProductId() : "null").append(",")
                 .append("\"name\":\"").append(escape(item.getProductName())).append("\",")
                 .append("\"price\":").append(item.getPrice()).append(",")
-                .append("\"quantity\":").append(item.getQuantity()).append("}");
+                .append("\"quantity\":").append(item.getQuantity()).append(',');
+
+            // shop info (may be null)
+            if (item.getShopId() != null) {
+                json.append("\"shopId\":").append(item.getShopId()).append(',');
+            } else {
+                json.append("\"shopId\":null,");
+            }
+            json.append("\"shopName\":\"").append(escape(item.getShopName())).append("\"");
+
+            json.append("}");
             if (i < items.size() - 1) {
                 json.append(",");
             }
@@ -136,7 +150,11 @@ public class CartServlet extends HttpServlet {
             return;
         }
 
-        Long cartItemId = Long.parseLong(request.getParameter("cartItemId"));
+        Long cartItemId = parseLongParam(request, "itemId", "cartItemId");
+        if (cartItemId == null) {
+            sendError(response, "Не указан id элемента корзины");
+            return;
+        }
         cartService.removeFromCart(clientId, cartItemId);
         sendSuccess(response);
     }
@@ -147,8 +165,24 @@ public class CartServlet extends HttpServlet {
             return;
         }
 
-        Long cartItemId = Long.parseLong(request.getParameter("cartItemId"));
-        int quantity = Integer.parseInt(request.getParameter("quantity"));
+        Long cartItemId = parseLongParam(request, "itemId", "cartItemId");
+        if (cartItemId == null) {
+            sendError(response, "Не указан id элемента корзины");
+            return;
+        }
+
+        Integer quantity = parseIntParam(request, "quantity", null);
+        if (quantity == null) {
+            sendError(response, "Не указано количество или оно некорректно");
+            return;
+        }
+        if (quantity < 1) {
+            // удаляем элемент, если количество стало меньше единицы
+            cartService.removeFromCart(clientId, cartItemId);
+            sendSuccess(response);
+            return;
+        }
+
         cartService.updateQuantity(clientId, cartItemId, quantity);
         sendSuccess(response);
     }
@@ -256,5 +290,39 @@ public class CartServlet extends HttpServlet {
                 .replace("\"", "\\\"")
                 .replace("\n", "\\n")
                 .replace("\r", "\\r");
+    }
+
+    /**
+     * Попытка распарсить long из нескольких имен параметров (берёт первое непустое значение).
+     */
+    private Long parseLongParam(HttpServletRequest request, String... names) {
+        for (String n : names) {
+            String v = request.getParameter(n);
+            if (v != null && !v.isBlank()) {
+                try {
+                    return Long.parseLong(v);
+                } catch (NumberFormatException e) {
+                    log.debug("Не удалось распарсить параметр {}=" + v, n);
+                    return null;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Попытка распарсить int, возвращает defaultValue, если нет или некорректно
+     */
+    private Integer parseIntParam(HttpServletRequest request, String name, Integer defaultValue) {
+        String v = request.getParameter(name);
+        if (v == null || v.isBlank()) {
+            return defaultValue;
+        }
+        try {
+            return Integer.parseInt(v);
+        } catch (NumberFormatException e) {
+            log.debug("Не удалось распарсить int-параметр {}=" + v, name);
+            return defaultValue;
+        }
     }
 }

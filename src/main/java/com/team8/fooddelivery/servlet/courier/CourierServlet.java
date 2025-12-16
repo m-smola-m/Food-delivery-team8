@@ -63,6 +63,7 @@ public class CourierServlet extends HttpServlet {
             case "/history" -> handleHistory(request, response);
             case "/earnings" -> handleEarnings(request, response);
             case "/today-history" -> handleTodayHistory(request, response);
+            case "/active-order" -> handleActiveOrder(request, response);
             case "/register" -> request.getRequestDispatcher("/WEB-INF/jsp/courier/register.jsp").forward(request, response);
             case "/login" -> request.getRequestDispatcher("/WEB-INF/jsp/courier/login.jsp").forward(request, response);
             default -> response.sendError(404);
@@ -396,6 +397,28 @@ public class CourierServlet extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
         ObjectMapper mapper = new ObjectMapper();
         mapper.writeValue(response.getWriter(), todayHistory);
+    }
+
+
+    // ======================================================================
+    // ACTIVE ORDER
+    // ======================================================================
+
+    private void handleActiveOrder(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        Long courierId = SessionManager.getUserId(request.getSession());
+        if (courierId == null) {
+            response.sendError(401);
+            return;
+        }
+
+        Order activeOrder = cws.getActiveOrderForCourier(courierId);
+
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.writeValue(response.getWriter(), activeOrder);
     }
 
 

@@ -32,7 +32,7 @@
 
         <section class="section">
             <h2>Контакты и адрес</h2>
-            <form method="POST" action="${pageContext.request.contextPath}/client/update-profile">
+            <form method="POST" action="${pageContext.request.contextPath}/client/update-profile" class="profile-form">
                 <div class="info-grid">
                     <div class="form-group">
                         <label>Имя:</label>
@@ -74,20 +74,15 @@
                         <label>Этаж:</label>
                         <input type="text" name="floor" value="${client.address.floor}">
                     </div>
-                    <div class="form-group">
-                        <label>Широта:</label>
-                        <input type="text" name="latitude" value="${client.address.latitude}">
-                    </div>
-                    <div class="form-group">
-                        <label>Долгота:</label>
-                        <input type="text" name="longitude" value="${client.address.longitude}">
-                    </div>
                     <div class="form-group" style="grid-column: 1 / -1;">
                         <label>Комментарий к адресу:</label>
                         <textarea name="addressNote" rows="2">${client.address.addressNote}</textarea>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                <div style="display:flex; gap:10px; margin-top:16px;">
+                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                    <a href="${pageContext.request.contextPath}/client/home" class="btn btn-secondary">Назад</a>
+                </div>
             </form>
         </section>
 

@@ -184,6 +184,56 @@ body {
     color: #3498db;
 }
 
+/* Back button in navbar for auth pages */
+.btn-back {
+    display: inline-block;
+    color: white;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    padding: 6px 10px;
+    border-radius: 6px;
+    text-decoration: none;
+    margin-right: 12px;
+    font-size: 14px;
+}
+.btn-back:hover {
+    background: rgba(255,255,255,0.09);
+    border-color: rgba(255,255,255,0.18);
+}
+
+/* На страницах авторизации убираем серую плашку navbar и показываем только фиксированную кнопку назад слева сверху */
+.auth-page .navbar {
+    background: transparent !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+.auth-page .navbar .container {
+    justify-content: flex-start;
+}
+.auth-page .navbar .navbar-brand {
+    display: none !important; /* скрываем логотип в полоске на auth-страницах */
+}
+.auth-page .btn-back {
+    position: fixed !important;
+    top: 12px !important;
+    left: 12px !important;
+    z-index: 1300 !important;
+    /* белая кнопка */
+    background: #ffffff !important;
+    color: #2c3e50 !important; /* тёмный текст */
+    border: 1px solid rgba(0,0,0,0.08) !important;
+    padding: 8px 10px !important;
+    border-radius: 6px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+}
+.auth-page .btn-back:hover {
+    background: #f2f2f4 !important;
+}
+@media (max-width: 480px) {
+    .auth-page .btn-back { top: 8px !important; left: 8px !important; font-size: 13px !important; padding: 6px 8px !important; }
+}
+
 /* Auth Page */
 .auth-page {
     display: flex;
@@ -276,53 +326,13 @@ body {
     font-size: 12px;
 }
 
-/* Alerts */
-.alert {
-    padding: 12px 16px;
-    border-radius: 4px;
-    margin-bottom: 20px;
+/* Акцентная кнопка регистрации (используется на странице логина) */
+.btn-register {
+    background-color: #007bff; /* синий, как основная кнопка */
+    color: #ffffff !important;
 }
-
-.alert-error {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-}
-
-.alert-success {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-}
-
-/* Form */
-.form-group {
-    margin-bottom: 15px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-
-.form-group input,
-.form-group textarea,
-.form-group select {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-    font-family: Arial, sans-serif;
-}
-
-.form-group input:focus,
-.form-group textarea:focus,
-.form-group select:focus {
-    outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+.btn-register:hover {
+    background-color: #0056b3;
 }
 
 /* Links */
@@ -338,6 +348,28 @@ body {
 
 .auth-box a:hover {
     text-decoration: underline;
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: #007bff;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+    font-size: inherit;
+}
+
+.btn-link:hover {
+    color: #0056b3;
+    text-decoration: none;
+}
+
+.auth-links {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
 }
 
 /* Hero Section */
@@ -1088,4 +1120,89 @@ header div {
 
 .earnings-table tr:hover {
     background-color: #f9f9f9;
+}
+
+/* форма авторизации/регистрации */
+.auth-box .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.auth-box .form-group label {
+    font-weight: 600;
+    font-size: 14px;
+    color: #333;
+}
+
+.auth-box .form-group input,
+.auth-box .form-group textarea,
+.auth-box .form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+/* уменьшить ширину контейнера регистрационной формы на больших экранах */
+.auth-box.auth-box--narrow {
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+/* ссылки под формой */
+.auth-box p, .auth-links {
+    text-align: center;
+}
+
+@media (max-width: 480px) {
+    .auth-container { padding: 12px; }
+    .auth-box { padding: 20px; }
+}
+
+/* улучшение внешнего вида demo-credentials */
+.demo-credentials ul { padding-left: 0; list-style: none; }
+.demo-credentials li { display: flex; gap: 10px; align-items: center; }
+
+/* Toast (всплывающее уведомление) */
+.toast-container {
+    position: fixed;
+    right: 20px;
+    bottom: 20px; /* теперь снизу справа */
+    top: auto;
+    z-index: 1200;
+    display: flex;
+    flex-direction: column-reverse; /* новые уведомления снизу поднимаются вверх */
+    gap: 10px;
+}
+.toast {
+    min-width: 200px;
+    max-width: 320px;
+    background: rgba(0,0,0,0.85);
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+    font-size: 14px;
+    opacity: 0;
+    transform: translateY(8px); /* появление снизу-вверх */
+    transition: opacity 220ms ease, transform 220ms ease;
+}
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Success / Error variants */
+.toast--success {
+    background: linear-gradient(180deg, #34d399 0%, #10b981 100%); /* зеленый */
+    color: #052e19;
+}
+
+.toast--error {
+    background: linear-gradient(180deg, #f87171 0%, #ef4444 100%); /* красный */
+    color: #3b0b0b;
 }
